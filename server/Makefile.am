@@ -12,13 +12,10 @@ BASE_SOURCE_FILES   = fwknopd.h config_init.c config_init.h \
                       fw_util_iptables.c fw_util_iptables.h \
                       fw_util_ipfw.c fw_util_ipfw.h \
                       fw_util_pf.c fw_util_pf.h cmd_opts.h \
+                      nfq_capture.c nfq_capture.h \
                       extcmd.c extcmd.h cmd_cycle.c cmd_cycle.h
 
 fwknopd_SOURCES   = fwknopd.c $(BASE_SOURCE_FILES)
-
-if NFQ_CAPTURE
-    fwknopd_SOURCES += nfq_capture.c nfq_capture.h
-endif
 
 fwknopd_LDADD     = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.a
 
@@ -29,22 +26,19 @@ if WANT_C_UNIT_TESTS
     fwknopd_utests_LDADD    = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.a
     fwknopd_utests_LDFLAGS  = -lcunit $(GPGME_LIBS)
 
-if NFQ_CAPTURE
-    fwknopd_utests_LDFLAGS += -lnetfilter_queue -lnfnetlink
-else
-if !UDP_SERVER
+if CAPTURE_WITH_PCAP
     fwknopd_utests_LDFLAGS += -lpcap
 endif
+if CAPTURE_WITH_NFQ
+    fwknopd_utests_LDFLAGS += -lnetfilter_queue -lnfnetlink
+endif
 endif
 
-endif
-
-if NFQ_CAPTURE
-    fwknopd_LDADD += -lnetfilter_queue -lnfnetlink
-else
-if !UDP_SERVER
+if CAPTURE_WITH_PCAP
     fwknopd_LDADD += -lpcap
 endif
+if CAPTURE_WITH_NFQ
+    fwknopd_LDADD += -lnetfilter_queue -lnfnetlink
 endif
 
 

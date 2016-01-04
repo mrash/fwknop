@@ -67,7 +67,7 @@
 #if USE_LIBNETFILTER_QUEUE
   #define IPT_NFQ_ADD_ARGS "-t %s -A %s -p udp -m udp --dport %s -j NFQUEUE --queue-num %s"
   #define IPT_NFQ_ADD_ARGS_WITH_IF "-t %s -A %s -i %s -p udp -m udp --dport %s -j NFQUEUE --queue-num %s"
-#endif
+#endif /* USE_LIBNETFILTER_QUEUE */
 
 int validate_ipt_chain_conf(const char * const chain_str);
 

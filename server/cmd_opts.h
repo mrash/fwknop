@@ -58,9 +58,12 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "ENABLE_SPA_OVER_HTTP",
     "ENABLE_TCP_SERVER",
     "TCPSERV_PORT",
+#if USE_UDP_SERVER
     "ENABLE_UDP_SERVER",
+    "UDPSERV_INTERFACE",
     "UDPSERV_PORT",
     "UDPSERV_SELECT_TIMEOUT",
+#endif
 #if USE_LIBNETFILTER_QUEUE
     "ENABLE_NFQ_CAPTURE",
     "NFQ_INTERFACE",
@@ -178,11 +181,7 @@ enum {
 
 /* Our getopt_long options string.
 */
-#if USE_LIBNETFILTER_QUEUE
-  #define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:Kl:nO:p:P:Rr:StUvV"
-#else
-  #define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:Kl:O:p:P:Rr:StUvV"
-#endif
+#define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:Kl:O:p:P:Rr:StvV"
 
 /* Our program command-line options...
 */
@@ -218,9 +217,11 @@ static struct option cmd_opts[] =
     {"no-firewd-check-support", 0, NULL, FIREWD_DISABLE_CHECK_SUPPORT },
     {"no-ipt-check-support",    0, NULL, IPT_DISABLE_CHECK_SUPPORT },
     {"locale",                  1, NULL, 'l' },
+/*
 #if USE_LIBNETFILTER_QUEUE
     {"nfq-capture",             0, NULL, 'n' },
 #endif
+*/
     {"rotate-digest-cache",     0, NULL, ROTATE_DIGEST_CACHE },
     {"override-config",         1, NULL, 'O' },
     {"pcap-file",               1, NULL, PCAP_FILE },
@@ -232,7 +233,9 @@ static struct option cmd_opts[] =
     {"status",                  0, NULL, 'S'},
     {"sudo-exe",                1, NULL, SUDO_EXE_PATH },
     {"test",                    0, NULL, 't'},
+/*
     {"udp-server",              0, NULL, 'U'},
+*/
     {"verbose",                 0, NULL, 'v'},
     {"version",                 0, NULL, 'V'},
     {0, 0, 0, 0}

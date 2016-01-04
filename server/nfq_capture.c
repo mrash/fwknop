@@ -28,7 +28,11 @@
  *
  *****************************************************************************
 */
+
 #include "fwknopd_common.h"
+
+#if USE_LIBNETFILTER_QUEUE
+
 #include "nfq_capture.h"
 #include "process_packet.h"
 #include "sig_handler.h"
@@ -288,4 +292,6 @@ nfq_capture(fko_srv_options_t *opts)
 
     return(0);
 }
+#endif /* USE_LIBNETFILTER_QUEUE */
+
 /***EOF***/

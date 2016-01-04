@@ -28,6 +28,8 @@
  *****************************************************************************
 */
 #include "fwknopd_common.h"
+
+#if USE_UDP_SERVER
 #include "sig_handler.h"
 #include "incoming_spa.h"
 #include "log_msg.h"
@@ -48,6 +50,9 @@
 
 #include <fcntl.h>
 #include <sys/select.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <net/if.h>
 
 int
 run_udp_server(fko_srv_options_t *opts)
@@ -57,12 +62,17 @@ run_udp_server(fko_srv_options_t *opts)
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
     struct timeval      tv;
+    struct ifreq        ifr;
     char                sipbuf[MAX_IPV4_STR_LEN] = {0};
     char                dgram_msg[MAX_SPA_PACKET_LEN+1] = {0};
     socklen_t           clen;
 
-    log_msg(LOG_INFO, "Kicking off UDP server to listen on port %i.",
-            opts->udpserv_port);
+    if(opts->config[CONF_UDPSERV_INTERFACE] != NULL)
+        log_msg(LOG_INFO, "Kicking off UDP server to listen on interface %s, port %i.",
+                opts->config[CONF_UDPSERV_INTERFACE], opts->udpserv_port);
+    else
+        log_msg(LOG_INFO, "Kicking off UDP server to listen on port %i.",
+                opts->udpserv_port);
 
     /* Now, let's make a UDP server
     */
@@ -96,8 +106,25 @@ run_udp_server(fko_srv_options_t *opts)
 
     /* Construct local address structure */
     memset(&saddr, 0x0, sizeof(saddr));
-    saddr.sin_family      = AF_INET;           /* Internet address family */
-    saddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
+    saddr.sin_family = AF_INET; /* Internet address family */
+
+    if(opts->config[CONF_UDPSERV_INTERFACE] != NULL)
+    {
+        ifr.ifr_addr.sa_family = AF_INET; /* Internet address family */
+        strlcpy(ifr.ifr_name, opts->config[CONF_UDPSERV_INTERFACE], IFNAMSIZ);
+        if(ioctl(s_sock, SIOCGIFADDR, &ifr) < 0)
+        {
+            log_msg(LOG_ERR, "run_udp_server: Unable to get IP for interface %s: %s",
+                opts->config[CONF_UDPSERV_INTERFACE], strerror(errno));
+            close(s_sock);
+            return -1;
+        }
+        saddr.sin_addr.s_addr = ((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr.s_addr;
+    }
+    else
+    {
+        saddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
+    }
     saddr.sin_port        = htons(opts->udpserv_port); /* Local port */
 
     /* Bind to the local address */
@@ -244,5 +271,6 @@ run_udp_server(fko_srv_options_t *opts)
     close(s_sock);
     return rv;
 }
+#endif /* USE_UDP_SERVER */
 
 /***EOF***/

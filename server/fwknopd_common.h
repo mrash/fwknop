@@ -40,10 +40,6 @@
   #include <sys/stat.h>
 #endif
 
-#if USE_LIBPCAP
-  #include <pcap.h>
-#endif
-
 /* My Name and Version
 */
 #define MY_NAME     "fwknopd"
@@ -108,11 +104,15 @@
 #define DEF_ENABLE_SPA_OVER_HTTP        "N"
 #define DEF_ENABLE_TCP_SERVER           "N"
 #define DEF_TCPSERV_PORT                "62201"
-#if USE_LIBPCAP
+#if USE_UDP_SERVER
+/*
   #define DEF_ENABLE_UDP_SERVER           "N"
 #else
   #define DEF_ENABLE_UDP_SERVER           "Y"
-#endif
+*/
+  #define DEF_UDPSERV_PORT                "62201"
+  #define DEF_UDPSERV_SELECT_TIMEOUT      "500000" /* half a second (in microseconds) */
+#endif /* USE_UDP_SERVER */
 #if USE_LIBNETFILTER_QUEUE
   #define DEF_ENABLE_NFQ_CAPTURE          "N"
   #define DEF_NFQ_INTERFACE               ""
@@ -121,10 +121,8 @@
   #define DEF_NFQ_CHAIN                   "FWKNOP_NFQ"
   #define DEF_NFQ_QUEUE_NUMBER            "1"
   #define DEF_CONF_NFQ_LOOP_SLEEP         "500000" /* half a second (in microseconds) */
+#endif /* USE_LIBNETFILTER_QUEUE */
 
-#endif
-#define DEF_UDPSERV_PORT                "62201"
-#define DEF_UDPSERV_SELECT_TIMEOUT      "500000" /* half a second (in microseconds) */
 #define DEF_SYSLOG_IDENTITY             MY_NAME
 #define DEF_SYSLOG_FACILITY             "LOG_DAEMON"
 #define DEF_ENABLE_DESTINATION_RULE     "N"
@@ -256,9 +254,12 @@ enum {
     CONF_ENABLE_SPA_OVER_HTTP,
     CONF_ENABLE_TCP_SERVER,
     CONF_TCPSERV_PORT,
+#if USE_UDP_SERVER
     CONF_ENABLE_UDP_SERVER,
+    CONF_UDPSERV_INTERFACE,
     CONF_UDPSERV_PORT,
     CONF_UDPSERV_SELECT_TIMEOUT,
+#endif
 #if USE_LIBNETFILTER_QUEUE
     CONF_ENABLE_NFQ_CAPTURE,
     CONF_NFQ_INTERFACE,
@@ -647,8 +648,6 @@ typedef struct fko_srv_options
     unsigned char   test;               /* Test mode flag */
     unsigned char   afl_fuzzing;        /* SPA pkts from stdin for AFL fuzzing */
     unsigned char   verbose;            /* Verbose mode flag */
-    unsigned char   enable_udp_server;  /* Enable UDP server mode */
-    unsigned char   enable_nfq_capture; /* Enable Netfilter Queue capture mode */
     unsigned char   enable_fw;          /* Command modes by themselves don't
                                            need firewall support. */
 

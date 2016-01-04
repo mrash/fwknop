@@ -28,12 +28,15 @@
  *****************************************************************************
 */
 
-#if USE_LIBPCAP
-  #include <pcap.h>
-  #include <errno.h>
-#endif
+
 
 #include "fwknopd_common.h"
+
+#if USE_LIBPCAP
+
+#include <pcap.h>
+#include <errno.h>
+
 #include "pcap_capture.h"
 #include "process_packet.h"
 #include "fw_util.h"
@@ -47,7 +50,6 @@
   #include <sys/wait.h>
 #endif
 
-#if USE_LIBPCAP
 
 /* The pcap capture routine.
 */

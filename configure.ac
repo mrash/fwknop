@@ -242,26 +242,6 @@ if test "x$want_afl_fuzzing_support" = "xyes"; then
     AC_DEFINE([FUZZING_INTERFACES], [1], [Define for fuzzing interfaces support])
 fi
 
-dnl Decide whether or not to enable UDP server mode (no libpcap dependency)
-dnl
-want_udp_server=no
-AC_ARG_ENABLE([udp-server],
-  [AS_HELP_STRING([--enable-udp-server],
-    [Enable UDP server mode for no libpcap dependency @<:@default is to disable@:>@])],
-  [want_udp_server=$enableval],
-  [])
-AM_CONDITIONAL([UDP_SERVER], [test "$want_udp_server" = yes])
-
-dnl Decide whether or not to enable UDP server mode (no libpcap dependency)
-dnl
-want_nfq_capture=no
-AC_ARG_ENABLE([nfq-capture],
-  [AS_HELP_STRING([--enable-nfq-capture],
-    [Enable NF_QUEUE server mode for no libpcap dependency @<:@default is to disable@:>@])],
-  [want_nfq_capture=$enableval],
-  [])
-AM_CONDITIONAL([NFQ_CAPTURE], [test "$want_nfq_capture" = yes])
-
 dnl Decide whether or not to enable all warnings with -Wall
 dnl
 use_wall=yes
@@ -514,49 +494,64 @@ case "$host" in
 esac
 fi
 
-dnl Check for wget (used by the fwknop client for SSL external IP resolution)
+dnl Check for capture modes, gdbm (or ndbm) if we are building the server component
 dnl
-AC_ARG_WITH([wget],
-  [AS_HELP_STRING([--with-wget=/path/to/wget],
-    [Specify path to the wget executable @<:@default=check path@:>@])],
-  [
-      AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
-        [AC_MSG_ERROR([--with-wget requires an argument specifying a path to wget])],
-        [ WGET_EXE=$withval ]
-      )
-  ],
-  [
-      AC_PATH_PROG(WGET_EXE, [wget], [], [$APP_PATH])
-  ]
-)
-AS_IF([test "x$WGET_EXE" != x],
-  [
-    AC_DEFINE_UNQUOTED([WGET_EXE], ["$WGET_EXE"], [Path to wget executable])
-    wget_exe=$WGET_EXE
-  ], [ wget_exe="(not found)"]
-)
-
-dnl Check for libpcap, gdbm (or ndbm) if we are building the server component
-dnl
+server_capture_mode=pcap
+have_valid_capture_mode=0
 AS_IF([test "$want_server" = yes], [
+  # Get capture mode preference
+  #
+  AC_ARG_WITH([capture-mode],
+    [AS_HELP_STRING([--with-capture-mode=@<:@capture-mode@:>@],
+      [Specify the SPA data capture mode used by fwknopd (i.e. pcap, udp-server, netfilter-queue) @<:@default=pcap@:>@])],
+    [
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+          [AC_MSG_ERROR([--with-capture-mode requires an argument (pcap, udp-server, netfilter-queue)])],
+          [ server_capture_mode=$withval ]
+        )
+    ], []
+  )
 
-  AS_IF([test "$want_udp_server" = no -a "$want_nfq_capture" = no], [
+  AS_IF([test "$server_capture_mode" = "pcap"], [
     # Looking for libpcap
     #
     AC_CHECK_LIB([pcap],[pcap_open_live],
-      [ AC_DEFINE([USE_LIBPCAP], [1], [Define if you have libpcap]) ],
-      [ AC_MSG_ERROR([fwknopd needs libpcap])]
+      [
+        AC_DEFINE([USE_LIBPCAP], [1], [Define if you have libpcap])
+        have_valid_capture_mode=1
+      ],
+      [ AC_MSG_ERROR([pcap capture mode needs libpcap])]
     )
   ])
-
-  AS_IF([test "$want_nfq_capture" = yes], [
+  AS_IF([test "$server_capture_mode" = "netfilter-queue" -o "$server_capture_mode" = "nfq"], [
     # Check for libnetfilter_queue
     #
     AC_CHECK_LIB([netfilter_queue],[nfq_open],
-      [ AC_DEFINE([USE_LIBNETFILTER_QUEUE], [1], [Define if you have libnetfilter_queue]) ],
-      [ AC_MSG_ERROR([fwknopd needs libnetfilter_queue])]
+      [
+        AC_DEFINE([USE_LIBNETFILTER_QUEUE], [1], [Define if you have libnetfilter_queue])
+        have_valid_capture_mode=1
+        server_capture_mode="netfilter-queue"
+      ],
+      [ AC_MSG_ERROR([NetFilter Queue capture mode needs libnetfilter_queue])]
     )
   ])
+  AS_IF([test "$server_capture_mode" = "udp-server" -o "$server_capture_mode" = "udp"],
+    [
+      AC_DEFINE([USE_UDP_SERVER], [1], [Define if you plan to use a UDP server for capture mode])
+      have_valid_capture_mode=1
+      server_capture_mode="udp-server"
+    ]
+  )
+
+  dnl Make sure we have a valid capture mode
+  dnl
+  AS_IF(
+    [test "$have_valid_capture_mode" != 1], [AC_MSG_ERROR(Capture mode of '$server_capture_mode' is invalid!)]
+  )
+
+  AM_CONDITIONAL([CAPTURE_WITH_NFQ], [test "$server_capture_mode" = "netfilter-queue"])
+  AM_CONDITIONAL([CAPTURE_WITH_UDP], [test "$server_capture_mode" = "udp-server"])
+  AM_CONDITIONAL([CAPTURE_WITH_PCAP], [test "$server_capture_mode" = "pcap"])
 
   AS_IF([test "$want_digest_cache" = yes], [
     use_ndbm=no
@@ -787,6 +782,28 @@ dnl
   ]
 )
 
+dnl Check for wget (used by the fwknop client for SSL external IP resolution)
+dnl
+AC_ARG_WITH([wget],
+  [AS_HELP_STRING([--with-wget=/path/to/wget],
+    [Specify path to the wget executable @<:@default=check path@:>@])],
+  [
+      AS_IF([ test "x$withval" = x -o "x$withval" = xyes -o "x$withval" = xno ],
+        [AC_MSG_ERROR([--with-wget requires an argument specifying a path to wget])],
+        [ WGET_EXE=$withval ]
+      )
+  ],
+  [
+      AC_PATH_PROG(WGET_EXE, [wget], [], [$APP_PATH])
+  ]
+)
+AS_IF([test "x$WGET_EXE" != x],
+  [
+    AC_DEFINE_UNQUOTED([WGET_EXE], ["$WGET_EXE"], [Path to wget executable])
+    wget_exe=$WGET_EXE
+  ], [ wget_exe="(not found)"]
+)
+
 AC_CONFIG_FILES([Makefile
                  lib/Makefile
                  client/Makefile
@@ -812,18 +829,10 @@ echo "
 "
 if [test "$want_server" = "yes" ]; then
   echo "    Server support:
+        SPA capture mode:           $server_capture_mode
         firewall type:              $FIREWALL_TYPE
         firewall program path:      $FIREWALL_EXE
 "
-if [test "$want_udp_server" = "yes" ]; then
-  echo "    UDP server mode enabled, no libpcap dependency
-"
-    fi
-if [test "$want_nfq_capture" = "yes" ]; then
-  echo "    Netfilter Queue server mode enabled, no libpcap dependency
-"
-    fi
-
     if [test "$want_digest_cache" = "no" ]; then
         echo "    *WARNING*
         The digest-cache functionality is not enabled.  This

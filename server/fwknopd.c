@@ -235,32 +235,17 @@ main(int argc, char **argv)
         if(!opts.test && opts.enable_fw && (fw_initialize(&opts) != 1))
             clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
 
-#if USE_LIBNETFILTER_QUEUE
-        /* If we are to acquire SPA data via a libnetfilter_queue, start it up here.
-        */
-        if(opts.enable_nfq_capture ||
-                strncasecmp(opts.config[CONF_ENABLE_NFQ_CAPTURE], "Y", 1) == 0)
-        {
-            nfq_capture(&opts);
-        }
-        else
-#endif
+#if USE_UDP_SERVER
         /* If we are to acquire SPA data via a UDP socket, start it up here.
         */
-        if(opts.enable_udp_server ||
-                strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "Y", 1) == 0)
+        if(run_udp_server(&opts) < 0)
         {
-            if(run_udp_server(&opts) < 0)
-            {
-                log_msg(LOG_ERR, "Fatal run_udp_server() error");
-                clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
-            }
-            else
-            {
-                break;
-            }
+            log_msg(LOG_ERR, "Fatal run_udp_server() error");
+            clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
         }
-
+        else
+            break;
+#else /* NOT USE_UDP_SERVER */
         /* If the TCP server option was set, fire it up here. Note that in
          * this mode, fwknopd still acquires SPA packets via libpcap. If you
          * want to use UDP only without the libpcap dependency, then fwknop
@@ -277,20 +262,18 @@ main(int argc, char **argv)
                 clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
             }
         }
+#endif /* USE_UDP_SERVER */
+
+#if USE_LIBNETFILTER_QUEUE
+        /* If we are to acquire SPA data via a libnetfilter_queue, start it up here.
+        */
+        nfq_capture(&opts);
+#endif
 
 #if USE_LIBPCAP
         /* Intiate pcap capture mode...
         */
-        if(!opts.enable_udp_server
-            && strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "N", 1) == 0)
-        {
-            pcap_capture(&opts);
-        }
-        else
-        {
-            log_msg(LOG_ERR, "No available capture mode specified.  Aborting.");
-            clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
-        }
+        pcap_capture(&opts);
 #endif
 
         /* Deal with any signals that we've received and break out

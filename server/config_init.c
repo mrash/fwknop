@@ -142,12 +142,14 @@ validate_int_var_ranges(fko_srv_options_t *opts)
     int     is_err = FKO_SUCCESS;
 #endif
 
+#if USE_LIBPCAP
     opts->pcap_loop_sleep = range_check(opts,
             "PCAP_LOOP_SLEEP", opts->config[CONF_PCAP_LOOP_SLEEP],
             1, RCHK_MAX_PCAP_LOOP_SLEEP);
     opts->pcap_dispatch_count = range_check(opts,
             "PCAP_DISPATCH_COUNT", opts->config[CONF_PCAP_DISPATCH_COUNT],
             1, RCHK_MAX_PCAP_DISPATCH_COUNT);
+#endif /* USE_LIBPCAP */
     opts->max_spa_packet_age = range_check(opts,
             "MAX_SPA_PACKET_AGE", opts->config[CONF_MAX_SPA_PACKET_AGE],
             1, RCHK_MAX_SPA_PACKET_AGE);
@@ -160,12 +162,14 @@ validate_int_var_ranges(fko_srv_options_t *opts)
     opts->tcpserv_port = range_check(opts,
             "TCPSERV_PORT", opts->config[CONF_TCPSERV_PORT],
             1, RCHK_MAX_TCPSERV_PORT);
+#if USE_UDP_SERVER
     opts->udpserv_port = range_check(opts,
             "UDPSERV_PORT", opts->config[CONF_UDPSERV_PORT],
             1, RCHK_MAX_UDPSERV_PORT);
     opts->udpserv_select_timeout = range_check(opts,
             "UDPSERV_SELECT_TIMEOUT", opts->config[CONF_UDPSERV_SELECT_TIMEOUT],
             1, RCHK_MAX_UDPSERV_SELECT_TIMEOUT);
+#endif /* USE_UDP_SERVER */
 
 #if FIREWALL_IPFW
     range_check(opts, "IPFW_START_RULE_NUM", opts->config[CONF_IPFW_START_RULE_NUM],
@@ -916,7 +920,6 @@ validate_options(fko_srv_options_t *opts)
 
 #if USE_LIBNETFILTER_QUEUE
     /* Enable NFQ Capture
-    */
     if(opts->config[CONF_ENABLE_NFQ_CAPTURE] == NULL)
         set_config_entry(opts, CONF_ENABLE_NFQ_CAPTURE, DEF_ENABLE_NFQ_CAPTURE);
 
@@ -925,6 +928,7 @@ validate_options(fko_srv_options_t *opts)
     {
         opts->enable_nfq_capture = 1;
     }
+    */
 
     /* NFQ Interface
     */
@@ -956,10 +960,10 @@ validate_options(fko_srv_options_t *opts)
     */
     if(opts->config[CONF_NFQ_LOOP_SLEEP] == NULL)
         set_config_entry(opts, CONF_NFQ_LOOP_SLEEP, DEF_CONF_NFQ_LOOP_SLEEP);
-#endif
+#endif /* USE_LIBNETFILTER_QUEUE */
 
+#if USE_UDP_SERVER
     /* Enable UDP server.
-    */
     if(opts->config[CONF_ENABLE_UDP_SERVER] == NULL)
     {
         if((strncasecmp(DEF_ENABLE_UDP_SERVER, "Y", 1) == 0) &&
@@ -970,6 +974,7 @@ validate_options(fko_srv_options_t *opts)
         }
         set_config_entry(opts, CONF_ENABLE_UDP_SERVER, DEF_ENABLE_UDP_SERVER);
     }
+    */
 
     /* UDP Server port.
     */
@@ -981,7 +986,7 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_UDPSERV_SELECT_TIMEOUT] == NULL)
         set_config_entry(opts, CONF_UDPSERV_SELECT_TIMEOUT,
             DEF_UDPSERV_SELECT_TIMEOUT);
-
+#endif /* USE_UDP_SERVER */
     /* Syslog identity.
     */
     if(opts->config[CONF_SYSLOG_IDENTITY] == NULL)
@@ -1376,11 +1381,13 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'l':
                 set_config_entry(opts, CONF_LOCALE, optarg);
                 break;
+/*
 #if USE_LIBNETFILTER_QUEUE
             case 'n':
                 opts->enable_nfq_capture = 1;
                 break;
 #endif
+*/
             case 'O':
                 /* This was handled earlier */
                 break;
@@ -1429,9 +1436,11 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 't':
                 opts->test = 1;
                 break;
+/*
             case 'U':
                 opts->enable_udp_server = 1;
                 break;
+*/
             /* Verbosity level */
             case 'v':
                 opts->verbose++;
@@ -1497,10 +1506,12 @@ usage(void)
       " -K, --kill              - Kill the currently running fwknopd.\n"
       " -l, --locale            - Provide a locale setting other than the system\n"
       "                           default.\n"
+/*
 #if USE_LIBNETFILTER_QUEUE
       " -n, --nfq-capture       - Capture packets using libnetfilter_queue (falls\n"
       "                           back to UDP server mode if not used).\n"
 #endif
+*/
       " -O, --override-config   - Specify a file with configuration entries that will\n"
       "                           overide those in fwknopd.conf\n"
       " -p, --pid-file          - Specify an alternate fwknopd.pid file.\n"
@@ -1516,7 +1527,9 @@ usage(void)
       " -S, --status            - Display the status of any running fwknopd process.\n"
       " -t, --test              - Test mode, process SPA packets but do not make any\n"
       "                           firewall modifications.\n"
+/*
       " -U, --udp-server        - Set UDP server mode.\n"
+*/
       " -v, --verbose           - Set verbose mode.\n"
       "     --syslog-enable     - Allow messages to be sent to syslog even if the\n"
       "                           foreground mode is set.\n"
