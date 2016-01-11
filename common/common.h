@@ -107,7 +107,9 @@
   #define S_IWUSR		_S_IWRITE
   #define PATH_SEP      '\\'
   // --DSS needed for VS versions before 2010
-  typedef __int8 int8_t;
+  #ifndef __MINGW32__
+    typedef __int8 int8_t;
+  #endif
   typedef unsigned __int8 uint8_t;
   typedef __int16 int16_t;
   typedef unsigned __int16 uint16_t;
