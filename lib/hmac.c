@@ -61,7 +61,7 @@ pad_init(unsigned char *inner_pad, unsigned char *outer_pad,
     return;
 }
 
-void
+int
 hmac_md5(const char *msg, const unsigned int msg_len,
     unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
 {
@@ -70,7 +70,10 @@ hmac_md5(const char *msg, const unsigned int msg_len,
     unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[MD5_BLOCK_LEN + MD5_DIGEST_LEN + 1] = {0};
-    unsigned char *padded_msg = malloc(msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+
+    if (padded_msg == NULL)
+        return FKO_ERROR_MEMORY_ALLOCATION;
 
     int final_len = hmac_key_len;
 
@@ -86,6 +89,7 @@ hmac_md5(const char *msg, const unsigned int msg_len,
         memcpy(final_key, hmac_key, hmac_key_len);
     }
     pad_init(block_inner_pad, block_outer_pad, final_key, final_len);
+
     //The first step is to hash the inner_pad + message
     memcpy(padded_msg, block_inner_pad, MD5_BLOCK_LEN);
     memcpy(padded_msg + MD5_BLOCK_LEN, msg, msg_len);
@@ -101,10 +105,10 @@ hmac_md5(const char *msg, const unsigned int msg_len,
     md5(hmac, padded_hash, MD5_BLOCK_LEN + MD5_DIGEST_LEN);
 
     free(padded_msg);
-    return;
+    return FKO_SUCCESS;
 }
 
-void
+int
 hmac_sha1(const char *msg, const unsigned int msg_len,
     unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
 {
@@ -113,7 +117,10 @@ hmac_sha1(const char *msg, const unsigned int msg_len,
     unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[SHA1_BLOCK_LEN + SHA1_DIGEST_LEN + 1] = {0};
-    unsigned char *padded_msg = malloc(msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+
+    if (padded_msg == NULL)
+        return FKO_ERROR_MEMORY_ALLOCATION;
 
     int final_len = hmac_key_len;
 
@@ -129,6 +136,7 @@ hmac_sha1(const char *msg, const unsigned int msg_len,
         memcpy(final_key, hmac_key, hmac_key_len);
     }
     pad_init(block_inner_pad, block_outer_pad, final_key, final_len);
+
     //The first step is to hash the inner_pad + message
     memcpy(padded_msg, block_inner_pad, SHA1_BLOCK_LEN);
     memcpy(padded_msg + SHA1_BLOCK_LEN, msg, msg_len);
@@ -144,10 +152,10 @@ hmac_sha1(const char *msg, const unsigned int msg_len,
     sha1(hmac, padded_hash, SHA1_BLOCK_LEN + SHA1_DIGEST_LEN);
 
     free(padded_msg);
-    return;
+    return FKO_SUCCESS;
 }
 
-void
+int
 hmac_sha256(const char *msg, const unsigned int msg_len,
     unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
 {
@@ -156,7 +164,10 @@ hmac_sha256(const char *msg, const unsigned int msg_len,
     unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[SHA256_BLOCK_LEN + SHA256_DIGEST_LEN + 1] = {0};
-    unsigned char *padded_msg = malloc(msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+
+    if (padded_msg == NULL)
+        return FKO_ERROR_MEMORY_ALLOCATION;
 
     int final_len = hmac_key_len;
 
@@ -172,6 +183,7 @@ hmac_sha256(const char *msg, const unsigned int msg_len,
         memcpy(final_key, hmac_key, hmac_key_len);
     }
     pad_init(block_inner_pad, block_outer_pad, final_key, final_len);
+
     //The first step is to hash the inner_pad + message
     memcpy(padded_msg, block_inner_pad, SHA256_BLOCK_LEN);
     memcpy(padded_msg + SHA256_BLOCK_LEN, msg, msg_len);
@@ -187,10 +199,10 @@ hmac_sha256(const char *msg, const unsigned int msg_len,
     sha256(hmac, padded_hash, SHA256_BLOCK_LEN + SHA256_DIGEST_LEN);
 
     free(padded_msg);
-    return;
+    return FKO_SUCCESS;
 }
 
-void
+int
 hmac_sha384(const char *msg, const unsigned int msg_len,
     unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
 {
@@ -199,7 +211,10 @@ hmac_sha384(const char *msg, const unsigned int msg_len,
     unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[SHA384_BLOCK_LEN + SHA384_DIGEST_LEN + 1] = {0};
-    unsigned char *padded_msg = malloc(msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+
+    if (padded_msg == NULL)
+        return FKO_ERROR_MEMORY_ALLOCATION;
 
     int final_len = hmac_key_len;
 
@@ -215,6 +230,7 @@ hmac_sha384(const char *msg, const unsigned int msg_len,
         memcpy(final_key, hmac_key, hmac_key_len);
     }
     pad_init(block_inner_pad, block_outer_pad, final_key, final_len);
+
     //The first step is to hash the inner_pad + message
     memcpy(padded_msg, block_inner_pad, SHA384_BLOCK_LEN);
     memcpy(padded_msg + SHA384_BLOCK_LEN, msg, msg_len);
@@ -230,10 +246,10 @@ hmac_sha384(const char *msg, const unsigned int msg_len,
     sha384(hmac, padded_hash, SHA384_BLOCK_LEN + SHA384_DIGEST_LEN);
 
     free(padded_msg);
-    return;
+    return FKO_SUCCESS;
 }
 
-void
+int
 hmac_sha512(const char *msg, const unsigned int msg_len,
     unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
 {
@@ -242,7 +258,10 @@ hmac_sha512(const char *msg, const unsigned int msg_len,
     unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[SHA512_BLOCK_LEN + SHA512_DIGEST_LEN + 1] = {0};
-    unsigned char *padded_msg = malloc(msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+
+    if (padded_msg == NULL)
+        return FKO_ERROR_MEMORY_ALLOCATION;
 
     int final_len = hmac_key_len;
 
@@ -258,6 +277,7 @@ hmac_sha512(const char *msg, const unsigned int msg_len,
         memcpy(final_key, hmac_key, hmac_key_len);
     }
     pad_init(block_inner_pad, block_outer_pad, final_key, final_len);
+
     //The first step is to hash the inner_pad + message
     memcpy(padded_msg, block_inner_pad, SHA512_BLOCK_LEN);
     memcpy(padded_msg + SHA512_BLOCK_LEN, msg, msg_len);
@@ -273,10 +293,10 @@ hmac_sha512(const char *msg, const unsigned int msg_len,
     sha512(hmac, padded_hash, SHA512_BLOCK_LEN + SHA512_DIGEST_LEN);
 
     free(padded_msg);
-    return;
+    return FKO_SUCCESS;
 }
 
-void
+int
 hmac_sha3_256(const char *msg, const unsigned int msg_len,
     unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
 {
@@ -284,8 +304,12 @@ hmac_sha3_256(const char *msg, const unsigned int msg_len,
     unsigned char block_inner_pad[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
-    unsigned char padded_hash[2 * MAX_DIGEST_BLOCK_LEN + 1] = {0};
-    unsigned char *padded_msg = malloc(msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    unsigned char padded_hash[SHA3_256_BLOCK_LEN + SHA3_256_DIGEST_LEN + 1] = {0};
+    unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+
+    if (padded_msg == NULL)
+        return FKO_ERROR_MEMORY_ALLOCATION;
+
     int final_len = hmac_key_len;
 
     if(SHA3_256_BLOCK_LEN < hmac_key_len)
@@ -300,6 +324,7 @@ hmac_sha3_256(const char *msg, const unsigned int msg_len,
         memcpy(final_key, hmac_key, hmac_key_len);
     }
     pad_init(block_inner_pad, block_outer_pad, final_key, final_len);
+
     //The first step is to hash the inner_pad + message
     memcpy(padded_msg, block_inner_pad, SHA3_256_BLOCK_LEN);
     memcpy(padded_msg + SHA3_256_BLOCK_LEN, msg, msg_len);
@@ -315,9 +340,10 @@ hmac_sha3_256(const char *msg, const unsigned int msg_len,
     FIPS202_SHA3_256(padded_hash, SHA3_256_BLOCK_LEN + SHA3_256_DIGEST_LEN, hmac);
 
     free(padded_msg);
+    return FKO_SUCCESS;
 }
 
-void
+int
 hmac_sha3_512(const char *msg, const unsigned int msg_len,
     unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
 {
@@ -326,7 +352,10 @@ hmac_sha3_512(const char *msg, const unsigned int msg_len,
     unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[SHA3_512_BLOCK_LEN + SHA3_512_DIGEST_LEN + 1] = {0};
-    unsigned char *padded_msg = malloc(msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+
+    if (padded_msg == NULL)
+        return FKO_ERROR_MEMORY_ALLOCATION;
 
     int final_len = hmac_key_len;
 
@@ -358,6 +387,7 @@ hmac_sha3_512(const char *msg, const unsigned int msg_len,
     FIPS202_SHA3_512(padded_hash, SHA3_512_BLOCK_LEN + SHA3_512_DIGEST_LEN, hmac);
 
     free(padded_msg);
+    return FKO_SUCCESS;
 }
 
 #ifdef HAVE_C_UNIT_TESTS
