@@ -1,3 +1,5 @@
+fwknop-2.6.9 (01//2016):
+
 fwknop-2.6.8 (12/23/2015):
     - [server] Added a major new feature that allows fwknopd to easily
       integrate with third-party devices and software. This done through the
