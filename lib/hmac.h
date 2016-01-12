@@ -44,8 +44,9 @@
  * \param hmac_key Pointer to the key to be used for generating the hmac
  * \param hmac_key_len Size of the hmac key
  *
+ * \return FKO_SUCCESS if successful, returns an error code otherwise.
  */
-void hmac_md5(const char *msg, const unsigned int msg_len,
+int hmac_md5(const char *msg, const unsigned int msg_len,
         unsigned char *hmac, const char *hmac_key, const int hmac_key_len);
 /**
  * \brief Generate SHA1 based HMAC
@@ -58,8 +59,9 @@ void hmac_md5(const char *msg, const unsigned int msg_len,
  * \param hmac_key Pointer to the key to be used for generating the hmac
  * \param hmac_key_len Size of the hmac key
  *
+ * \return FKO_SUCCESS if successful, returns an error code otherwise.
  */
-void hmac_sha1(const char *msg, const unsigned int msg_len,
+int hmac_sha1(const char *msg, const unsigned int msg_len,
         unsigned char *hmac, const char *hmac_key, const int hmac_key_len);
 /**
  * \brief Generate SHA256 based HMAC
@@ -72,8 +74,9 @@ void hmac_sha1(const char *msg, const unsigned int msg_len,
  * \param hmac_key Pointer to the key to be used for generating the hmac
  * \param hmac_key_len Size of the hmac key
  *
+ * \return FKO_SUCCESS if successful, returns an error code otherwise.
  */
-void hmac_sha256(const char *msg, const unsigned int msg_len,
+int hmac_sha256(const char *msg, const unsigned int msg_len,
         unsigned char *hmac, const char *hmac_key, const int hmac_key_len);
 /**
  * \brief Generate SHA384 based HMAC
@@ -86,8 +89,9 @@ void hmac_sha256(const char *msg, const unsigned int msg_len,
  * \param hmac_key Pointer to the key to be used for generating the hmac
  * \param hmac_key_len Size of the hmac key
  *
+ * \return FKO_SUCCESS if successful, returns an error code otherwise.
  */
-void hmac_sha384(const char *msg, const unsigned int msg_len,
+int hmac_sha384(const char *msg, const unsigned int msg_len,
         unsigned char *hmac, const char *hmac_key, const int hmac_key_len);
 /**
  * \brief Generate SHA512 based HMAC
@@ -100,8 +104,9 @@ void hmac_sha384(const char *msg, const unsigned int msg_len,
  * \param hmac_key Pointer to the key to be used for generating the hmac
  * \param hmac_key_len Size of the hmac key
  *
+ * \return FKO_SUCCESS if successful, returns an error code otherwise.
  */
-void hmac_sha512(const char *msg, const unsigned int msg_len,
+int hmac_sha512(const char *msg, const unsigned int msg_len,
         unsigned char *hmac, const char *hmac_key, const int hmac_key_len);
 /**
  * \brief Generate SHA3-256 based HMAC
@@ -114,8 +119,9 @@ void hmac_sha512(const char *msg, const unsigned int msg_len,
  * \param hmac_key Pointer to the key to be used for generating the hmac
  * \param hmac_key_len Size of the hmac key
  *
+ * \return FKO_SUCCESS if successful, returns an error code otherwise.
  */
-void hmac_sha3_256(const char *msg, const unsigned int msg_len,
+int hmac_sha3_256(const char *msg, const unsigned int msg_len,
         unsigned char *hmac, const char *hmac_key, const int hmac_key_len);
 /**
  * \brief Generate SHA3-512 based HMAC
@@ -128,8 +134,9 @@ void hmac_sha3_256(const char *msg, const unsigned int msg_len,
  * \param hmac_key Pointer to the key to be used for generating the hmac
  * \param hmac_key_len Size of the hmac key
  *
+ * \return FKO_SUCCESS if successful, returns an error code otherwise.
  */
-void hmac_sha3_512(const char *msg, const unsigned int msg_len,
+int hmac_sha3_512(const char *msg, const unsigned int msg_len,
         unsigned char *hmac, const char *hmac_key, const int hmac_key_len);
 
 #endif /* HMAC_H */
