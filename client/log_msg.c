@@ -65,8 +65,8 @@ log_free(void)
 
 /**
  * Set the verbosity level for the current context of the log module.
- * 
- * @param level verbosity level to set
+ *
+ * \param level verbosity level to set
  */
 void
 log_set_verbosity(int level)
@@ -80,9 +80,9 @@ log_set_verbosity(int level)
  * This function sends a message to the stream dedicated to the priority
  * set. If the verbosity for the context is higher than the one used for
  * the message, then the message is discarded.
- * 
- * @param level Verbosity level to used for the message.
- * @param msg   Message to print
+ *
+ * \param level Verbosity level to used for the message.
+ * \param msg   Message to print
  */
 void
 log_msg(int level, char* msg, ...)
@@ -92,7 +92,7 @@ log_msg(int level, char* msg, ...)
     if (level <= log_ctx.verbosity)
     {
         va_start(ap, msg);
-        
+
         switch (level)
         {
             case LOG_VERBOSITY_ERROR:
@@ -103,7 +103,7 @@ log_msg(int level, char* msg, ...)
             case LOG_VERBOSITY_NORMAL:
             case LOG_VERBOSITY_INFO:
             case LOG_VERBOSITY_DEBUG:
-            default : 
+            default :
                 vfprintf(LOG_STREAM_STDOUT, msg, ap);
                 fprintf(LOG_STREAM_STDOUT, "\n");
                 break;

@@ -88,7 +88,7 @@ struct fko_context {
     char           *digest;
     int             digest_len;
     /*@}*/
-    /** \name Digest of raw encrypted/base64 data 
+    /** \name Digest of raw encrypted/base64 data
      * This is used for replay attack detection
     */
     /*@{*/
