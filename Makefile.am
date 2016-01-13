@@ -71,6 +71,7 @@ EXTRA_DIST = \
     extras/console-qr/console-qr.sh \
     extras/sanitizer/asan-build.sh \
     extras/sanitizer/ubsan-build.sh \
+    extras/clang/scan-build.sh \
     fwknop.spec \
     iphone/main.m \
     iphone/Fwknop.xcodeproj \
