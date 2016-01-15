@@ -30,7 +30,9 @@
 #include "fko_common.h"
 #include "fko.h"
 
-#ifdef WIN32
+#ifdef __MINGW32__
+  #include "../win32/getlogin.h"
+#elif WIN32
   #include <getlogin.h>
 #endif
 

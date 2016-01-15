@@ -10,6 +10,11 @@ libfko_source_files = \
     sha1.h sha2.c sha2.h sha3.c sha3.h fko_context.h fko_state.h \
     gpgme_funcs.c gpgme_funcs.h
 
+if MINGW
+libfko_source_files += ./common/common.h ../common/fko_util.c ../common/fko_util.h \
+    ../common/strlcat.c ../common/strlcpy.c ../win32/getlogin.c ../common/netinet_common.h \
+    ../win32/getlogin.h
+endif
 
 if WANT_C_UNIT_TESTS
 libfko_la_LIBADD    = $(top_builddir)/common/cunit_common.o

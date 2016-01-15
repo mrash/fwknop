@@ -409,6 +409,10 @@ case "$host" in
 *-*-openbsd*)
     AC_DEFINE_UNQUOTED([PLATFORM_OPENBSD], [1], [Define if you are running on OpenBSD])
     ;;
+*-mingw32*)
+    AC_DEFINE_UNQUOTED(MINGW,1,[This is a MinGW system])
+    AM_CONDITIONAL(MINGW, true)
+    ;;
 esac
 
 dnl Decide whether or not to build the client
