@@ -403,6 +403,8 @@ fi
 AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([inet_addr], [nsl])
 
+AM_CONDITIONAL(MINGW, false)
+
 case "$host" in
 *-*-linux*)
     ;;
