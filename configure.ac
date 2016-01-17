@@ -405,6 +405,8 @@ AC_SEARCH_LIBS([inet_addr], [nsl])
 
 AM_CONDITIONAL(MINGW, false)
 
+use_mingw=no
+
 case "$host" in
 *-*-linux*)
     ;;
@@ -413,9 +415,11 @@ case "$host" in
     ;;
 *-mingw32*)
     AC_DEFINE_UNQUOTED(MINGW,1,[This is a MinGW system])
-    AM_CONDITIONAL(MINGW, true)
+    use_mingw=yes
     ;;
 esac
+
+AM_CONDITIONAL(USE_MINGW, [test x$use_mingw = xyes])
 
 dnl Decide whether or not to build the client
 dnl
