@@ -10,9 +10,13 @@ endif
 
 libfko_util_a_SOURCES    	= $(libfko_util_source_files)
 
+if USE_MINGW
+EXTRA_libfko_util_a_SOURCES = getlogin.c getlogin.h
+endif
+
 AM_CPPFLAGS         		= $(GPGME_CFLAGS) -I $(top_srcdir)/common -I $(top_srcdir)/lib
 
-EXTRA_DIST = common.h netinet_common.h cunit_common.h cunit_common.c
+EXTRA_DIST = common.h netinet_common.h cunit_common.h cunit_common.c getlogin.c getlogin.h
 
 clean-local:
 	rm -f *.gcno *.gcda
