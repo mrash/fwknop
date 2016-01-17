@@ -7,6 +7,7 @@
 
 import re
 import argparse
+import os
 
 def main():
 
@@ -24,6 +25,14 @@ def main():
 
     if args.new_lcov_dir:
         new_lcov_file = args.new_lcov_dir + "/" + final_lcov_file
+
+    if not os.path.exists(old_lcov_file):
+        print "[*] old coverage file does not exist: %s" % old_lcov_file
+        return 1
+
+    if not os.path.exists(new_lcov_file):
+        print "[*] new coverage file does not exist: %s" % new_lcov_file
+        return 1
 
     old_zero_coverage = extract_zero_coverage(old_lcov_file)
     new_zero_coverage = extract_zero_coverage(new_lcov_file)
