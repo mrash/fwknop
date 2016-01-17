@@ -383,7 +383,6 @@ fi
 AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([inet_addr], [nsl])
 
-
 use_mingw=no
 
 case "$host" in
