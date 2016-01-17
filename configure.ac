@@ -383,11 +383,17 @@ fi
 AC_SEARCH_LIBS([socket], [socket])
 AC_SEARCH_LIBS([inet_addr], [nsl])
 
+AM_CONDITIONAL(MINGW, false)
+
 case "$host" in
 *-*-linux*)
     ;;
 *-*-openbsd*)
     AC_DEFINE_UNQUOTED([PLATFORM_OPENBSD], [1], [Define if you are running on OpenBSD])
+    ;;
+*-mingw32*)
+    AC_DEFINE_UNQUOTED(MINGW,1,[This is a MinGW system])
+    AM_CONDITIONAL(MINGW, true)
     ;;
 esac
 

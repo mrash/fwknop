@@ -839,7 +839,6 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
     char                nat_access_buf[MAX_LINE_LEN] = {0};
     char                tmp_access_port[MAX_PORT_STR_LEN+1] = {0}, *ndx = NULL;
     int                 access_port = 0, i = 0, is_err = 0;
-    char                dst_ip_str[INET_ADDRSTRLEN] = {0};
     char                hostname[HOSTNAME_BUFSIZE] = {0};
     int                 port = 0;
     struct addrinfo     hints;

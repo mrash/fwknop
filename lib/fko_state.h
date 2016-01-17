@@ -72,7 +72,7 @@ typedef enum {
 #define FKO_SPA_DATA_MODIFIED ( \
     FKO_DATA_MODIFIED | FKO_SPA_MSG_TYPE_MODIFIED \
       | FKO_DIGEST_TYPE_MODIFIED | FKO_ENCRYPT_TYPE_MODIFIED )
- 
+
 /* This should return true if any SPA data field has been modifed since the
  * last encode/encrypt.
 */

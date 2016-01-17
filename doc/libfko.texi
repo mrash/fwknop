@@ -113,7 +113,7 @@ Using libfko
 
 SPA Parameter Types
 
-* Digests::                       The message digest hashes supported by libfko 
+* Digests::                       The message digest hashes supported by libfko
 * SPA Messages::                  The fko @acronym{SPA} message types
                                   supported by libfko (and fwknop)
 * Encryption Algorithms::         Encryption schemes supported by libfko
@@ -130,7 +130,7 @@ SPA Parameter Types
 @cindex Single Packet Authorization, intro
 
 The ``Firewall Knock Operator Library'' (libfko) is a C language library that
-implements the functions needed to create and/or parse 
+implements the functions needed to create and/or parse
 @dfn{Single Packet Authorization} (@acronym{SPA}) data.  It is designed to
 abstract the details of encoding, encryption, decoding, parsing, and verifying
 @acronym{SPA} messages such as those used by Michael Rash's @dfn{Firewall
@@ -155,7 +155,7 @@ programs.
 @sp 1
 @noindent
 For more information on fwknop and @acronym{SPA}, go to
-@uref{http://www.cipherdyne.org/fwknop}. 
+@uref{http://www.cipherdyne.org/fwknop}.
 
 @menu
 * Getting Started::               Purpose of the manual, and how to use it
@@ -521,7 +521,7 @@ fields that have a default value.
 
 This chapter provides the ``howto'' for using libfko, including required
 functions and parameter choices.  In some sections, code samples are provided
-to further illustrate usage.  
+to further illustrate usage.
 
 @menu
 * Creating Contexts::             Creating a new fko context
@@ -963,7 +963,7 @@ use this function.  However, some may find a reason to do it in this way.
 
 @deftypefun int fko_set_gpg_recipient (fko_ctx_t @var{ctx}, const char @var{recipient});
 Sets the @acronym{GPG} key for the recipient.  This would be the recipient's
-public key used to encyrpt the @acronym{SPA} data.  You can use the user name 
+public key used to encyrpt the @acronym{SPA} data.  You can use the user name
 ("recip@@the.dest.com") or the key ID ("5EXXXXCC").  At present, multiple
 recipients are not supported.
 @end deftypefun
@@ -1243,7 +1243,7 @@ called directly as it is called from @code{fko_spa_data_final}.
 @end deftypefun
 
 @deftypefun int fko_decode_spa_data (fko_ctx_t @var{ctx});
-This function performs the decoding, parsing, validation of the @acronym{SPA} 
+This function performs the decoding, parsing, validation of the @acronym{SPA}
 data that was just decrypted. It is normally not called directly as it is
 called from @code{fko_decrypt_spa_data} (which is in turn called from
 @code{fko_new_with_data} if a password is supplied to it).
@@ -1467,9 +1467,9 @@ Invalid data: missing user data
 @item FKO_ERROR_INVALID_DATA_USER_FIRSTCHAR_VALIDFAIL
 Invalid data: user first char not valid
 @item FKO_ERROR_INVALID_DATA_USER_REMCHAR_VALIDFAIL
-Invalid data: user remchar not valid 
+Invalid data: user remchar not valid
 @item FKO_ERROR_INVALID_DATA_UTIL_STRTOL_LT_MIN
-Invalid data: util conversion to long less than minimum 
+Invalid data: util conversion to long less than minimum
 @item FKO_ERROR_INVALID_DATA_UTIL_STRTOL_GT_MAX
 Invalid data: util conversion to long greater than maximum
 @item FKO_ERROR_DATA_TOO_LARGE
@@ -1586,7 +1586,7 @@ Invalid data: encrypt: GPG cipher failed
 @item FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_ENCODEDMSG_NULL
 Invalid data: encrypt: GPG-encoded message is NULL
 @item FKO_ERROR_INVALID_DATA_ENCRYPT_GPG_ENCODEDMSGLEN_VALIDFAIL
-Invalid data: encrypt: invalid GPG-encrypted message length 
+Invalid data: encrypt: invalid GPG-encrypted message length
 @end table
 @end deftypevar
 

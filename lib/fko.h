@@ -1402,6 +1402,7 @@ int register_ts_hmac_test(void);
 int register_ts_digest_test(void);
 int register_ts_aes_test(void);
 int register_utils_test(void);
+int register_base64_test(void);
 #endif
 
 #endif /* FKO_H */

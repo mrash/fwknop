@@ -240,6 +240,7 @@ int fko_set_spa_hmac(fko_ctx_t ctx,
     char *hmac_base64 = NULL;
     int   hmac_digest_str_len = 0;
     int   hmac_digest_len = 0;
+    int   res = FKO_ERROR_UNKNOWN ;
 
     /* Must be initialized
     */
@@ -254,7 +255,7 @@ int fko_set_spa_hmac(fko_ctx_t ctx,
 
     if(ctx->hmac_type == FKO_HMAC_MD5)
     {
-        hmac_md5(ctx->encrypted_msg,
+        res = hmac_md5(ctx->encrypted_msg,
             ctx->encrypted_msg_len, hmac, hmac_key, hmac_key_len);
 
         hmac_digest_len     = MD5_DIGEST_LEN;
@@ -262,7 +263,7 @@ int fko_set_spa_hmac(fko_ctx_t ctx,
     }
     else if(ctx->hmac_type == FKO_HMAC_SHA1)
     {
-        hmac_sha1(ctx->encrypted_msg,
+        res = hmac_sha1(ctx->encrypted_msg,
             ctx->encrypted_msg_len, hmac, hmac_key, hmac_key_len);
 
         hmac_digest_len     = SHA1_DIGEST_LEN;
@@ -270,7 +271,7 @@ int fko_set_spa_hmac(fko_ctx_t ctx,
     }
     else if(ctx->hmac_type == FKO_HMAC_SHA256)
     {
-        hmac_sha256(ctx->encrypted_msg,
+        res = hmac_sha256(ctx->encrypted_msg,
             ctx->encrypted_msg_len, hmac, hmac_key, hmac_key_len);
 
         hmac_digest_len     = SHA256_DIGEST_LEN;
@@ -278,7 +279,7 @@ int fko_set_spa_hmac(fko_ctx_t ctx,
     }
     else if(ctx->hmac_type == FKO_HMAC_SHA384)
     {
-        hmac_sha384(ctx->encrypted_msg,
+        res = hmac_sha384(ctx->encrypted_msg,
             ctx->encrypted_msg_len, hmac, hmac_key, hmac_key_len);
 
         hmac_digest_len     = SHA384_DIGEST_LEN;
@@ -286,7 +287,7 @@ int fko_set_spa_hmac(fko_ctx_t ctx,
     }
     else if(ctx->hmac_type == FKO_HMAC_SHA512)
     {
-        hmac_sha512(ctx->encrypted_msg,
+        res = hmac_sha512(ctx->encrypted_msg,
             ctx->encrypted_msg_len, hmac, hmac_key, hmac_key_len);
 
         hmac_digest_len     = SHA512_DIGEST_LEN;
@@ -294,7 +295,7 @@ int fko_set_spa_hmac(fko_ctx_t ctx,
     }
     else if(ctx->hmac_type == FKO_HMAC_SHA3_256)
     {
-        hmac_sha3_256(ctx->encrypted_msg,
+        res = hmac_sha3_256(ctx->encrypted_msg,
             ctx->encrypted_msg_len, hmac, hmac_key, hmac_key_len);
         hmac_digest_len     = SHA3_256_DIGEST_LEN;
         hmac_digest_str_len = SHA3_256_DIGEST_STR_LEN;
@@ -302,12 +303,15 @@ int fko_set_spa_hmac(fko_ctx_t ctx,
     }
     else if(ctx->hmac_type == FKO_HMAC_SHA3_512)
     {
-        hmac_sha3_512(ctx->encrypted_msg,
+        res = hmac_sha3_512(ctx->encrypted_msg,
             ctx->encrypted_msg_len, hmac, hmac_key, hmac_key_len);
         hmac_digest_len     = SHA3_512_DIGEST_LEN;
         hmac_digest_str_len = SHA3_512_DIGEST_STR_LEN;
 
     }
+
+    if (res != FKO_SUCCESS)
+        return res;
 
     hmac_base64 = calloc(1, MD_HEX_SIZE(hmac_digest_len)+1);
     if (hmac_base64 == NULL)

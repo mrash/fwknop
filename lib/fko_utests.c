@@ -22,6 +22,7 @@ static void register_test_suites(void)
     register_ts_digest_test();
     register_ts_aes_test();
     register_utils_test();
+    register_base64_test();
 }
 
 /* The main() function for setting up and running the tests.

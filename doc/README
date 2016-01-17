@@ -36,5 +36,3 @@ For creating HTML versions of the man pages, simply use the "-f xhtml"
 option to the "a2x" command:
 
     a2x -f xhtml fwknopd.man.asciidoc
-
-

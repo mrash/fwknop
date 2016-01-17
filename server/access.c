@@ -53,6 +53,9 @@
   DECLARE_TEST_SUITE(access, "Access test suite");
 #endif
 
+int
+include_keys_file(acc_stanza_t *, const char *, fko_srv_options_t *);
+
 static int do_acc_stanza_init = 1;
 
 void enable_acc_stanzas_init(void)
@@ -1037,6 +1040,35 @@ free_acc_stanzas(fko_srv_options_t *opts)
     return;
 }
 
+void
+free_last_acc_stanza(fko_srv_options_t *opts)
+{
+    acc_stanza_t *tmp_root = opts->acc_stanzas;
+
+    //deal with edge cases first, like a null list
+    if (tmp_root == NULL)
+        return;
+
+    //check for only one element
+    if (tmp_root->next == NULL)
+    {
+        free_acc_stanza_data(tmp_root);
+        free(tmp_root);
+        opts->acc_stanzas = NULL;
+        return;
+    }
+
+    //more than one element uses the general case
+    while (tmp_root->next->next != NULL)
+    {
+        tmp_root = tmp_root->next;
+    }
+
+    free(tmp_root->next);
+    tmp_root->next = NULL;
+    return;
+}
+
 /* Wrapper for free_acc_stanzas(), we may put additional initialization
  * code here.
 */
@@ -1415,7 +1447,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
 {
     FILE           *file_ptr;
     char           *ndx;
-    int             got_source = 0, is_err;
+    int             is_err;
     unsigned int    num_lines = 0;
 
     char            access_line_buf[MAX_LINE_LEN] = {0};
@@ -1579,13 +1611,24 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
             */
             curr_acc = acc_stanza_add(opts);
             add_acc_string(&(curr_acc->source), val, file_ptr, opts);
-            got_source++;
         }
         else if (curr_acc == NULL)
         {
             /* The stanza must start with the "SOURCE" variable
             */
             continue;
+        }
+        else if(CONF_VAR_IS(var, "%include_keys")) //Only valid options from this file are those defining keys.
+        {
+          // This directive is only valid within a SOURCE stanza
+            log_msg(LOG_DEBUG, "[+] Processing include_folder directive for: '%s'", val);
+            include_keys_file(curr_acc, val, opts);
+            if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
+            {
+                log_msg(LOG_DEBUG, "[*] Data error in included keyfile: '%s', skipping stanza.", val);
+                free_last_acc_stanza(opts);
+                curr_acc = NULL;
+            }
         }
         else if(CONF_VAR_IS(var, "DESTINATION"))
             add_acc_string(&(curr_acc->destination), val, file_ptr, opts);
@@ -1906,7 +1949,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
 
     if(*depth == 0) //means we just closed the root access.conf
     {
-        if(got_source > 0)
+        if(curr_acc != NULL)
         {
             if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
             {
@@ -1938,7 +1981,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
          *
          *
         */
-        if(got_source > 0)
+        if(curr_acc != NULL)
         {
             if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
             {
@@ -2234,6 +2277,175 @@ dump_access_list(const fko_srv_options_t *opts)
     fprintf(stdout, "\n");
     fflush(stdout);
 }
+
+int
+include_keys_file(acc_stanza_t *curr_acc, const char *access_filename, fko_srv_options_t *opts)
+{
+    FILE           *file_ptr;
+    struct stat     st;
+    unsigned int    num_lines = 0;
+
+    char            access_line_buf[MAX_LINE_LEN] = {0};
+    char            var[MAX_LINE_LEN] = {0};
+    char            val[MAX_LINE_LEN] = {0};
+
+    printf("including key file %s\n", access_filename);
+    if(stat(access_filename, &st) != 0)
+    {
+        log_msg(LOG_ERR, "[*] Access file: '%s' was not found.",
+            access_filename);
+
+        return EXIT_FAILURE;
+    }
+
+    if ((file_ptr = fopen(access_filename, "r")) == NULL)
+    {
+        log_msg(LOG_ERR, "[*] Could not open access file: %s",
+            access_filename);
+        perror(NULL);
+
+        return EXIT_FAILURE;
+    }
+
+    while ((fgets(access_line_buf, MAX_LINE_LEN, file_ptr)) != NULL)
+    {
+        num_lines++;
+        access_line_buf[MAX_LINE_LEN-1] = '\0';
+
+        /* Get past comments and empty lines (note: we only look at the
+         * first character.
+        */
+        if(IS_EMPTY_LINE(access_line_buf[0]))
+            continue;
+
+        if(sscanf(access_line_buf, "%s %[^;\n\r]", var, val) != 2)
+        {
+            log_msg(LOG_ERR,
+                "[*] Invalid access file entry in %s at line %i.\n - '%s'",
+                access_filename, num_lines, access_line_buf
+            );
+            fclose(file_ptr);
+            return EXIT_FAILURE;
+        }
+
+        if(CONF_VAR_IS(var, "KEY"))
+        {
+            if(strcasecmp(val, "__CHANGEME__") == 0)
+            {
+                log_msg(LOG_ERR,
+                    "[*] KEY value is not properly set in stanza source '%s' in access file: '%s'",
+                    curr_acc->source, access_filename);
+                fclose(file_ptr);
+                return EXIT_FAILURE;
+            }
+            add_acc_string(&(curr_acc->key), val, file_ptr, opts);
+            curr_acc->key_len = strlen(curr_acc->key);
+            add_acc_bool(&(curr_acc->use_rijndael), "Y");
+        }
+        else if(CONF_VAR_IS(var, "KEY_BASE64"))
+        {
+            if(strcasecmp(val, "__CHANGEME__") == 0)
+            {
+                log_msg(LOG_ERR,
+                    "[*] KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'",
+                    curr_acc->source, access_filename);
+                fclose(file_ptr);
+                return EXIT_FAILURE;
+            }
+            if (! is_base64((unsigned char *) val, strlen(val)))
+            {
+                log_msg(LOG_ERR,
+                    "[*] KEY_BASE64 argument '%s' doesn't look like base64-encoded data.",
+                    val);
+                fclose(file_ptr);
+                return EXIT_FAILURE;
+            }
+            add_acc_string(&(curr_acc->key_base64), val, file_ptr, opts);
+            add_acc_b64_string(&(curr_acc->key), &(curr_acc->key_len),
+                    curr_acc->key_base64, file_ptr, opts);
+            add_acc_bool(&(curr_acc->use_rijndael), "Y");
+        }
+        else if(CONF_VAR_IS(var, "HMAC_KEY_BASE64"))
+        {
+            if(strcasecmp(val, "__CHANGEME__") == 0)
+            {
+                log_msg(LOG_ERR,
+                    "[*] HMAC_KEY_BASE64 value is not properly set in stanza source '%s' in access file: '%s'",
+                    curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                fclose(file_ptr);
+                return EXIT_FAILURE;
+            }
+            if (! is_base64((unsigned char *) val, strlen(val)))
+            {
+                log_msg(LOG_ERR,
+                    "[*] HMAC_KEY_BASE64 argument '%s' doesn't look like base64-encoded data.",
+                    val);
+                fclose(file_ptr);
+                return EXIT_FAILURE;
+            }
+            add_acc_string(&(curr_acc->hmac_key_base64), val, file_ptr, opts);
+            add_acc_b64_string(&(curr_acc->hmac_key), &(curr_acc->hmac_key_len),
+                    curr_acc->hmac_key_base64, file_ptr, opts);
+        }
+        else if(CONF_VAR_IS(var, "HMAC_KEY"))
+        {
+            if(strcasecmp(val, "__CHANGEME__") == 0)
+            {
+                log_msg(LOG_ERR,
+                    "[*] HMAC_KEY value is not properly set in stanza source '%s' in access file: '%s'",
+                    curr_acc->source, opts->config[CONF_ACCESS_FILE]);
+                fclose(file_ptr);
+                return EXIT_FAILURE;
+            }
+            add_acc_string(&(curr_acc->hmac_key), val, file_ptr, opts);
+            curr_acc->hmac_key_len = strlen(curr_acc->hmac_key);
+        }
+        else if(CONF_VAR_IS(var, "GPG_DECRYPT_ID"))
+            add_acc_string(&(curr_acc->gpg_decrypt_id), val, file_ptr, opts);
+        else if(CONF_VAR_IS(var, "GPG_DECRYPT_PW"))
+        {
+            if(strcasecmp(val, "__CHANGEME__") == 0)
+            {
+                log_msg(LOG_ERR,
+                    "[*] GPG_DECRYPT_PW value is not properly set in stanza source '%s' in access file: '%s'",
+                    curr_acc->source, access_filename);
+                fclose(file_ptr);
+                return EXIT_FAILURE;
+            }
+            add_acc_string(&(curr_acc->gpg_decrypt_pw), val, file_ptr, opts);
+            add_acc_bool(&(curr_acc->use_gpg), "Y");
+        }
+        else if(CONF_VAR_IS(var, "GPG_ALLOW_NO_PW"))
+        {
+            add_acc_bool(&(curr_acc->gpg_allow_no_pw), val);
+            if(curr_acc->gpg_allow_no_pw == 1)
+            {
+                add_acc_bool(&(curr_acc->use_gpg), "Y");
+                add_acc_string(&(curr_acc->gpg_decrypt_pw), "", file_ptr, opts);
+            }
+        }
+        else if(CONF_VAR_IS(var, "GPG_REQUIRE_SIG"))
+        {
+            add_acc_bool(&(curr_acc->gpg_require_sig), val);
+        }
+        else if(CONF_VAR_IS(var, "GPG_DISABLE_SIG"))
+        {
+            add_acc_bool(&(curr_acc->gpg_disable_sig), val);
+        }
+        else if(CONF_VAR_IS(var, "GPG_IGNORE_SIG_VERIFY_ERROR"))
+        {
+            add_acc_bool(&(curr_acc->gpg_ignore_sig_error), val);
+        }
+        else if(CONF_VAR_IS(var, "GPG_REMOTE_ID"))
+            add_acc_string(&(curr_acc->gpg_remote_id), val, file_ptr, opts);
+        else if(CONF_VAR_IS(var, "GPG_FINGERPRINT_ID"))
+            add_acc_string(&(curr_acc->gpg_remote_fpr), val, file_ptr, opts);
+
+    }
+    fclose(file_ptr);
+    return EXIT_SUCCESS;
+}
+
 #ifdef HAVE_C_UNIT_TESTS
 
 DECLARE_UTEST(compare_port_list, "check compare_port_list function")
@@ -2242,7 +2454,7 @@ DECLARE_UTEST(compare_port_list, "check compare_port_list function")
     acc_port_list_t *in2_pl = NULL;
     acc_port_list_t *acc_pl = NULL;
 
-    /* Match any test */	
+    /* Match any test */
     free_acc_port_list(in1_pl);
     free_acc_port_list(acc_pl);
     add_port_list_ent(&in1_pl, "udp/6002");
