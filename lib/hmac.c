@@ -71,12 +71,11 @@ hmac_md5(const char *msg, const unsigned int msg_len,
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[MD5_BLOCK_LEN + MD5_DIGEST_LEN + 1] = {0};
     unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    int final_len = hmac_key_len;
 
     if (padded_msg == NULL)
         return FKO_ERROR_MEMORY_ALLOCATION;
-
-    int final_len = hmac_key_len;
-
+	
     if(MD5_BLOCK_LEN < hmac_key_len)
     {
         /* Calculate the digest of the key
@@ -118,11 +117,10 @@ hmac_sha1(const char *msg, const unsigned int msg_len,
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[SHA1_BLOCK_LEN + SHA1_DIGEST_LEN + 1] = {0};
     unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    int final_len = hmac_key_len;
 
     if (padded_msg == NULL)
         return FKO_ERROR_MEMORY_ALLOCATION;
-
-    int final_len = hmac_key_len;
 
     if(SHA1_BLOCK_LEN < hmac_key_len)
     {
@@ -165,11 +163,10 @@ hmac_sha256(const char *msg, const unsigned int msg_len,
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[SHA256_BLOCK_LEN + SHA256_DIGEST_LEN + 1] = {0};
     unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    int final_len = hmac_key_len;
 
     if (padded_msg == NULL)
         return FKO_ERROR_MEMORY_ALLOCATION;
-
-    int final_len = hmac_key_len;
 
     if(SHA256_BLOCK_LEN < hmac_key_len)
     {
@@ -212,11 +209,10 @@ hmac_sha384(const char *msg, const unsigned int msg_len,
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[SHA384_BLOCK_LEN + SHA384_DIGEST_LEN + 1] = {0};
     unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    int final_len = hmac_key_len;
 
     if (padded_msg == NULL)
         return FKO_ERROR_MEMORY_ALLOCATION;
-
-    int final_len = hmac_key_len;
 
     if(SHA384_BLOCK_LEN < hmac_key_len)
     {
@@ -259,11 +255,10 @@ hmac_sha512(const char *msg, const unsigned int msg_len,
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[SHA512_BLOCK_LEN + SHA512_DIGEST_LEN + 1] = {0};
     unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    int final_len = hmac_key_len;
 
     if (padded_msg == NULL)
         return FKO_ERROR_MEMORY_ALLOCATION;
-
-    int final_len = hmac_key_len;
 
     if(SHA512_BLOCK_LEN < hmac_key_len)
     {
@@ -306,11 +301,10 @@ hmac_sha3_256(const char *msg, const unsigned int msg_len,
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[SHA3_256_BLOCK_LEN + SHA3_256_DIGEST_LEN + 1] = {0};
     unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    int final_len = hmac_key_len;
 
     if (padded_msg == NULL)
         return FKO_ERROR_MEMORY_ALLOCATION;
-
-    int final_len = hmac_key_len;
 
     if(SHA3_256_BLOCK_LEN < hmac_key_len)
     {
@@ -353,11 +347,10 @@ hmac_sha3_512(const char *msg, const unsigned int msg_len,
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[SHA3_512_BLOCK_LEN + SHA3_512_DIGEST_LEN + 1] = {0};
     unsigned char *padded_msg = calloc(1, msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+    int final_len = hmac_key_len;
 
     if (padded_msg == NULL)
         return FKO_ERROR_MEMORY_ALLOCATION;
-
-    int final_len = hmac_key_len;
 
     if(SHA3_512_BLOCK_LEN < hmac_key_len)
     {

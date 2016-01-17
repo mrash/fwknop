@@ -1006,11 +1006,22 @@ ipv4_resolve(const char *dns_str, char *ip_str)
     struct addrinfo     hints;
     struct addrinfo    *result;     /* Result of getaddrinfo() */
     struct addrinfo    *rp;         /* Element of the linked list returned by getaddrinfo() */
+
 #if WIN32 && WINVER <= 0x0600
-        struct sockaddr_in *in;
-        char                       *win_ip;
+    struct sockaddr_in *in;
+    char               *win_ip;
 #else
     struct sockaddr_in *sai_remote; /* Remote host information as a sockaddr_in structure */
+#endif
+
+#if WIN32 
+    WSADATA wsa_data;
+	error = WSAStartup( MAKEWORD(1,1), &wsa_data );
+    if( error != 0 )
+    {
+        fprintf(stderr, "Winsock initialization error %d", error);
+        return(error);
+    }
 #endif
 
     memset(&hints, 0 , sizeof(hints));
@@ -1054,6 +1065,9 @@ ipv4_resolve(const char *dns_str, char *ip_str)
         freeaddrinfo(result);
     }
 
+#if WIN32
+	WSACleanup();
+#endif
     return error;
 }
 
