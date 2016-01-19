@@ -83,26 +83,29 @@ This file uses UTF-8 encoding, as some comments use Greek letters.
   *  Function to compute SHAKE128 on the input message with any output length.
   */
 #include "sha3.h"
+
+/*
 void FIPS202_SHAKE128(const unsigned char *input, unsigned int inputByteLen, unsigned char *output, int outputByteLen)
 {
     Keccak(1344, 256, input, inputByteLen, 0x1F, output, outputByteLen);
 }
+*/
 
 /**
   *  Function to compute SHAKE256 on the input message with any output length.
-  */
 void FIPS202_SHAKE256(const unsigned char *input, unsigned int inputByteLen, unsigned char *output, int outputByteLen)
 {
     Keccak(1088, 512, input, inputByteLen, 0x1F, output, outputByteLen);
 }
+*/
 
 /**
   *  Function to compute SHA3-224 on the input message. The output length is fixed to 28 bytes.
-  */
 void FIPS202_SHA3_224(const unsigned char *input, unsigned int inputByteLen, unsigned char *output)
 {
     Keccak(1152, 448, input, inputByteLen, 0x06, output, 28);
 }
+*/
 
 /**
   *  Function to compute SHA3-256 on the input message. The output length is fixed to 32 bytes.
@@ -114,11 +117,11 @@ void FIPS202_SHA3_256(const unsigned char *input, unsigned int inputByteLen, uns
 
 /**
   *  Function to compute SHA3-384 on the input message. The output length is fixed to 48 bytes.
-  */
 void FIPS202_SHA3_384(const unsigned char *input, unsigned int inputByteLen, unsigned char *output)
 {
     Keccak(832, 768, input, inputByteLen, 0x06, output, 48);
 }
+*/
 
 /**
   *  Function to compute SHA3-512 on the input message. The output length is fixed to 64 bytes.
