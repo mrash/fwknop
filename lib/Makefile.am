@@ -22,9 +22,15 @@ else
 if APPLE_PLATFORM
 libfko_la_LDFLAGS   = -version-info 2:4:0 $(GPGME_LIBS) -export-symbols-regex '^fko_'
 else
+if USE_MINGW
+libfko_la_LDFLAGS   = -version-info 2:4:0 $(GPGME_LIBS) \
+                      -export-symbols-regex '^fko_' -no-undefined \
+                      -Wl,--whole-archive,$(top_builddir)/common/libfko_util.a,--no-whole-archive,-lwsock32,-lws2_32
+else
 libfko_la_LDFLAGS   = -version-info 2:4:0 $(GPGME_LIBS) \
                       -export-symbols-regex '^fko_' \
                       -Wl,--whole-archive,$(top_builddir)/common/libfko_util.a,--no-whole-archive
+endif
 endif
 endif
 
