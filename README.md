@@ -20,7 +20,7 @@ ciphers and HMAC schemes are not usually possible to reliably support, and it
 is trivially easy to mount a DoS attack against a PK server just by spoofing an
 additional packet into a PK sequence as it traverses the network (thereby
 convincing the PK server that the client doesn't know the proper sequence). All
-of these limitation are solved by SPA. At the same time, SPA hides services
+of these shortcomings are solved by SPA. At the same time, SPA hides services
 behind a default-drop firewall policy, acquires SPA data passively (usually via
 libpcap or other means), and implements standard cryptographic operations for
 SPA packet authentication and encryption/decryption.
