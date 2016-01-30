@@ -2457,9 +2457,9 @@ DECLARE_UTEST(compare_port_list, "check compare_port_list function")
     /* Match any test */
     free_acc_port_list(in1_pl);
     free_acc_port_list(acc_pl);
-    add_port_list_ent(&in1_pl, "udp/6002");
-    add_port_list_ent(&in2_pl, "udp/6002, udp/6003");
-    add_port_list_ent(&acc_pl, "udp/6002, udp/6003");
+    expand_acc_port_list(&in1_pl, "udp/6002");
+    expand_acc_port_list(&in2_pl, "udp/6002, udp/6003");
+    expand_acc_port_list(&acc_pl, "udp/6002, udp/6003");
     CU_ASSERT(compare_port_list(in1_pl, acc_pl, 1) == 1);	/* Only one match is needed from access port list - 1 */
     CU_ASSERT(compare_port_list(in2_pl, acc_pl, 1) == 1);	/* Only match is needed from access port list - 2 */
     CU_ASSERT(compare_port_list(in1_pl, acc_pl, 0) == 1);	/* All ports must match access port list - 1 */
