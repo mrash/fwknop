@@ -12,6 +12,7 @@
 
   network inet raw,
   network packet raw,
+  network packet dgram,
 
   /bin/dash rix,
   /bin/bash rix,
