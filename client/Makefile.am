@@ -20,7 +20,7 @@ endif
 
 fwknop_CPPFLAGS     = -I $(top_srcdir)/lib -I $(top_srcdir)/common
 
-fwknop_LDADD        = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.a
+fwknop_LDADD        = -L$(top_builddir)/common -lfko_util $(top_builddir)/lib/libfko.la
 
 dist_man_MANS       = fwknop.8
 
