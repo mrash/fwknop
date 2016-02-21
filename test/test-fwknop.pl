@@ -422,6 +422,7 @@ our %cf = (
     'include_r2_hmac_access'       => "$conf_dir/include_r2_hmac_access.conf",
     'include_m1_hmac_access'       => "$conf_dir/include_m1_hmac_access.conf",
     'include_def_hmac_access'      => "$conf_dir/include_def_hmac_access.conf",
+    'include_keys1_hmac_access'    => "$conf_dir/include_keys1_hmac_access.conf",
     'hmac_cmd_access'              => "$conf_dir/hmac_cmd_access.conf",
     'hmac_cmd_setuid_access'       => "$conf_dir/hmac_cmd_setuid_access.conf",
     'hmac_cmd_giduid_access'       => "$conf_dir/hmac_cmd_giduid_access.conf",
