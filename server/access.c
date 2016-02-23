@@ -153,6 +153,17 @@ static void
 add_acc_b64_string(char **var, int *len, const char *val, FILE *file_ptr,
         fko_srv_options_t *opts)
 {
+    if(var == NULL)
+    {
+        log_msg(LOG_ERR, "[*] add_acc_b64_string() called with NULL variable");
+        if(file_ptr != NULL)
+            fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    if(*var != NULL)
+        free(*var);
+
     if((*var = strdup(val)) == NULL)
     {
         log_msg(LOG_ERR,
