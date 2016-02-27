@@ -302,7 +302,7 @@ cmd_cycle_open(fko_srv_options_t *opts, acc_stanza_t *acc,
         if(! add_cmd_close(opts, acc, spadat, stanza_num))
             return 0;
 
-     return FKO_SUCCESS;
+     return 1;
 }
 
 static void
