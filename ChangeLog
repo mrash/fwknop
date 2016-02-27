@@ -1,4 +1,9 @@
 fwknop-2.6.9 (01//2016):
+    - Bug fix in command open/close cycle feature to ensure that the first
+      successful match on a valid incoming SPA packet finishes all access.conf
+      stanza processing. That is, no other stanzas should be looked at after
+      the first match, and this is consistent with other SPA modes (such as
+      basic access requests). This bug was reported by Jonathan Bennett.
 
 fwknop-2.6.8 (12/23/2015):
     - [server] Added a major new feature that allows fwknopd to easily
