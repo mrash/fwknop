@@ -879,6 +879,10 @@ validate_options(fko_srv_options_t *opts)
 
 #endif /* FIREWALL type */
 
+    /* Prepend firewall rules*/
+    if(opts->config[CONF_ENABLE_PREPEND] == NULL)
+        set_config_entry(opts, CONF_ENABLE_PREPEND, DEF_ENABLE_PREPEND);
+
     /* NAT DNS enabled*/
     if(opts->config[CONF_ENABLE_NAT_DNS] == NULL)
         set_config_entry(opts, CONF_ENABLE_NAT_DNS, DEF_ENABLE_NAT_DNS);
