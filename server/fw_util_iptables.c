@@ -1154,9 +1154,13 @@ create_rule(const fko_srv_options_t * const opts,
 
     zero_cmd_buffers();
 
-    snprintf(cmd_buf, CMD_BUFSIZE-1, "%s -A %s %s",
-            opts->fw_config->fw_command, fw_chain, fw_rule);
-
+    if (strncasecmp(opts->config[CONF_ENABLE_PREPEND], "Y", 1) == 0) {
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s -I %s %s",
+                opts->fw_config->fw_command, fw_chain, fw_rule);
+    } else {
+        snprintf(cmd_buf, CMD_BUFSIZE-1, "%s -A %s %s",
+                opts->fw_config->fw_command, fw_chain, fw_rule);
+    }
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, WANT_STDERR,
                 NO_TIMEOUT, &pid_status, opts);
     chop_newline(err_buf);
