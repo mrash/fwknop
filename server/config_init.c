@@ -879,6 +879,10 @@ validate_options(fko_srv_options_t *opts)
 
 #endif /* FIREWALL type */
 
+    /* Disallow ENABLE_X_FORWARDED_FOR by default*/
+    if(opts->config[CONF_ENABLE_X_FORWARDED_FOR] == NULL)
+        set_config_entry(opts, CONF_ENABLE_X_FORWARDED_FOR, DEF_ENABLE_X_FORWARDED_FOR);
+
     /* Prepend firewall rules*/
     if(opts->config[CONF_ENABLE_PREPEND] == NULL)
         set_config_entry(opts, CONF_ENABLE_PREPEND, DEF_ENABLE_PREPEND);

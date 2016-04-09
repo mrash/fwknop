@@ -108,7 +108,7 @@ preprocess_spa_data(const fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt, spa_
 
         xff = strcasestr(ndx, "X-Forwarded-For: ");
 
-        if (xff != NULL) {
+        if (xff != NULL && strncasecmp(opts->config[CONF_ENABLE_X_FORWARDED_FOR], "Y", 1) == 0) {
             xff += 17;
 
             for (i = 0; *xff != '\0'; i++)
