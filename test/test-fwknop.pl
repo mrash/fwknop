@@ -2285,7 +2285,7 @@ sub server_start_stop_cycle() {
         my $sig = $sigs{$sig_name};
 
         &do_fwknopd_cmd("$lib_view_str $valgrind_str " .
-            "$fwknopdCmd $default_server_conf_args -f");
+            "$fwknopdCmd $default_server_conf_args -i $loopback_intf -f");
 
         open F, "< $default_pid_file" or
             die "[*] Could not open $default_pid_file: $!";
