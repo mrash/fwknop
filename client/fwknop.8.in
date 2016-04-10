@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 12/24/2015
+.\"      Date: 04/10/2016
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "12/24/2015" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "04/10/2016" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -240,12 +240,28 @@ client either prompt you for the key or acquire via the \(lq$HOME/\&.fwknoprc\(r
 .PP
 \fB\-\-rc\-file\fR=\fI<file>\fR
 .RS 4
-Specify path to the fwknop rc file (default is $HOME/\&.fwknoprc)\&.
+Specify path to the
+\fBfwknop\fR
+rc file (default is \(lq$HOME/\&.fwknoprc\(rq)\&.
+.RE
+.PP
+\fB\-\-no\-rc\-file\fR
+.RS 4
+Perform
+\fBfwknop\fR
+client operations without referencing the \(lq$HOME/\&.fwknoprc\(rq file\&.
+.RE
+.PP
+\fB\-\-no\-home\-dir\fR
+.RS 4
+Do not allow the
+\fBfwknop\fR
+client to look for the home directory associated with the user\&.
 .RE
 .PP
 \fB\-\-save\-rc\-stanza\fR=\fI<stanza name>\fR
 .RS 4
-Save command line arguments to the $HOME/\&.fwknoprc stanza specified with the
+Save command line arguments to the \(lq$HOME/\&.fwknoprc\(rq stanza specified with the
 \fB\-n\fR
 option\&. If the
 \fB\-n\fR
