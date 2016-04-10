@@ -59,8 +59,7 @@ static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
     char *key, int *key_len, char *hmac_key, int *hmac_key_len,
     unsigned int exit_status);
 static void zero_buf_wrapper(char *buf, int len);
-static int is_hostname_str_with_port(const char *str,
-        char *hostname, size_t hostname_bufsize, int *port);
+static int is_hostname_str_with_port(const char *str);
 #if HAVE_LIBFIU
 static int enable_fault_injections(fko_cli_options_t * const opts);
 #endif
@@ -93,9 +92,7 @@ is_ipv6_str(char *str)
 /**
  * @brief Check a string to find out if it is built as 'hostname,port'
  *
- * This function check if we can extract an hostname and a port from the string.
- * If yes, we return 1, and both the hostname buffer and the port number are set
- * accordingly.
+ * This function checks if there is a hostname and a port in the string.
  *
  * We could have used sscanf() here with a template "%[^,],%u", but this way we
  * do not limit the size of the value copy in the hostname destination buffer.
@@ -103,22 +100,17 @@ is_ipv6_str(char *str)
  * for the hostname buffer size.
  *
  * @param str String to parse.
- * @param hostname Buffer where to store the hostname value read from @str.
- * @param hostname_bufsize Hostname buffer size.
- * @param port Value of the port read from @str.
  *
  * @return 1 if the string is built as 'hostname,port', 0 otherwise.
  */
 static int
-is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsize, int *port)
+is_hostname_str_with_port(const char *str)
 {
     int     valid = 0;                /* Result of the function */
+    int     port = 0;                 /* temporary int to store port */
     char    buf[MAX_LINE_LEN] = {0};  /* Copy of the buffer eg. "hostname,port" */
-    char   *h;                        /* Pointer on the hostname string */
     char   *p;                        /* Ponter on the port string */
 
-    memset(hostname, 0, hostname_bufsize);
-    *port = 0;
 
     /* Replace the comma in the string with a NULL char to split the
      * buffer in two strings (hostname and port) */
@@ -128,17 +120,14 @@ is_hostname_str_with_port(const char *str, char *hostname, size_t hostname_bufsi
     if(p != NULL)
     {
         *p++ = 0;
-        h = buf;
-
-        *port = atoi(p);
+        port = atoi(p);
 
         /* If the string does not match an ipv4 or ipv6 address we assume this
          * is an hostname. We make sure the port is in the good range too */
         if (   (is_valid_ipv4_addr(buf) == 0)
             && (is_ipv6_str(buf) == 0)
-            && ((*port > 0) && (*port < 65536)) )
+            && ((port > 0) && (port < 65536)) )
         {
-            strlcpy(hostname, h, hostname_bufsize);
             valid = 1;
         }
 
@@ -839,8 +828,6 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
     char                nat_access_buf[MAX_LINE_LEN] = {0};
     char                tmp_access_port[MAX_PORT_STR_LEN+1] = {0}, *ndx = NULL;
     int                 access_port = 0, i = 0, is_err = 0;
-    char                hostname[HOSTNAME_BUFSIZE] = {0};
-    int                 port = 0;
     struct addrinfo     hints;
 
     memset(&hints, 0 , sizeof(hints));
@@ -878,7 +865,7 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
 
     if (nat_access_buf[0] == 0x0 && options->nat_access_str[0] != 0x0)
     {
-        if (ipv4_str_has_port(options->nat_access_str))
+        if (ipv4_str_has_port(options->nat_access_str) || is_hostname_str_with_port(options->nat_access_str))
         {
             snprintf(nat_access_buf, MAX_LINE_LEN, "%s",
                 options->nat_access_str);
@@ -888,23 +875,6 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
             snprintf(nat_access_buf, MAX_LINE_LEN, NAT_ACCESS_STR_TEMPLATE,
                 options->nat_access_str, access_port);
         }
-    }
-
-    /* Check if there is a hostname to resolve as an ip address in the NAT access buffer */
-    if (is_hostname_str_with_port(nat_access_buf, hostname, sizeof(hostname), &port))
-    {
-
-        /* We now send the hostname, and resolve it server side */
-        snprintf(nat_access_buf, MAX_LINE_LEN, "%s",
-                options->nat_access_str);
-    }
-
-        /* assume just hostname */
-    else
-    {
-        snprintf(nat_access_buf, MAX_LINE_LEN, NAT_ACCESS_STR_TEMPLATE,
-            options->nat_access_str, access_port);
-
     }
 
     if(options->nat_rand_port)
