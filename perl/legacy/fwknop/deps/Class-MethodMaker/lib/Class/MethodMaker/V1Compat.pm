@@ -49,7 +49,7 @@ possible:
 
 =item boolean
 
-Boolean is available as a backwards compatiblity hack, but there is currently
+Boolean is available as a backwards compatibility hack, but there is currently
 no V2 equivalent.  It is likely that some replacement mechanism will be
 introduced in the future, but that it will be incompatible with the version 1
 boolean.

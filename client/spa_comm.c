@@ -556,7 +556,7 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
     else /* we are sending the SPA packet through an HTTP proxy */
     {
         /* Extract the hostname if it was specified as a URL. Actually,
-         * we just move the start of the hostname to the begining of the
+         * we just move the start of the hostname to the beginning of the
          * original string.
         */
         if(strncasecmp(ndx, "http://", 7) == 0)
@@ -622,7 +622,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
     int                 res, sd_len;
     char               *spa_data;
     struct sockaddr_in  saddr, daddr;
-    char                ip_str[INET_ADDRSTRLEN] = {0};  /* String used to contain the ip addres of an hostname */
+    char                ip_str[INET_ADDRSTRLEN] = {0};  /* String used to contain the ip address of an hostname */
     struct addrinfo     hints;                          /* Structure used to set hints to resolve hostname */
 #ifdef WIN32
     WSADATA wsa_data;

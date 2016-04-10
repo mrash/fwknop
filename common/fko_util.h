@@ -64,7 +64,7 @@ void  chop_spaces(char *str);
 
 /**
  *
- * \brief counts the occurences of a character
+ * \brief counts the occurrences of a character
  *
  * \return returns the number of chars found
  */

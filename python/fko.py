@@ -438,7 +438,7 @@ class Fko:
             "client_timeout" data field.
 
         FKO_LOCAL_NAT_ACCESS_MSG
-            This is similar to the "FKO_NAT_ACCESS" request exept the NAT
+            This is similar to the "FKO_NAT_ACCESS" request except the NAT
             is to the local to the server (i.e. a service listening on
             127.0.0.1).
 

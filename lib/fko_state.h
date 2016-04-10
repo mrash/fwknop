@@ -79,7 +79,7 @@ typedef enum {
 #define FKO_IS_SPA_DATA_MODIFIED(ctx) (ctx->state & FKO_SPA_DATA_MODIFIED)
 
 /* Clear all SPA data modified flags.  This is normally called after a
- * succesful encode/digest/encryption cycle.
+ * successful encode/digest/encryption cycle.
 */
 #define FKO_CLEAR_SPA_DATA_MODIFIED(ctx) \
     (ctx->state &= (0xffff & ~FKO_SPA_DATA_MODIFIED))

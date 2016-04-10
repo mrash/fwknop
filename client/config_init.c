@@ -673,7 +673,7 @@ set_rc_file(char *rcfile, fko_cli_options_t *options)
         rcf_offset = strlen(rcfile);
 
         /* Sanity check the path to .fwknoprc.
-         * The preceeding path plus the path separator and '.fwknoprc' = 11
+         * The preceding path plus the path separator and '.fwknoprc' = 11
          * cannot exceed MAX_PATH_LEN.
          */
         if(rcf_offset > (MAX_PATH_LEN - 11))
@@ -807,7 +807,7 @@ create_fwknoprc(const char *rcfile)
      * If the rcfile already exists, an error is returned */
     rcfile_fd = open(rcfile, FWKNOPRC_OFLAGS ,FWKNOPRC_MODE);
 
-    // If an error occured ...
+    // If an error occurred ...
     if (rcfile_fd == -1) {
             log_msg(LOG_VERBOSITY_WARNING, "Unable to create initial rc file: %s: %s",
                 rcfile, strerror(errno));
@@ -1517,7 +1517,7 @@ add_multiple_vars_to_rc(FILE* rc, fko_cli_options_t *options, fko_var_bitmask_t 
  *                      be stored.
  *
  * @return 0 if the section has been found and processed successfully
- *         a negative value if one or more errors occured
+ *         a negative value if one or more errors occurred
  */
 static int
 process_rc_section(char *section_name, fko_cli_options_t *options)

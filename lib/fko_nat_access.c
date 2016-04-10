@@ -68,7 +68,7 @@ fko_set_spa_nat_access(fko_ctx_t ctx, const char * const msg)
     if((res = validate_nat_access_msg(msg)) != FKO_SUCCESS)
         return(res);
 
-    /* Just in case this is a subsquent call to this function.  We
+    /* Just in case this is a subsequent call to this function.  We
      * do not want to be leaking memory.
     */
     if(ctx->nat_access != NULL)

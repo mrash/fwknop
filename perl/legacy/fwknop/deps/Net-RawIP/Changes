@@ -146,7 +146,7 @@ Revision history for Perl extension Net::RawIP.
     - has been added README.DEV - readme for the developers.       
 
 0.04e Tue Feb  2 13:46:37 1999
-    - have been added some defines in the util.c for compability
+    - have been added some defines in the util.c for compatibility
       with an old libpcap. Thanks to Seth <seth@freebie.dp.ny.frb.org> 
 
 0.04d Tue Feb  2 10:26:54 1999
@@ -212,10 +212,10 @@ Revision history for Perl extension Net::RawIP.
     - insert usleep(20000); for sendto() on FreeBSD
 
 0.03a Thu Dec 24 10:01:15 1998
-    - minimize files for includes for system compability
+    - minimize files for includes for system compatibility
     - Set switch $^W to FALSE for suppress warning messages
       Thu Dec 24 18:59:42 1998
-    - added some compability with other systems
+    - added some compatibility with other systems
 
 0.02  Wed Dec 23 17:59:30 1998
     - some man fixes

@@ -596,7 +596,7 @@ ok evcheck(sub { $y = bless {}, 'X'; }, 'bless ( 2)'), 1,        'bless ( 2)';
   ok(evcheck(sub { $n = $x->df2_index(1)->value; }, 'default_ctor( 4)'), 1,
                                                           'default_ctor ( 4)');
   ok $n, 1,                                               'default_ctor ( 5)';
-  # This actually creates two Y instances; one explictly, and one not implictly
+  # This actually creates two Y instances; one explicitly, and one not implictly
   # by the _index method defaulting one (since it can't see the incoming)
   # XXX not anymore XXX
   # lvalue support has been dropped (I can't find a consistent way to support
@@ -977,7 +977,7 @@ Check that calling a(), with no arguments, doesn't instantiate a new instance
 =head2 Tests 419--425: non-init ctor
 
 This is to test that the default ctor or default is not assigned if a value is
-supplied.  This would particularly be a problem with v1 compatiblity use where
+supplied.  This would particularly be a problem with v1 compatibility use where
 a value is explcitly supplied to prevent 'new' being called because there is
 no 'new' (if the ctor is called anyway, the program barfs).
 
@@ -1049,7 +1049,7 @@ no 'new' (if the ctor is called anyway, the program barfs).
   ok $n, 3,                                         'default_ctor (arg) ( 5)';
   print STDERR Data::Dumper->Dump([$x], [qw($x)])
     if $ENV{TEST_DEBUG};
-  # This actually creates two Y instances; one explictly, and one not implictly
+  # This actually creates two Y instances; one explicitly, and one not implictly
   # by the _index method defaulting one (since it can't see the incoming)
   # XXX not anymore XXX
   # lvalue support has been dropped (I can't find a consistent way to support

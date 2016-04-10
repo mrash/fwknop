@@ -513,7 +513,7 @@ properly will be returned. B<undef> will be returned if nothing succeeds.
 
 =cut
 
-sub CheckStructure { # Check existance of a structure.
+sub CheckStructure { # Check existence of a structure.
 	my($structname,@headers) = @_;
 	ApplyHeaders("main(){ struct $structname s;}",@headers);
 }
@@ -527,7 +527,7 @@ be returned if nothing succeeds.
 
 =cut
 
-sub CheckField { # Check for the existance of specified field in structure
+sub CheckField { # Check for the existence of specified field in structure
 	my($structname,$fieldname,@headers) = @_;
 	ApplyHeaders("main(){ struct $structname s1; struct $structname s2;
 								 s1.$fieldname = s2.$fieldname; }",@headers);
@@ -578,7 +578,7 @@ sub CheckHSymbol { # Check for header symbol
 An experimental routine that takes a name of a function, a nested array
 consisting of the prototype, and then the normal header groups. It attempts
 to deduce whether the given prototype matches what the header supplies.
-Basically, it doesn't work. Or maybe it does. I wouldn't reccomend it,
+Basically, it doesn't work. Or maybe it does. I wouldn't recommend it,
 though.
 
 =cut
@@ -812,7 +812,7 @@ sub DeducePrototype {
 	my @args = ();
 	my @validcount = ();
 
-	# Can we check the return type without worry about arguements?
+	# Can we check the return type without worry about arguments?
 	if($checkreturn and (!$checknilargs or !$checkniletcargs)) {
 		for (@types) {
 			if(ApplyHeaders("extern $_ $function(". ($checknilargs?"...":"").");main(){}",[@headers])) {

@@ -729,7 +729,7 @@ sub test_default_key_passphrase()
     # restore this setting to its original setting
     $self->options->meta_interactive( $saved_meta_interactive_option );
     
-    # all we realy want to check is the status fh
+    # all we really want to check is the status fh
     while ( <$status> )
     {
 	if ( /^\[GNUPG:\]\s*GOOD_PASSPHRASE/ )

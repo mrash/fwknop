@@ -811,7 +811,7 @@ our $default_server_gpg_args_no_pw_hmac = "$lib_view_str " .
     "-a $cf{'gpg_no_pw_hmac_access'} $intf_str " .
     "-d $default_digest_file -p $default_pid_file";
 
-### point the compiled binaries at the local libary path
+### point the compiled binaries at the local library path
 ### instead of any installed libfko instance
 $ENV{'LD_LIBRARY_PATH'}   = $lib_dir;
 $ENV{'DYLD_LIBRARY_PATH'} = $lib_dir if $lib_view_cmd =~ /otool/;

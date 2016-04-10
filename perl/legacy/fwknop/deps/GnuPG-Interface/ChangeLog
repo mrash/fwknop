@@ -321,7 +321,7 @@
 2000-07-12 04:10  ftobin
 
 	* lib/GnuPG/Interface.pm, test/trustdb.gpg: whoops, I really do
-	need to explictly dup, as well as compensate when it's an
+	need to explicitly dup, as well as compensate when it's an
 	already-opened filehandle.  Maybe I'll change the name to direct
 	instead of dup.
 

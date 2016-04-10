@@ -1021,7 +1021,7 @@ The given parameters must look like a parameters for the B<send>.
 =item send_eth_frame($frame,$times,$delay)
 
 is a method for send any ethernet frame which you may construct by
-hands.B<$frame> is a packed ethernet frame exept destination and
+hands.B<$frame> is a packed ethernet frame except destination and
 source fields(these fields can be setting by B<ethset> or B<ethnew>).
 Another parameters must look like the parameters for the B<send>. 
 
@@ -1037,7 +1037,7 @@ the B<data> also is an array reference. This array must be filled
 with strings which must contain all bytes from a option except bytes 
 with type and length of an option.Of course indexes in those arrays must be 
 equal for the one option.If type is equal to 0 or 1 then there is no bytes
-with a length and a data,but you have to specify zero data for compability.
+with a length and a data,but you have to specify zero data for compatibility.
 
 =item B<optget>(OPTPROTO => { type => [...] },...)  
 

@@ -51,7 +51,7 @@ character is waiting, please call it with -1, instead of 1. Positive
 arguments now indicate a timeout, so 1 would wait a second before timing
 out.
 
-As older versions will accept -1, it is reccomended to change all code 
+As older versions will accept -1, it is recommended to change all code
 that uses ReadMode.
 
 
@@ -88,7 +88,7 @@ actually a good idea.)
 Non-blocking support is provided via the ReadKey and ReadLine functions. If
 they are passed no argument, or an argument of zero, they will act like a
 normal getc(STDIN) or scalar(<STDIN>). If they are passed a negative
-argument, then they will immediatly return undef if no input is present. If
+argument, then they will immediately return undef if no input is present. If
 passed a positive argument, then they will wait until that time in seconds
 has passed before returning undef. In most situations, you will probably
 want to use "ReadKey -1".
