@@ -14,7 +14,7 @@
 # Warning: This program could cause problems on your network.
 #          This program could hang, crash or reboot network devices.
 #          Switches could start sending packages to all ports making it
-#          possible to intercept network trafic.
+#          possible to intercept network traffic.
 #          
 #
 require 'getopts.pl';

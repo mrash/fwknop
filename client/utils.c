@@ -155,7 +155,7 @@ get_in_addr(struct sockaddr *sa)
  * @param ip_bufsize Number of bytes available in the ip_str buffer
  * @param opts       Client command line options
  *
- * @return 0 if successful, 1 if an error occured.
+ * @return 0 if successful, 1 if an error occurred.
  */
 int
 resolve_dst_addr(const char *dns_str, struct addrinfo *hints,

@@ -449,7 +449,7 @@ server.  The timeout value is provided via the @code{client_timeout} data
 field.
 
 @item FKO_LOCAL_NAT_ACCESS_MSG
-This is similar to the FKO_NAT_ACCESS request exept the @acronym{NAT} is
+This is similar to the FKO_NAT_ACCESS request except the @acronym{NAT} is
 to the local to the server (i.e. a service listening on 127.0.0.1).
 
 @item FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG
@@ -1213,7 +1213,7 @@ will be NULL if the context value was not previously set.
 This section describes the functions not covered elsewhere in this
 manual.  These are utility functions that operate on the data in the fko
 context.  All but @code{fko_spa_data_final} are called by other functions
-and are not normally explictly called by the user.  However, they can
+and are not normally explicitly called by the user.  However, they can
 be, so they are listed here.
 
 All of these functions return an integer representing the return status of
@@ -1289,7 +1289,7 @@ for the given error code.
 
 @deftypefun {const char *} fko_errstr (int @var{err_code})
 The function @code{fko_errstr} returns a pointer to a statically
-allocated string containing the descripton of the error.
+allocated string containing the description of the error.
 @end deftypefun
 
 @noindent
@@ -1599,7 +1599,7 @@ using the following function:
 
 @deftypefun {const char *} fko_gpg_errstr (int @var{err_code})
 The function @code{fko_errstr} returns a pointer to a statically
-allocated string containing the descripton of the @acronym{GPGME} error.
+allocated string containing the description of the @acronym{GPGME} error.
 @end deftypefun
 
 @noindent

@@ -23,7 +23,7 @@ control over terminal driver modes (cbreak, raw, cooked, etc.,) support for
 non-blocking reads, if the architecture allows, and some generalized handy
 functions for working with terminals. One of the main goals is to have the
 functions as portable as possible, so you can just plug in "use
-Term::ReadKey" on any architecture and have a good likelyhood of it working.
+Term::ReadKey" on any architecture and have a good likelihood of it working.
 
 =over 8
 

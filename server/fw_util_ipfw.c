@@ -513,7 +513,7 @@ process_spa_request(const fko_srv_options_t * const opts,
         */
         rule_num = get_next_rule_num();
 
-        /* If rule_num comes back as 0, we aready have the maximum number
+        /* If rule_num comes back as 0, we already have the maximum number
          * of active rules allowed so we reject and bail here.
         */
         if(rule_num == 0)

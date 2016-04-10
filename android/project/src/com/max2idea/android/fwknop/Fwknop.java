@@ -238,7 +238,7 @@ public class Fwknop extends Activity {
         }
     }
 
-//    Another Generic Messanger
+//    Another Generic Messenger
     public static void sendHandlerMessage(Handler handler, int message_type) {
         Message msg1 = handler.obtainMessage();
         Bundle b = new Bundle();

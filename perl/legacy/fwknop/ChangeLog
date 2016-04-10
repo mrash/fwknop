@@ -1017,7 +1017,7 @@ fwknop-0.9.6 (01/13/2006):
       adds a "-K <fwknop cmd line>" argument to the SSH client so that
       fwknop can be executed directly before an SSH connection is made.
     - Separated server and client portions of fwknop into "fwknopd" and
-      fwknop repectively.  This will allow better portability to be
+      fwknop respectively.  This will allow better portability to be
       developed since the client and server pieces can be developed more
       independently.  NOTE: With so many changes, it is probably a good idea
       to not preserve old fwknop configs via install.pl.
@@ -1093,7 +1093,7 @@ fwknop-0.9.1 (07/29/2005):
       server with the --Access command line option.
     - Added the ability to spoof SPA packets over icmp and tcp protocols.
     - Added the ability to restrict access at the server to only those
-      ports defined in the OPEN_PORTS keyword.  This option is controled by
+      ports defined in the OPEN_PORTS keyword.  This option is controlled by
       a new keyword "PERMIT_CLIENT_PORTS".
     - Bugfix for MD5 sum not being properly calculated over decrypted data.
       This allowed old packets that contained additional garbage data to

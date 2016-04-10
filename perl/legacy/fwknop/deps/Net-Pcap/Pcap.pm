@@ -216,8 +216,8 @@ B<Net::Pcap::open_live()>.
 
 =item B<Net::Pcap::is_swapped($pcap_t);>
 
-This function returns true if the endianess of the currently open
-savefile is different from the endianess of the machine.
+This function returns true if the endianness of the currently open
+savefile is different from the endianness of the machine.
 
 =item B<Net::Pcap::major_version($pcap_t);>
 

@@ -47,19 +47,19 @@ Revision History for Class::MethodMaker (versions 2)
 	- Flatten list passed to * in v1 list
 	- Fix buglet in object that called default_ctor method even when an
 	  explicit value was supplied
-	- Add compatiblity support for boolean
+	- Add compatibility support for boolean
 	- Lots of documentation improvements
 	- Add html target to Makefile.PL
 	- Add implementation of _clear by default
 	- Add *_clear to array
 	- Add support for 5.6.x
 	- Add new -singleton
-	- Add compatiblity support for singleton
-	- Add compatiblity support for get_concat
+	- Add compatibility support for singleton
+	- Add compatibility support for get_concat
 	- Add basic support for INTEGER type
-	- Add compatiblity support for get_counter
+	- Add compatibility support for get_counter
 	- Bug fixes to read callback
-	- Add compatiblity support for key_{attrib,with_create}
+	- Add compatibility support for key_{attrib,with_create}
 
 2.00a09     Sep 18 11:04 AM GMT 2003
 	- Add tie_scalar, static_hash, tie_hash for V1

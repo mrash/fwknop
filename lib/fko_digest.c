@@ -216,7 +216,7 @@ set_digest(char *data, char **digest, short digest_type, int *digest_len)
             return(FKO_ERROR_INVALID_DIGEST_TYPE);
     }
 
-    /* Just in case this is a subsquent call to this function.  We
+    /* Just in case this is a subsequent call to this function.  We
      * do not want to be leaking memory.
     */
     if(*digest != NULL)

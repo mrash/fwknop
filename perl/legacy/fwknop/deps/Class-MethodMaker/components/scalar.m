@@ -318,7 +318,7 @@ no argument provided).  Returns no value.
                       return;
                     },
 
-       # this is here for V1 compatiblity only
+       # this is here for V1 compatibility only
        '!*_find' => sub : method {
                       my ($self, @args) = @_;
                       if (scalar @args) {

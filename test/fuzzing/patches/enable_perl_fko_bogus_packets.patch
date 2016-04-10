@@ -41,7 +41,7 @@ index 7d8237b..e627b0c 100644
 +//    if(res != FKO_SUCCESS)
 +//        return(res);
  
-     /* Just in case this is a subsquent call to this function.  We
+     /* Just in case this is a subsequent call to this function.  We
       * do not want to be leaking memory.
 @@ -278,6 +278,8 @@ validate_nat_access_msg(const char *msg)
      int     res         = FKO_SUCCESS;
@@ -78,7 +78,7 @@ index 03a7cad..47a0fe4 100644
 +//    if((res = validate_nat_access_msg(msg)) != FKO_SUCCESS)
 +//        return(res);
  
-     /* Just in case this is a subsquent call to this function.  We
+     /* Just in case this is a subsequent call to this function.  We
       * do not want to be leaking memory.
 diff --git a/lib/fko_user.c b/lib/fko_user.c
 index 0c909dd..7f0f7eb 100644
@@ -100,5 +100,5 @@ index 0c909dd..7f0f7eb 100644
 +//        if((isalnum(username[i]) == 0) && username[i] != '-')
 +//            return(FKO_ERROR_INVALID_DATA);
  
-     /* Just in case this is a subsquent call to this function.  We
+     /* Just in case this is a subsequent call to this function.  We
       * do not want to be leaking memory.

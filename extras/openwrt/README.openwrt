@@ -2,8 +2,8 @@ This directory holds files and subdirectories related to fwknop and the
 OpenWRT platform.
 
 The "package" directory contains the individual OpenWRT package directories.
-Each of these package directories hold the Makefile and addtional patch or
-file directories used by teh OpenWRT build sytem.
+Each of these package directories hold the Makefile and additional patch or
+file directories used by the OpenWRT build system.
 
 At present, the packages we include are "fwknop" and "gpgpme".  The gpgme
 package is include because it does not appear to be available on any of

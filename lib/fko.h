@@ -672,7 +672,7 @@ DLL_API int fko_set_spa_hmac_type(fko_ctx_t ctx, const short hmac_type);
  * \brief Return error in string form
  *
  * The function 'fko_errstr' returns a pointer to a statically
- * allocated string containing the descripton of the error.
+ * allocated string containing the description of the error.
  *
  * \param err_code The error code to convert
  *
@@ -1297,7 +1297,7 @@ DLL_API int fko_set_gpg_ignore_verify_error(fko_ctx_t ctx,
  * ignore_verify_error flag value associated with the current context.
  *
  * \param ctx The FKO context to access
- * \param val Pointer where teh flag value will be set
+ * \param val Pointer where the flag value will be set
  *
  * \return FKO_SUCCESS if successful, returns an error code otherwise
  */

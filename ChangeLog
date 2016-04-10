@@ -81,7 +81,7 @@ fwknop-2.6.6 (04/23/2015):
       default from accessing the broader Internet until a valid SPA packet is
       sent to the gateway. Two new access.conf variables support this feature:
       DISABLE_DNAT (do not build any DNAT rules for forwarded connections) and
-      FORWARD_ALL (allow all traffic to be forwarded instead of specfic
+      FORWARD_ALL (allow all traffic to be forwarded instead of specific
       services requested within an SPA packet). So far, this feature is only
       supported on systems running iptables or firewalld. The idea was
       contributed by "spartan1833" to the fwknop mailing list, and this became
@@ -90,7 +90,7 @@ fwknop-2.6.6 (04/23/2015):
       pcap.h, which is likely not installed whenever libpcap is also not
       installed. This bug was reported by Alexander Kozhevnikov.
     - [android] (Dan Brooks) Contributed a patch for the Android client app to
-      add the definition of custom server udp port. This is similiar to the
+      add the definition of custom server udp port. This is similar to the
       --server-port argument offered by the main fwknop client.
     - [test suite] Handle versions of lcov that don't have the --rc argument
       which is normally used to force the creation of branch coverage stats

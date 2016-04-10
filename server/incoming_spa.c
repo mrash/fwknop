@@ -717,7 +717,7 @@ handle_gpg_sigs(acc_stanza_t *acc, spa_data_t *spadat,
                 if(*res != FKO_SUCCESS)
                 {
                     log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) Error in GPG signature comparision: %s",
+                        "[%s] (stanza #%d) Error in GPG signature comparison: %s",
                         spadat->pkt_source_ip, stanza_num, fko_gpg_errstr(*ctx));
                     return 0;
                 }
@@ -744,7 +744,7 @@ handle_gpg_sigs(acc_stanza_t *acc, spa_data_t *spadat,
                 if(*res != FKO_SUCCESS)
                 {
                     log_msg(LOG_WARNING,
-                        "[%s] (stanza #%d) Error in GPG signature comparision: %s",
+                        "[%s] (stanza #%d) Error in GPG signature comparison: %s",
                         spadat->pkt_source_ip, stanza_num, fko_gpg_errstr(*ctx));
                     return 0;
                 }

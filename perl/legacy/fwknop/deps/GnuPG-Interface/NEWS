@@ -124,7 +124,7 @@ Noteworthy changes in 0.08
 
     *	Changes so that testing on recent development versions
 	of GnuPG (namely 1.0.1e) works, or notably says
-	that the error is occuring because of GnuPG version
+	that the error is occurring because of GnuPG version
 	differences.
 
 

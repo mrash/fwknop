@@ -125,7 +125,7 @@ eval {
     elsif ( &Term::ReadKey::termoptions() == 4 )
     {
         $response =
-"Term::ReadKey is trying to make do with stty; facilites may be limited.\n";
+"Term::ReadKey is trying to make do with stty; facilities may be limited.\n";
     }
     elsif ( &Term::ReadKey::termoptions() == 5 )
     {

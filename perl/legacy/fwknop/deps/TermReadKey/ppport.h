@@ -33,7 +33,7 @@
  *  5. Any other information that you think could be relevant.
  *
  *
- * For the latest version of this code, please retreive the Devel::PPPort
+ * For the latest version of this code, please retrieve the Devel::PPPort
  * module from CPAN.
  * 
  */

@@ -68,7 +68,7 @@ fko_set_spa_server_auth(fko_ctx_t ctx, const char * const msg)
 
     /**/
 
-    /* Just in case this is a subsquent call to this function.  We
+    /* Just in case this is a subsequent call to this function.  We
      * do not want to be leaking memory.
     */
     if(ctx->server_auth != NULL)

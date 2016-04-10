@@ -890,7 +890,7 @@ Constructing with new1 involves an implicit call to C<init>, whilst
 constructing with new2 involves an implicit call to C<bob> (I<instead> of
 C<init>).
 
-It is the responsiblity of the user to ensure that an C<init> method (or
+It is the responsibility of the user to ensure that an C<init> method (or
 whatever name) is defined.
 
 =item -singleton
@@ -1072,7 +1072,7 @@ sub copy {
 
 # ----------------------------------------------------------------------------
 
-# This supplied for V1 compatiblity only
+# This supplied for V1 compatibility only
 
 my (%BooleanPos, %BooleanFields);
 

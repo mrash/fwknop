@@ -4,7 +4,7 @@ Until we decide on a better way, the man pages for 'fwknop' (client) and
 'fwknopd' (server) are generated from the asciidoc sources in this directory,
 then copied to their respective directories before check-in.
 
-We use the "a2x" command to generate the inital nroff-formated version,
+We use the "a2x" command to generate the initial nroff-formated version,
 which is then manually edited to clean it up a bit.  The "a2x" command is:
 
     a2x -f manpage  fwknopd.man.asciidoc
@@ -13,7 +13,7 @@ This creates the "fwknopd.8" man page.  However, depending on the a2x and.or
 asciidoc configuration on your system, you may have to edit the "fwknopd.8"
 file directly to remove the "[FIXME: source/manual]" string embedded within.
 At present, we simply remove them.  There may also be places where you want
-items on succesive line without intervening lines (i.e. the AUTHORS section
+items on successive line without intervening lines (i.e. the AUTHORS section
 of the generated man page).  In those cases, simply change the ".sp"
 between those lines to ".br".
 

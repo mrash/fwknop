@@ -190,5 +190,5 @@ closelog;
 print "Testing pointer handling in closelog().\n";
 print "Calling closelog() a second time.\n";
 closelog;
-print "This message should not be preceeded by an error message\n";
+print "This message should not be preceded by an error message\n";
 print "   about dereferenced pointers.\n\n";

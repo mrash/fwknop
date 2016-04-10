@@ -526,7 +526,7 @@ int zero_free(char *buf, int len)
 }
 
 /* zero out sensitive information in a way that isn't optimized out by the compiler
- * since we force a comparision and return an error if there is a problem (though
+ * since we force a comparison and return an error if there is a problem (though
  * the caller should do something with this information too).
 */
 int
@@ -585,7 +585,7 @@ char
  * written is set to 0. This way the user knows exactly how many bytes
  * can be appended afterwards.
  *
- * @param buf       Buffer to write the formated message to
+ * @param buf       Buffer to write the formatted message to
  * @param buf_size  Maximum number of bytes to write to the buffer
  * @param msg       Message to format and to append to the buffer
  *
@@ -605,7 +605,7 @@ append_msg_to_buf(char *buf, size_t buf_size, const char* msg, ...)
         /* Format the message like a printf message */
         bytes_written = vsnprintf(buf, buf_size, msg, ap);
 
-        /* It looks like the message has been truncated or an error occured*/
+        /* It looks like the message has been truncated or an error occurred*/
         if (bytes_written < 0)
             bytes_written = 0;
 
@@ -996,7 +996,7 @@ get_in_addr(struct sockaddr *sa)
  * @param ip_bufsize Number of bytes available in the ip_str buffer
  * @param opts       Client command line options
  *
- * @return 0 if successful, 1 if an error occured.
+ * @return 0 if successful, 1 if an error occurred.
  */
 int
 ipv4_resolve(const char *dns_str, char *ip_str)

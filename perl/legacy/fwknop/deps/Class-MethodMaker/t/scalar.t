@@ -870,7 +870,7 @@ TEST_275: {
 =head2 Tests 295--301: non-init ctor
 
 This is to test that the default ctor or default is not assigned if a value is
-supplied.  This would particularly be a problem with v1 compatiblity use where
+supplied.  This would particularly be a problem with v1 compatibility use where
 a value is explcitly supplied to prevent 'new' being called because there is
 no 'new' (if the ctor is called anyway, the program barfs).
 

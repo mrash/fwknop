@@ -1,7 +1,7 @@
 /**
  * \file lib/fko_context.h
  *
- * \brief fko context definiton.
+ * \brief fko context definition.
  */
 
 /*
@@ -43,7 +43,7 @@
  *
  * \struct fko_gpg_sig
  *
- * \brief Stucture to hold a list of the gpg signature information we are interested in.
+ * \brief Structure to hold a list of the gpg signature information we are interested in.
  */
 struct fko_gpg_sig {
     struct fko_gpg_sig *next; /**< link to next member */

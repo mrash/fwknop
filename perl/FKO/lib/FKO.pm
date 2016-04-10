@@ -869,7 +869,7 @@ server.  The timeout value is provided via the C<client_timeout> data field.
 
 =item * B<FKO_LOCAL_NAT_ACCESS_MSG>
 
-This is similar to the C<FKO_NAT_ACCESS> request exept the NAT is to the
+This is similar to the C<FKO_NAT_ACCESS> request except the NAT is to the
 local to the server (i.e. a service listening on 127.0.0.1).
 
 =item * B<FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCES_MSG>

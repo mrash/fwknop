@@ -150,8 +150,8 @@ init_logging(fko_srv_options_t *opts) {
     verbosity = LOG_DEFAULT_VERBOSITY + opts->verbose;
 }
 
-/* Syslog message function.  It uses default set at intialization, and also
- * takes variable args to accomodate printf-like formatting and expansion.
+/* Syslog message function.  It uses default set at initialization, and also
+ * takes variable args to accommodate printf-like formatting and expansion.
 */
 void
 log_msg(int level, char* msg, ...)

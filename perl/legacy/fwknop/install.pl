@@ -286,7 +286,7 @@ if ($os_type == $OS_LINUX) {
     $distro = &get_linux_distro();
 
     if ($distro eq 'redhat' or $distro eq 'fedora') {
-        ### add chkconfig only if we are runing on a redhat distro
+        ### add chkconfig only if we are running on a redhat distro
         $cmds{'chkconfig'} = $chkconfigCmd;
     } elsif ($distro eq 'gentoo') {
         ### add rc-update if we are running on a gentoo distro

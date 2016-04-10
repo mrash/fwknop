@@ -53,7 +53,7 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
     if(!CTX_INITIALIZED(ctx))
         return FKO_ERROR_CTX_NOT_INITIALIZED;
 
-    /* If spoof_user was not passed in, check for a SPOOF_USER enviroment
+    /* If spoof_user was not passed in, check for a SPOOF_USER environment
      * variable.  If it is set, use its value.
     */
     if(spoof_user != NULL && spoof_user[0] != '\0')
@@ -115,7 +115,7 @@ fko_set_username(fko_ctx_t ctx, const char * const spoof_user)
         return res;
     }
 
-    /* Just in case this is a subsquent call to this function.  We
+    /* Just in case this is a subsequent call to this function.  We
      * do not want to be leaking memory.
     */
     if(ctx->username != NULL)
