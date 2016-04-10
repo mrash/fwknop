@@ -157,6 +157,8 @@ typedef struct fko_cli_options
     int             time_offset_minus;
     int             fw_timeout;
 
+    unsigned char   no_home_dir;
+    unsigned char   no_rc_file;
     char            use_rc_stanza[MAX_LINE_LEN];
     unsigned char   got_named_stanza;
     unsigned char   save_rc_stanza;

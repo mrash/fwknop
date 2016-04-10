@@ -933,10 +933,19 @@ prev_exec(fko_cli_options_t *options, int argc, char **argv)
     }
     else
     {
-        if (get_save_file(args_save_file) != 1)
+        if(options->no_home_dir)
         {
-            log_msg(LOG_VERBOSITY_ERROR, "Unable to determine args save file");
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "In --no-home-dir mode must set the args save file path with -E");
             return 0;
+        }
+        else
+        {
+            if (get_save_file(args_save_file) != 1)
+            {
+                log_msg(LOG_VERBOSITY_ERROR, "Unable to determine args save file");
+                return 0;
+            }
         }
     }
 

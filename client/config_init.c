@@ -649,6 +649,12 @@ set_rc_file(char *rcfile, fko_cli_options_t *options)
 
     if(options->rc_file[0] == 0x0)
     {
+        if(options->no_home_dir)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "Warning: in --no-home-dir mode, must set --rc-file path.");
+            exit(EXIT_FAILURE);
+        }
 #ifdef WIN32
         homedir = getenv("USERPROFILE");
 #else
@@ -1787,6 +1793,27 @@ update_rc(fko_cli_options_t *options, fko_var_bitmask_t *bitmask)
 static void
 validate_options(fko_cli_options_t *options)
 {
+    if(options->no_rc_file)
+    {
+        if(options->save_rc_stanza)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "Cannot save an rc stanza in --no-rc-file mode.");
+            exit(EXIT_FAILURE);
+        }
+        if (options->use_rc_stanza[0] != 0x0)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "Cannot set stanza name in --no-rc-file mode.");
+            exit(EXIT_FAILURE);
+        }
+        if (options->stanza_list)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "Cannot list stanzas in --no-rc-file mode.");
+            exit(EXIT_FAILURE);
+        }
+    }
 
     if ( (options->use_rc_stanza[0] != 0x0)
         && (options->got_named_stanza == 0)
@@ -1795,7 +1822,6 @@ validate_options(fko_cli_options_t *options)
         log_msg(LOG_VERBOSITY_ERROR,
                 "Named configuration stanza: [%s] was not found.",
                 options->use_rc_stanza);
-
         exit(EXIT_FAILURE);
     }
 
@@ -1988,6 +2014,12 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
             case 'n':
                 strlcpy(options->use_rc_stanza, optarg, sizeof(options->use_rc_stanza));
                 break;
+            case NO_HOME_DIR:
+                options->no_home_dir = 1;
+                break;
+            case NO_RC_FILE:
+                options->no_rc_file = 1;
+                break;
             case SAVE_RC_STANZA:
                 options->save_rc_stanza = 1;
                 break;
@@ -2010,20 +2042,44 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
     /* Update the verbosity level for the log module */
     log_set_verbosity(LOG_DEFAULT_VERBOSITY + options->verbose);
 
-    /* Dump the configured stanzas from an rcfile */
-    if (options->stanza_list == 1)
+    if(options->no_rc_file)
     {
-        set_rc_file(rcfile, options);
-        exit(dump_configured_stanzas_from_rcfile(rcfile));
+        if(options->save_rc_stanza)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "Cannot save an rc stanza in --no-rc-file mode.");
+            exit(EXIT_FAILURE);
+        }
+        if (options->use_rc_stanza[0] != 0x0)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "Cannot set stanza name in --no-rc-file mode.");
+            exit(EXIT_FAILURE);
+        }
+        if (options->stanza_list)
+        {
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "Cannot list stanzas in --no-rc-file mode.");
+            exit(EXIT_FAILURE);
+        }
     }
+    else
+    {
+        /* Dump the configured stanzas from an rcfile */
+        if (options->stanza_list == 1)
+        {
+            set_rc_file(rcfile, options);
+            exit(dump_configured_stanzas_from_rcfile(rcfile));
+        }
 
-    /* First process the .fwknoprc file.
-    */
-    process_rc_section(RC_SECTION_DEFAULT, options);
+        /* First process the .fwknoprc file.
+        */
+        process_rc_section(RC_SECTION_DEFAULT, options);
 
-    /* Load the user specified stanza from .fwknoprc file */
-    if ( (options->got_named_stanza) && (options->save_rc_stanza == 0) )
-        process_rc_section(options->use_rc_stanza, options);
+        /* Load the user specified stanza from .fwknoprc file */
+        if ( (options->got_named_stanza) && (options->save_rc_stanza == 0) )
+            process_rc_section(options->use_rc_stanza, options);
+    }
 
     /* Reset the options index so we can run through them again.
     */
@@ -2382,6 +2438,14 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                         MAX_PORT, EXIT_UPON_ERR, &is_err);
                 add_var_to_bitmask(FWKNOP_CLI_ARG_NAT_PORT, &var_bitmask);
                 break;
+            case NO_HOME_DIR:
+                /* We already handled this earlier, so we do nothing here
+                */
+                break;
+            case NO_RC_FILE:
+                /* We already handled this earlier, so we do nothing here
+                */
+                break;
             case TIME_OFFSET_PLUS:
                 if (! parse_time_offset(optarg, &options->time_offset_plus))
                 {
@@ -2599,6 +2663,10 @@ usage(void)
       "                             service via NAT.\n"
       "     --nat-rand-port         Have the fwknop client assign a random port\n"
       "                             for NAT access.\n"
+      "     --no-home-dir           Do not allow the fwknop client to look for\n"
+      "                             the user home directory.\n"
+      "     --no-rc-file            Perform fwknop client operations without\n"
+      "                             referencing a ~/.fwknoprc file.\n"
       "     --show-last             Show the last fwknop command line arguments.\n"
       "     --time-offset-plus      Add time to outgoing SPA packet timestamp.\n"
       "     --time-offset-minus     Subtract time from outgoing SPA packet\n"
