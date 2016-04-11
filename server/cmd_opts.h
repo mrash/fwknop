@@ -150,7 +150,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
 };
 
 
-/* Long options values (for those that may not have a short option).
+/** Long options values (for those that may not have a short option).
 */
 enum {
     FW_LIST         = 0x200,

@@ -43,18 +43,43 @@
  * of defining them here.
 */
 #ifndef LOCK_SH
-  #define   LOCK_SH        0x01      /* shared file lock */
+  /**
+   * \def LOCK_SH
+   *
+   * \brief Shared file lock
+   */
+  #define   LOCK_SH        0x01
 #endif
 #ifndef LOCK_EX
-  #define   LOCK_EX        0x02      /* exclusive file lock */
+  /**
+   * \def LOCK_EX
+   *
+   * \brief Exclusive file lock
+   */
+  #define   LOCK_EX        0x02
 #endif
 #ifndef LOCK_NB
-  #define   LOCK_NB        0x04      /* do not block when locking */
+  /**
+   * \def LOCK_NB
+   *
+   * \brief Do not block when locking
+   */
+  #define   LOCK_NB        0x04
 #endif
 #ifndef LOCK_UN
-  #define   LOCK_UN        0x08      /* unlock file */
+  /**
+   * \def LOCK_UN
+   *
+   * \brief Unlock file
+   */
+  #define   LOCK_UN        0x08
 #endif
 
+  /**
+   * \def PID_BUFLEN
+   *
+   * \brief Buffer length for PID
+   */
 #define PID_BUFLEN 7
 
 #endif  /* FWKNOPD_H */

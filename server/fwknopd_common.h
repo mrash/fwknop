@@ -732,6 +732,15 @@ typedef struct fko_srv_options
 */
 #define FW_CLEANUP          1
 #define NO_FW_CLEANUP       0
+
+/**
+ * \brief Frees all memory and exits
+ *
+ * \param opts Program options
+ * \param fw_cleanup_flag Flag indicates whether firewall needs cleanup
+ * \param exit_status Exit status to return when closing the program
+ *
+ */
 void clean_exit(fko_srv_options_t *opts,
         unsigned int fw_cleanup_flag, unsigned int exit_status);
 

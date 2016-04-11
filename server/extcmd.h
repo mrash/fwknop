@@ -82,18 +82,108 @@ enum {
 
 /* Function prototypes
 */
+
+
+
+/**
+ * \brief Runs an external command
+ *
+ * This function is actually a wrapper for _run_extcmd().
+ * Run an external command returning exit status, and optionally filling
+ * provided buffer with STDOUT output up to the size provided.
+ *
+ * \param cmd Command to run
+ * \param so_buf Buffer for command output, or null pointer to discard output
+ * \param so_buf_sz length of so_buf
+ * \param want_stderr Flag indicating stderr is to be saved
+ * \param timeout Placeholder, the timeout is not used
+ * \param pid_status Pointer where the command status is stored
+ * \param opts Program options struct
+ *
+ */
 int run_extcmd(const char *cmd, char *so_buf, const size_t so_buf_sz,
         const int want_stderr, const int timeout, int *pid_status,
         const fko_srv_options_t * const opts);
+
+/**
+ * \brief Runs an external command as a given user and group
+ *
+ * This function is actually a wrapper for _run_extcmd().
+ * Run an external command returning exit status, and optionally filling
+ * provided buffer with STDOUT output up to the size provided.
+ * This function takes a user ID and Group ID to use when running the command.
+ *
+ * \param uid User to run as
+ * \param gid Group to run as
+ * \param cmd Command to run
+ * \param so_buf Buffer for command output
+ * \param so_buf_sz length of so_buf
+ * \param want_stderr Flag indicating stderr is to be saved
+ * \param timeout Placeholder, the timeout is not used
+ * \param pid_status Pointer where the command status is stored
+ * \param opts Program options struct
+ *
+ */
 int run_extcmd_as(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
         const size_t so_buf_sz, const int want_stderr, const int timeout,
         int *pid_status, const fko_srv_options_t * const opts);
+
+/**
+ * \brief Runs an external command, searching for a substring
+ *
+ * This function is actually a wrapper for _run_extcmd().
+ * Run an external command returning exit status, and optionally filling
+ * provided buffer with STDOUT output up to the size provided.
+ *
+ * \param cmd Command to run
+ * \param want_stderr Flag indicating stderr is to be saved
+ * \param timeout Placeholder, the timeout is not used
+ * \param substr_search The substring to search for
+ * \param pid_status Pointer where the command status is stored
+ * \param opts Program options struct
+ *
+ * \return Returns line number where the substring was matched, or 0 for no match
+ */
 int search_extcmd(const char *cmd, const int want_stderr,
         const int timeout, const char *substr_search,
         int *pid_status, const fko_srv_options_t * const opts);
+
+/**
+ * \brief Runs an external command, returning a line of output
+ *
+ * This function is actually a wrapper for _run_extcmd().
+ * Run an external command returning exit status, and optionally filling
+ * provided buffer with STDOUT output up to the size provided.
+ * This function searches the command output for the first match against
+ * The provided substring, returns the line number that matched,
+ * and populates so_buf with that line of output.
+ *
+ * \param cmd Command to run
+ * \param so_buf Buffer for command output
+ * \param so_buf_sz length of so_buf
+ * \param timeout Placeholder, the timeout is not used
+ * \param substr_search The substring to search for
+ * \param pid_status Pointer where the command status is stored
+ * \param opts Program options struct
+ *
+ * \return Returns the line number that matched, or 0 for no match
+ */
 int search_extcmd_getline(const char *cmd, char *so_buf, const size_t so_buf_sz,
         const int timeout, const char *substr_search, int *pid_status,
         const fko_srv_options_t * const opts);
+
+/**
+ * \brief Runs an external command, and feeds it stdin
+ *
+ * This function is actually a wrapper for _run_extcmd_write().
+ * Run an external command that expects stdin.
+ *
+ * \param cmd Command to run
+ * \param cmd_write The text to send as stdin
+ * \param pid_status Pointer where the command status is stored
+ * \param opts Program options struct
+ *
+ */
 int run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
         const fko_srv_options_t * const opts);
 #endif /* EXTCMD_H */
