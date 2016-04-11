@@ -33,9 +33,40 @@
 
 #define CMD_CYCLE_BUFSIZE 256
 
+/**
+ * \brief Main driver for open/close command cycles
+ *
+ * This function is called when a valid SPA packet is received that matches
+ * a stanza containing a command cycle.
+ *
+ * \param opts
+ * \param acc
+ * \param spadat
+ * \param stanza_num
+ * \param res
+ *
+ */
 int cmd_cycle_open(fko_srv_options_t *opts, acc_stanza_t *acc,
         spa_data_t *spadat, const int stanza_num, int *res);
+
+/**
+ * \brief Launches the command cycle close command
+ *
+ * TODO: finish me
+ *
+ * \param opts
+ *
+ */
 void cmd_cycle_close(fko_srv_options_t *opts);
+
+/**
+ * \brief frees the command cycle list
+ *
+ * TODO: Finish me
+ *
+ * \param opts
+ *
+ */
 void free_cmd_cycle_list(fko_srv_options_t *opts);
 
 #endif  /* CMD_CYCLE_H */

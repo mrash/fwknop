@@ -1,10 +1,10 @@
+/**
+ * \file server/nfq_capture.c
+ *
+ * \brief Capture routine for fwknopd that uses libnetfilter_queue.
+ */
+
 /*
- *****************************************************************************
- *
- * File:    nfq_capture.c
- *
- * Purpose: Capture routine for fwknopd that uses libnetfilter_queue.
- *
  *  Fwknop is developed primarily by the people listed in the file 'AUTHORS'.
  *  Copyright (C) 2009-2014 fwknop developers and contributors. For a full
  *  list of contributors, see the file 'CREDITS'.

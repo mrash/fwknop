@@ -35,10 +35,39 @@
 
 /* Function Prototypes
 */
+
+/**
+ * \brief Initializes the program config
+ *
+ * This function sets default config options and loads the config information from the command line.
+ *
+ * \param opts fko_srv_options_t struct that is populated with configuration
+ * \param argc argument count, the number of command line arguments
+ * \param argv argument vector, an array of the command line arguments
+ *
+ */
 void config_init(fko_srv_options_t *opts, int argc, char **argv);
+
+/**
+ * \brief dumps current config to std out
+ *
+ * \param opts Pointer to the program options struct to dump
+ *
+ */
 void dump_config(const fko_srv_options_t *opts);
-void clear_configs(fko_srv_options_t *opts);
+
+/**
+ * \brief Frees config memory
+ *
+ * \param opts fko_srv_options_t struct that is to be freed
+ *
+ */
 void free_configs(fko_srv_options_t *opts);
+
+/**
+ * \brief Prints program help message to stdout
+ *
+ */
 void usage(void);
 
 #endif /* CONFIG_INIT_H */

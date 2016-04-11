@@ -68,7 +68,19 @@ enum {
 
 /* Function prototypes
 */
+
+/**
+ * \brief takes a numeric error code and returns the readable string
+ *
+ * \param err_code The integer error code to convert
+ *
+ * \return returns a pointer to the error string
+ */
 const char* get_errstr(const int err_code);
+
+/**
+ * \brief print all server errors (from server/fwknopd_errors.c) to stdout
+ */
 void dump_server_errors(void);
 
 #endif /* FWKNOPD_ERRORS_H */

@@ -53,6 +53,17 @@
   DECLARE_TEST_SUITE(access, "Access test suite");
 #endif
 
+/**
+ * \brief include keys file
+ *
+ * This function loads only the crypto keys from a given file.
+ * It inserts these keys into the active access stanza.
+ *
+ * \param curr_acc pointer to the current access stanza
+ * \param access_filename Pointer to the file containing the keys
+ * \param opts fko_srv_options_t Server options struct
+ *
+ */
 int
 include_keys_file(acc_stanza_t *, const char *, fko_srv_options_t *);
 
@@ -1051,6 +1062,15 @@ free_acc_stanzas(fko_srv_options_t *opts)
     return;
 }
 
+/**
+ * \brief Frees the final access stanza
+ *
+ * This function walks the access stanza list and frees the last member
+ *
+ * \param opts pointer to the server options struct
+ *
+ */
+
 void
 free_last_acc_stanza(fko_srv_options_t *opts)
 {
@@ -1404,11 +1424,7 @@ acc_data_is_valid(fko_srv_options_t *opts,
 
     return(1);
 }
-/**
- * \brief Parses an access folder
- *
- * This function processes all the *.conf files in the specified directory.
- */
+
 int
 parse_access_folder(fko_srv_options_t *opts, char *access_folder, int *depth)
 {
@@ -2049,12 +2065,21 @@ compare_addr_list(acc_int_list_t *ip_list, const uint32_t ip)
     return(match);
 }
 
-/* Compare the contents of 2 port lists.  Return true on a match.
+/**
+ * \brief Compares port lists
+ *
+ * Compare the contents of 2 port lists.  Return true on a match.
  * Match depends on the match_any flag.  if match_any is 1 then any
  * entry in the incoming data need only match one item to return true.
  * Otherwise all entries in the incoming data must have a corresponding
  * match in the access port_list.
-*/
+ *
+ * \param acc Pointer to the acc_stanza_t struct that holds the access stanzas
+ * \param port_str pointer to the
+ *
+ * \return Returns true on a match
+ *
+ */
 static int
 compare_port_list(acc_port_list_t *in, acc_port_list_t *ac, const int match_any)
 {
