@@ -2654,7 +2654,8 @@
         'subcategory' => 'server',
         'detail'   => 'invalid pcap filter',
         'function' => \&generic_exec,
-        'cmdline' => "$fwknopdCmd $default_server_conf_args -f -P proto invalid",
+        'cmdline' => "$fwknopdCmd $default_server_conf_args " .
+            "-i $loopback_intf -f -P proto invalid",
         'exec_err' => $YES,
     },
     {
