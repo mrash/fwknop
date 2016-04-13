@@ -13,11 +13,13 @@
 #
 use FKO;
 
-use Test::More tests => 9581;
+use Test::More tests => 9589;
 
 my $err;
 
 ##############################################################################
+
+my $HMAC_MAX_LEN = 136; ### allow for SHA3
 
 # Fuzzing data
 my @fuzz_msg_types = (
@@ -171,10 +173,10 @@ my @fuzzing_enc_keys = (
 );
 
 my @fuzzing_hmac_keys = (
-    pack('a', "")x129,
-    pack('a', "") . 'A'x128,
-    'A'x128 . pack('a', ""),
-    'A'x129,
+    pack('a', "")x($HMAC_MAX_LEN+1),
+    pack('a', "") . 'A'x$HMAC_MAX_LEN,
+    'A'x$HMAC_MAX_LEN . pack('a', ""),
+    'A'x($HMAC_MAX_LEN+1),
     'A'x1000,
     'A'x2000,
 );
@@ -301,7 +303,7 @@ foreach my $hmac_key ( @fuzzing_hmac_keys ) {
 }
 
 my $valid_enc_key  = 'A'x32;
-my $valid_hmac_key = 'A'x128;
+my $valid_hmac_key = 'A'x$HMAC_MAX_LEN;
 $f1 = FKO->new();
 ok($f1, 'f1 valid encryption key NULL fuzzing');
 ok($f1->spa_message('1.2.3.4,tcp/22') == FKO::FKO_SUCCESS, 'set spa_message');
@@ -333,13 +335,13 @@ $f2->destroy() if $f2;
 
 # Test valid HMAC key that is altered with embedded NULL bytes
 #
-for (my $i=0; $i<128; $i++) {
+for (my $i=0; $i<$HMAC_MAX_LEN; $i++) {
     my $bad_key = '';
     for (my $j=0; $j < $i; $j++) {
         $bad_key .= 'A';
     }
     $bad_key .= pack('A', "");
-    for (my $j=$i+1; $j < 128; $j++) {
+    for (my $j=$i+1; $j < $HMAC_MAX_LEN; $j++) {
         $bad_key .= 'A';
     }
     my $f2 = FKO->new($f1->spa_data(), $valid_enc_key, FKO::FKO_ENC_MODE_CBC, $bad_key, FKO::FKO_HMAC_SHA256);
@@ -347,7 +349,7 @@ for (my $i=0; $i<128; $i++) {
     $f2->destroy() if $f2;
 }
 
-$bad_key = 'A'x128 . pack('A', "");
+$bad_key = 'A'x$HMAC_MAX_LEN . pack('A', "");
 $f2 = FKO->new($f1->spa_data(), $valid_enc_key, FKO::FKO_ENC_MODE_CBC, $bad_key, FKO::FKO_HMAC_SHA256);
 is($f2, undef, 'create fko object f2 (bad HMAC key)');
 $f2->destroy() if $f2;
