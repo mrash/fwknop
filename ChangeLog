@@ -1,4 +1,7 @@
-fwknop-2.6.9 (01//2016):
+fwknop-2.6.9 (04//2016):
+    - (Vlad Glagolev) Added support for deriving the source IP from the
+      X-Forwarded-For HTTP header when SPA packets are sent over HTTP
+      connections.
     - Bug fix in command open/close cycle feature to ensure that the first
       successful match on a valid incoming SPA packet finishes all access.conf
       stanza processing. That is, no other stanzas should be looked at after

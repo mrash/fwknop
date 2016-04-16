@@ -336,6 +336,8 @@ EXTRA_DIST = \
     test/conf/udp_server_fwknopd.conf \
     test/conf/spa_over_http_fwknopd.conf \
     test/conf/spa_over_http.pcap \
+    test/conf/spa_x_forwarded_for.pcap \
+    test/conf/spa_x_forwarded_for_fwknopd.conf \
     test/conf/ipt_snat_fwknopd.conf \
     test/conf/firewd_snat_fwknopd.conf \
     test/conf/ipt_snat_no_translate_ip_fwknopd.conf \

@@ -537,6 +537,20 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'server',
+        'detail'   => '--pcap-file http X-Forwarded-For',
+        'function' => \&process_pcap_file_directly,
+        'cmdline'  => '',
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'spa_x_forwarded_for'} -a $cf{'hmac_access'} " .
+            "-d $default_digest_file -p $default_pid_file " .
+            "--pcap-file $spa_x_forwarded_for_pcap_file --foreground $verbose_str " .
+            "--pcap-filter 'port 80' " .
+            "--verbose --verbose --verbose",
+        'server_positive_output_matches' => [qr/Added access rule.*\sfor 1.2.3.4/],
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'server',
         'detail'   => '--pcap-file with Ethernet FCS header',
         'function' => \&process_pcap_file_directly,
         'cmdline'  => '',
