@@ -5796,7 +5796,7 @@ sub down_interface() {
     &start_fwknopd($test_hr);
 
     &run_cmd("$ifconfig_path lo down", $cmd_out_tmp, $curr_test_file);
-    sleep 1;
+    sleep 5;
     &run_cmd("$ifconfig_path lo up", $cmd_out_tmp, $curr_test_file);
 
     if (&is_fwknopd_running()) {
