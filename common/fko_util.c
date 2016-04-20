@@ -171,6 +171,68 @@ is_valid_ipv4_addr(const char * const ip_str)
     return(res);
 }
 
+/* Validate a hostname
+*/
+int
+is_valid_hostname(const char * const hostname_str)
+{
+    int                 label_size = 0, total_size = 0;
+    const char         *ndx     = hostname_str;
+
+    if (hostname_str == NULL)
+        return 0;
+
+    while(*ndx != '\0')
+    {
+        if (label_size == 0) //More restrictions on first character of a label
+        {
+            if (!isalnum(*ndx))
+                return 0;
+        }
+        else if (!(isalnum(*ndx) | (*ndx == '.') | (*ndx == '-')))
+            return 0;
+
+        if (*ndx == '.')
+        {
+            if (label_size > 63)
+                return 0;
+            if (!isalnum(*(ndx-1)))  //checks that previous character was not a . or -
+                return 0;
+
+            label_size = 0;
+        }
+        else
+        {
+            label_size++;
+        }
+
+        total_size++;
+
+        if (total_size > 254)
+            return 0;
+
+        ndx++; //move to next character
+    }
+    /* At this point, we're pointing at the null.  Decrement ndx for simplicity
+    */
+    ndx--;
+    if (*ndx == '-')
+        return 0;
+
+    if (*ndx == '.')
+        total_size--;
+
+    if (total_size > 253)
+        return 0;
+
+    if (label_size > 63)
+        return 0;
+
+    /* By now we've bailed if invalid
+    */
+    return 1;
+}
+
 /* Convert a digest_type string to its integer value.
 */
 short
