@@ -1149,6 +1149,28 @@ count_characters(const char *str, const char match, int len)
 
 #ifdef HAVE_C_UNIT_TESTS
 
+DECLARE_UTEST(test_hostname_validator, "test the is_valid_hostname function")
+{
+    char test_hostname[300];
+    strcpy(test_hostname, "a");
+    CU_ASSERT(is_valid_hostname(test_hostname) == 1);
+    strcpy(test_hostname, "a.b");
+    CU_ASSERT(is_valid_hostname(test_hostname) == 1);
+    strcpy(test_hostname, "a.b.");
+    CU_ASSERT(is_valid_hostname(test_hostname) == 1);
+    strcpy(test_hostname, "a.");
+    CU_ASSERT(is_valid_hostname(test_hostname) == 1);
+
+    strcpy(test_hostname, "a..b");
+    CU_ASSERT(is_valid_hostname(test_hostname) == 0);
+    strcpy(test_hostname, ".a.b");
+    CU_ASSERT(is_valid_hostname(test_hostname) == 0);
+    strcpy(test_hostname, "a-.b");
+    CU_ASSERT(is_valid_hostname(test_hostname) == 0);
+    strcpy(test_hostname, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.b");
+    CU_ASSERT(is_valid_hostname(test_hostname) == 0);
+}
+
 DECLARE_UTEST(test_count_characters, "test the count_characters function")
 {
     char test_str[32];
@@ -1168,6 +1190,7 @@ int register_utils_test(void)
 {
     ts_init(&TEST_SUITE(utils_test), TEST_SUITE_DESCR(utils_test), NULL, NULL);
     ts_add_utest(&TEST_SUITE(utils_test), UTEST_FCT(test_count_characters), UTEST_DESCR(test_count_characters));
+    ts_add_utest(&TEST_SUITE(utils_test), UTEST_FCT(test_hostname_validator), UTEST_DESCR(test_hostname_validator));
 
     return register_ts(&TEST_SUITE(utils_test));
 }
