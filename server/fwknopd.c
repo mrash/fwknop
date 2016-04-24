@@ -147,6 +147,7 @@ main(int argc, char **argv)
         if(opts.fw_flush == 1)
         {
             fprintf(stdout, "Deleting any existing firewall rules...\n");
+            opts.enable_fw = 1;
             clean_exit(&opts, FW_CLEANUP, EXIT_SUCCESS);
         }
 
