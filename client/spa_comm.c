@@ -98,7 +98,7 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
 
     memset(&hints, 0, sizeof(struct addrinfo));
 
-    hints.ai_family   = AF_UNSPEC; /* Allow IPv4 or IPv6 */
+    hints.ai_family   = AF_INET; /* Allow IPv4 only */
 
     if (options->spa_proto == FKO_PROTO_UDP)
     {
