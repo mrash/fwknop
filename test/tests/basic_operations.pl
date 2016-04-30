@@ -4327,7 +4327,7 @@
         'subcategory' => 'server',
         'detail'   => "$FW_TYPE FORCE_SNAT and 0.0.0.0 0",
         'function' => \&server_conf_files,
-        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config -D",
         'exec_err' => $YES,
         'server_access_file' => [
             'SOURCE         any',
