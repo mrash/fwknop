@@ -1672,6 +1672,9 @@ rm_expired_rules(const fko_srv_options_t * const opts,
         tmp_mark = ndx;
 
         strlcpy(exp_str, ndx, sizeof(exp_str));
+        if (strchr(exp_str, '*') != NULL)
+            strchr(exp_str, '*')[0] = '\0';
+
         chop_spaces(exp_str);
         if(!is_digits(exp_str))
         {
