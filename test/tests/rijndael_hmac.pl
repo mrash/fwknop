@@ -636,7 +636,7 @@
         'subcategory' => 'client+server',
         'detail'   => '-f client timeout',
         'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_hmac_args -f 2",
+        'cmdline'  => "$default_client_hmac_args -f 4",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $NEW_RULE_REQUIRED,
