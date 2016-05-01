@@ -1742,7 +1742,7 @@
         'function' => \&generic_exec,
         'exec_err' => $YES,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
-            "$cf{'rc_hmac_b64_key'} -N 999.1.1.1:22",
+            "$cf{'rc_hmac_b64_key'} -N 192,1.1.1:22",
         'key_file' => $cf{'rc_hmac_b64_key'},
     },
     {
