@@ -7,7 +7,7 @@
 
 if [ -x ./configure ]; then
     ./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var \
-        --enable-profile-coverage --enable-fuzzing-interfaces --enable-libfiu-support $@
+        --enable-profile-coverage --enable-fuzzing-interfaces --enable-libfiu-support --enable-c-unit-tests $@
 else
     echo "[*] Execute from the fwknop top level sources directory"
 fi

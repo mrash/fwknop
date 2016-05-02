@@ -119,6 +119,7 @@ my @test_files = (
     "$tests_dir/preliminaries.pl",
     "$tests_dir/code_structure.pl",
     "$tests_dir/basic_operations.pl",
+    "$tests_dir/cunit_tests.pl",
     "$tests_dir/rijndael.pl",
     "$tests_dir/rijndael_cmd_exec.pl",
     "$tests_dir/rijndael_hmac_cmd_exec.pl",
@@ -148,6 +149,7 @@ our @preliminaries                = ();  ### from tests/preliminaries.pl
 our @code_structure_errstr        = ();  ### from tests/code_structure.pl (may include Coccinelle matches eventually)
 our @configure_args               = ();  ### from tests/configure_args.pl
 our @basic_operations             = ();  ### from tests/basic_operations.pl
+our @cunit_tests                 = ();  ### from tests/cunit_tests.pl
 our @rijndael                     = ();  ### from tests/rijndael.pl
 our @rijndael_cmd_exec            = ();  ### from tests/rijndael_cmd_exec.pl
 our @rijndael_hmac_cmd_exec       = ();  ### from tests/rijndael_hmac_cmd_exec.pl
@@ -264,6 +266,7 @@ my $enable_perl_module_checks = 0;
 my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
 my $enable_python_module_checks = 0;
 my $enable_openssl_compatibility_tests = 0;
+my $enable_cunit_tests = 0;
 my $openssl_success_ctr = 0;
 my $openssl_failure_ctr = 0;
 my $openssl_ctr = 0;
@@ -373,6 +376,7 @@ exit 1 unless GetOptions(
     'enable-distcheck'  => \$enable_make_distcheck,
     'enable-dist-check' => \$enable_make_distcheck,  ### synonym
     'enable-openssl-checks' => \$enable_openssl_compatibility_tests,
+    'enable-cunit' => \$enable_cunit_tests,
     'gdb-test=s'        => \$gdb_test_file,
     'List-mode'         => \$list_mode,
     'test-limit=i'      => \$test_limit,
@@ -624,6 +628,7 @@ if ($enable_all or $enable_complete) {
     $enable_perl_module_checks = 1;
     $enable_python_module_checks = 1;
     $enable_openssl_compatibility_tests = 1;
+    $enable_cunit_tests = 1;
 }
 
 if ($enable_complete) {
@@ -852,6 +857,7 @@ my @tests = (
     @preliminaries,
     @code_structure_errstr,
     @basic_operations,
+    @cunit_tests,
     @rijndael,
     @rijndael_cmd_exec,
     @rijndael_hmac_cmd_exec,
@@ -2225,6 +2231,22 @@ sub write_rc_file() {
     close RC;
 
     return;
+}
+
+sub cunit_tests() {
+    my $test_hr = shift;
+
+    my $rv = 1;
+
+    &run_cmd("$lib_view_str $valgrind_str" . $test_hr->{'cmdline'},
+            $cmd_out_tmp, $curr_test_file);
+    if ($test_hr->{'negative_output_matches'}) {
+        $rv = 0 if &file_find_regex(
+            $test_hr->{'negative_output_matches'},
+            $MATCH_ANY, $APPEND_RESULTS, $curr_test_file);
+    }
+return $rv
+
 }
 
 sub server_start_stop_cycle() {
@@ -7235,6 +7257,9 @@ sub init() {
         $fuzzing_test_tag .= '_' unless $fuzzing_test_tag =~ /_$/;
     }
 
+    unless ($enable_cunit_tests) {
+        push @tests_to_exclude, qr/cunit tests/;
+    }
     unless ($enable_valgrind) {
         push @tests_to_exclude, qr/with valgrind/;
     }
