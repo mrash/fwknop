@@ -48,10 +48,10 @@
   #define SUCCESS    1
 #endif
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
   #include "cunit_common.h"
   DECLARE_TEST_SUITE(access, "Access test suite");
-#endif
+#endif /* LCOV_EXCL_STOP */
 
 /**
  * \brief include keys file
@@ -2482,7 +2482,7 @@ include_keys_file(acc_stanza_t *curr_acc, const char *access_filename, fko_srv_o
     return EXIT_SUCCESS;
 }
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 
 DECLARE_UTEST(compare_port_list, "check compare_port_list function")
 {
@@ -2511,6 +2511,5 @@ int register_ts_access(void)
 
     return register_ts(&TEST_SUITE(access));
 }
-#endif /* HAVE_C_UNIT_TESTS */
-
+#endif /* HAVE_C_UNIT_TESTS */ /* LCOV_EXCL_STOP */
 /***EOF***/

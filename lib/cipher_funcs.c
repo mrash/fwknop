@@ -48,9 +48,9 @@
   #endif
 #endif
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 DECLARE_TEST_SUITE(digest_test, "Cipher functions test suite");
-#endif
+#endif /* LCOV_EXCL_STOP */
 
 /* Get random data.
 */
@@ -417,7 +417,7 @@ add_gpg_prefix(fko_ctx_t ctx)
     return(FKO_SUCCESS);
 }
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 
 
 
@@ -659,5 +659,5 @@ int register_ts_aes_test(void)
 
     return register_ts(&TEST_SUITE(digest_test));
 }
-#endif
+#endif /* LCOV_EXCL_STOP */
 /***EOF***/

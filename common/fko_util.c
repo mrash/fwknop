@@ -49,10 +49,10 @@
 
 #define NULL_STRING                 "<NULL>"                /*!< String which represents a NULL buffer */
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 #include "cunit_common.h"
 DECLARE_TEST_SUITE(utils_test, "Utility functions test suite");
-#endif
+#endif /* LCOV_EXCL_STOP */
 
 /**
  * Structure to handle an encryption mode string string and its associated integer value
@@ -1085,7 +1085,7 @@ count_characters(const char *str, const char match, int len)
     return count;
 }
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 
 DECLARE_UTEST(test_count_characters, "test the count_characters function")
 {
@@ -1109,5 +1109,5 @@ int register_utils_test(void)
 
     return register_ts(&TEST_SUITE(utils_test));
 }
-#endif
+#endif /* LCOV_EXCL_STOP */
 /***EOF***/

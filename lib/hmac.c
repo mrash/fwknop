@@ -29,9 +29,9 @@
 */
 
 #include "hmac.h"
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 DECLARE_TEST_SUITE(hmac_test, "hmac functions test suite");
-#endif
+#endif /* LCOV_EXCL_STOP */
 
 /**
  * /brief populate the inner and outer pads
@@ -383,7 +383,7 @@ hmac_sha3_512(const char *msg, const unsigned int msg_len,
     return FKO_SUCCESS;
 }
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 
 DECLARE_UTEST(test_hmac_md5, "hmac_md5 test vectors") // https://tools.ietf.org/html/rfc2202
 {
@@ -1474,4 +1474,4 @@ int register_ts_hmac_test(void)
     return register_ts(&TEST_SUITE(hmac_test));
 }
 
-#endif /* HAVE_C_UNIT_TESTS */
+#endif /* HAVE_C_UNIT_TESTS */ /* LCOV_EXCL_STOP */

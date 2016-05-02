@@ -38,9 +38,9 @@
 /* Char used to separate SPA fields in an SPA packet */
 #define SPA_FIELD_SEPARATOR    ":"
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 DECLARE_TEST_SUITE(fko_decode, "FKO decode test suite");
-#endif
+#endif /* LCOV_EXCL_STOP */
 
 static int
 num_fields(char *str)
@@ -590,7 +590,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     return(FKO_SUCCESS);
 }
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 
 DECLARE_UTEST(num_fields, "Count the number of SPA fields in a SPA packet")
 {
@@ -649,6 +649,5 @@ int register_ts_fko_decode(void)
     return register_ts(&TEST_SUITE(fko_decode));
 }
 
-#endif /* HAVE_C_UNIT_TESTS */
-
+#endif /* HAVE_C_UNIT_TESTS */ /* LCOV_EXCL_STOP */
 /***EOF***/

@@ -29,9 +29,9 @@
 #include "fko_common.h"
 #include "digest.h"
 #include "base64.h"
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 DECLARE_TEST_SUITE(digest_test, "digest functions test suite");
-#endif
+#endif /* LCOV_EXCL_STOP */
 /* Compute MD5 hash on in and store result in out.
 */
 void
@@ -192,7 +192,7 @@ sha3_512_base64(char *out, unsigned char *in, size_t size)
 
 }
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 
 DECLARE_UTEST(test_md5, "md5 test vectors") //https://tools.ietf.org/html/rfc1321.html
 {
@@ -575,5 +575,5 @@ int register_ts_digest_test(void)
     return register_ts(&TEST_SUITE(digest_test));
 }
 
-#endif /* HAVE_C_UNIT_TESTS */
+#endif /* HAVE_C_UNIT_TESTS */ /* LCOV_EXCL_STOP */
 /***EOF***/

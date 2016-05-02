@@ -51,10 +51,10 @@ static unsigned char map2[] =
 };
 #endif
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 #include "cunit_common.h"
 DECLARE_TEST_SUITE(base64_test, "Utility functions test suite");
-#endif
+#endif /* LCOV_EXCL_STOP */
 
 int
 b64_decode(const char *in, unsigned char *out)
@@ -140,7 +140,7 @@ strip_b64_eq(char *data)
         *ndx = '\0';
 }
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 DECLARE_UTEST(test_base64_encode, "test base64 encoding functions")
 {
     char test_str[32] = {0};
@@ -248,5 +248,5 @@ int register_base64_test(void)
 
     return register_ts(&TEST_SUITE(base64_test));
 }
-#endif
+#endif /* LCOV_EXCL_STOP */
 /***EOF***/

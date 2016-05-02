@@ -51,10 +51,10 @@
 #define BITMASK_ARRAY_SIZE          2                                   /*!< Number of 32bits integer used to handle bitmask in the fko_var_bitmask_t structure */
 #define LF_CHAR                     0x0A                                /*!< Hexadecimal value associated to the LF char */
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
   #include "cunit_common.h"
   DECLARE_TEST_SUITE(config_init, "Config init test suite");
-#endif
+#endif /* LCOV_EXCL_STOP */
 
 /**
  * Structure to handle long bitmask.
@@ -2676,7 +2676,7 @@ usage(void)
     return;
 }
 
-#ifdef HAVE_C_UNIT_TESTS
+#ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 
 DECLARE_TEST_SUITE_INIT(config_init)
 {
@@ -2734,4 +2734,4 @@ int register_ts_config_init(void)
     return register_ts(&TEST_SUITE(config_init));
 }
 
-#endif /* HAVE_C_UNIT_TESTS */
+#endif /* HAVE_C_UNIT_TESTS */ /* LCOV_EXCL_STOP */
