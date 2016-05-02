@@ -157,6 +157,8 @@ if test "x$want_libfiu_support" = "xyes"; then
     FKO_CHECK_COMPILER_ARG_LDFLAGS_ONLY([-lfiu])
 fi
 
+AM_CONDITIONAL([WANT_LIBFIU_SUPPORT], [test "$want_libfiu_support" = yes])
+
 dnl Decide whether or not to enable C unit testing
 dnl
 want_c_unit_tests=no
