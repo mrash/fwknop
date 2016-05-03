@@ -5954,15 +5954,15 @@ sub fw_check() {
         if ($test_hr->{'sleep_cycles'}) {
             last if $ctr == $test_hr->{'sleep_cycles'};
         } else {
-            last if $ctr == 3;
+            last if $ctr == 6;
         }
-        sleep 1;
+        precise_sleep(.5);
     }
     if ($test_hr->{'sleep_cycles'} and ($ctr == $test_hr->{'sleep_cycles'})) {
         $fw_rule_created = 0;
         $fw_rule_removed = 0;
     } else {
-        if ($ctr == 3) {
+        if ($ctr == 6) {
             $fw_rule_created = 0;
             $fw_rule_removed = 0;
         }

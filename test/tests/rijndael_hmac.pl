@@ -797,7 +797,7 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'relax_receive_cycle_num_check' => $YES, ### multiple SPA packets involved
         'weak_server_receive_check' => $YES,
-        'sleep_cycles' => 5,
+        'sleep_cycles' => 10,
         'key_file' => $cf{'rc_hmac_b64_key'},
     },
     {

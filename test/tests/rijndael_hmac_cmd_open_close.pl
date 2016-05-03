@@ -169,7 +169,7 @@
         'cmd_cycle_close_file' => ['/tmp/2127.0.0.2'],
         'relax_receive_cycle_num_check' => $YES, ### multiple SPA packets involved
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'sleep_cycles' => 6,
+        'sleep_cycles' => 12,
         'server_positive_output_matches' => [qr/Timer expired/],
     },
     {
@@ -235,7 +235,7 @@
         ],
         'relax_receive_cycle_num_check' => $YES, ### multiple SPA packets involved
         'key_file' => $cf{'rc_cmd_open_close_multi_cycle'},
-        'sleep_cycles' => 20,
+        'sleep_cycles' => 40,
         'server_positive_output_matches' => [qr/Timer expired/],
     },
     {
@@ -300,7 +300,7 @@
         ],
         'relax_receive_cycle_num_check' => $YES, ### multiple SPA packets involved
         'key_file' => $cf{'rc_cmd_open_close_multi_cycle'},
-        'sleep_cycles' => 20,
+        'sleep_cycles' => 40,
         'server_positive_output_matches' => [qr/Timer expired/],
     },
 
