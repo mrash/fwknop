@@ -1268,6 +1268,11 @@ sub run_test() {
     return;
 }
 
+sub precise_sleep {
+    my ($sleeptime) = @_;
+    select(undef, undef, undef, $sleeptime);
+}
+
 sub get_msg() {
     my $test_hr = shift;
 
