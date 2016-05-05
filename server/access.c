@@ -2324,6 +2324,7 @@ include_keys_file(acc_stanza_t *curr_acc, const char *access_filename, fko_srv_o
     char            access_line_buf[MAX_LINE_LEN] = {0};
     char            var[MAX_LINE_LEN] = {0};
     char            val[MAX_LINE_LEN] = {0};
+    char           *ndx;
 
     printf("including key file %s\n", access_filename);
     if(stat(access_filename, &st) != 0)
@@ -2363,6 +2364,11 @@ include_keys_file(acc_stanza_t *curr_acc, const char *access_filename, fko_srv_o
             fclose(file_ptr);
             return EXIT_FAILURE;
         }
+
+        /* Remove the colon if present
+        */
+        if((ndx = strrchr(var, ':')) != NULL)
+            *ndx = '\0';
 
         if(CONF_VAR_IS(var, "KEY"))
         {
