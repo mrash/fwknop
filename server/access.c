@@ -1648,7 +1648,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         else if(CONF_VAR_IS(var, "%include_keys")) //Only valid options from this file are those defining keys.
         {
           // This directive is only valid within a SOURCE stanza
-            log_msg(LOG_DEBUG, "[+] Processing include_folder directive for: '%s'", val);
+            log_msg(LOG_DEBUG, "[+] Processing include_keys directive for: '%s'", val);
             include_keys_file(curr_acc, val, opts);
             if(!acc_data_is_valid(opts, user_pw, sudo_user_pw, curr_acc))
             {
@@ -2476,7 +2476,8 @@ include_keys_file(acc_stanza_t *curr_acc, const char *access_filename, fko_srv_o
             add_acc_string(&(curr_acc->gpg_remote_id), val, file_ptr, opts);
         else if(CONF_VAR_IS(var, "GPG_FINGERPRINT_ID"))
             add_acc_string(&(curr_acc->gpg_remote_fpr), val, file_ptr, opts);
-
+        else
+            log_msg(LOG_INFO, "Ignoring invalid entry: '%s'", var);
     }
     fclose(file_ptr);
     return EXIT_SUCCESS;
