@@ -778,7 +778,206 @@
         'exec_err' => $YES,
         'positive_output_matches' => [qr/Invalid access folder/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf valid include_keys file (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
 
+            'SOURCE             1.1.1.1',
+            "%include_keys $access_include_dir/valid-keyfile",
+
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'negative_output_matches' => [qr/skipping stanza/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf valid include_keys file (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            'SOURCE             1.1.1.1',
+            'KEY             testtest',
+            'SOURCE             2.2.2.2',
+            "%include_keys $access_include_dir/valid-keyfile",
+
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'negative_output_matches' => [qr/skipping stanza/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf unauthorized include_keys file (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            'SOURCE             1.1.1.1',
+            "%include_keys $access_include_dir/unauth-keyfile",
+
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/Ignoring invalid entry: \'SOURCE\'/],
+        'negative_output_matches' => [qr/was not found/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf unauthorized include_keys file (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            'SOURCE             1.1.1.1',
+            'KEY             testtest',
+            'SOURCE             2.2.2.2',
+            "%include_keys $access_include_dir/unauth-keyfile",
+
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/Ignoring invalid entry: \'SOURCE\'/],
+        'negative_output_matches' => [qr/Could not find valid SOURCE stanza/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf invalid include_keys file (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            'SOURCE             1.1.1.1',
+            "%include_keys $access_include_dir/invalid-keyfile",
+
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/Ignoring invalid entry: \'INVALID_STATEMENT\'/],
+        'negative_output_matches' => [qr/was not found/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf invalid include_keys file (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            'SOURCE             1.1.1.1',
+            'KEY             testtest',
+            'SOURCE             2.2.2.2',
+            "%include_keys $access_include_dir/invalid-keyfile",
+
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/Ignoring invalid entry: \'INVALID_STATEMENT\'/],
+        'negative_output_matches' => [qr/was not found/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf empty include_keys file (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            'SOURCE             1.1.1.1',
+            "%include_keys $access_include_dir/empty-file",
+
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/skipping stanza/],
+        'positive_output_matches' => [qr/Could not find valid SOURCE stanza/],
+        'negative_output_matches' => [qr/was not found/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf empty include_keys file (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            'SOURCE             1.1.1.1',
+            'KEY             testtest',
+            'SOURCE             2.2.2.2',
+            "%include_keys $access_include_dir/empty-file",
+
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/skipping stanza/],
+        'negative_output_matches' => [qr/Could not find valid SOURCE stanza/],
+        'negative_output_matches' => [qr/was not found/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf nonexistent include_keys file (1)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            'SOURCE             1.1.1.1',
+            "%include_keys    /tmp/doesnt_exist ",
+
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/skipping stanza/],
+        'positive_output_matches' => [qr/Could not find valid SOURCE stanza/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'access.conf nonexistent include_keys file (2)',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files -D --exit-parse-config -v",
+        'exec_err' => $YES,
+        'server_access_file' => [
+
+            'SOURCE             1.1.1.1',
+            'KEY             testtest',
+            'SOURCE             2.2.2.2',
+            "%include_keys    /tmp/doesnt_exist ",
+
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/skipping stanza/],
+        'negative_output_matches' => [qr/Could not find valid SOURCE stanza/],
+    },
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
