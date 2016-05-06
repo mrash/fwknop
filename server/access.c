@@ -1095,6 +1095,7 @@ free_last_acc_stanza(fko_srv_options_t *opts)
         tmp_root = tmp_root->next;
     }
 
+    free_acc_stanza_data(tmp_root->next);
     free(tmp_root->next);
     tmp_root->next = NULL;
     return;
