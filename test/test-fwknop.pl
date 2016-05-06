@@ -1743,10 +1743,10 @@ sub valgrind_results() {
     my $rv = 1;
 
     $rv = 0 if &file_find_regex(
-        [qr/definitely\slost\:\s[1-9]\d+\sbytes/],
+        [qr/definitely\slost\:\s[1-9]\d*\sbytes/],
         $MATCH_ALL, $APPEND_RESULTS, $file);
     $rv = 0 if &file_find_regex(
-        [qr/indirectly\slost\:\s[1-9]\d+\sbytes/],
+        [qr/indirectly\slost\:\s[1-9]\d*\sbytes/],
         $MATCH_ALL, $APPEND_RESULTS, $file);
 
     return $rv;
