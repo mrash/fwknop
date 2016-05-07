@@ -59,7 +59,6 @@ static void clean_exit(fko_ctx_t ctx, fko_cli_options_t *opts,
     char *key, int *key_len, char *hmac_key, int *hmac_key_len,
     unsigned int exit_status);
 static void zero_buf_wrapper(char *buf, int len);
-static int is_hostname_str_with_port(const char *str);
 #if HAVE_LIBFIU
 static int enable_fault_injections(fko_cli_options_t * const opts);
 #endif
@@ -75,71 +74,6 @@ static int enable_fault_injections(fko_cli_options_t * const opts);
 #define NAT_ACCESS_STR_TEMPLATE     "%s,%d"             /*!< Template for a nat access string ip,port with sscanf*/
 #define HOSTNAME_BUFSIZE            64                  /*!< Maximum size of a hostname string */
 #define CTX_DUMP_BUFSIZE            4096                /*!< Maximum size allocated to a FKO context dump */
-
-/**
- * @brief Check whether a string is an ipv6 address or not
- *
- * @param str String to check for an ipv6 address.
- *
- * @return 1 if the string is an ipv6 address, 0 otherwise.
- */
-static int
-is_ipv6_str(char *str)
-{
-    return 0;
-}
-
-/**
- * @brief Check a string to find out if it is built as 'hostname,port'
- *
- * This function checks if there is a hostname and a port in the string.
- *
- * We could have used sscanf() here with a template "%[^,],%u", but this way we
- * do not limit the size of the value copy in the hostname destination buffer.
- * Limiting the string in the sscanf() can be done but would prevent any easy change
- * for the hostname buffer size.
- *
- * @param str String to parse.
- *
- * @return 1 if the string is built as 'hostname,port', 0 otherwise.
- */
-static int
-is_hostname_str_with_port(const char *str)
-{
-    int     valid = 0;                /* Result of the function */
-    int     port = 0;                 /* temporary int to store port */
-    char    buf[MAX_LINE_LEN] = {0};  /* Copy of the buffer eg. "hostname,port" */
-    char   *p;                        /* Ponter on the port string */
-
-
-    /* Replace the comma in the string with a NULL char to split the
-     * buffer in two strings (hostname and port) */
-    strlcpy(buf, str, sizeof(buf));
-    p = strchr(buf, ',');
-
-    if(p != NULL)
-    {
-        *p++ = 0;
-        port = atoi(p);
-
-        /* If the string does not match an ipv4 or ipv6 address we assume this
-         * is an hostname. We make sure the port is in the good range too */
-        if (   (is_valid_ipv4_addr(buf) == 0)
-            && (is_ipv6_str(buf) == 0)
-            && ((port > 0) && (port < 65536)) )
-        {
-            valid = 1;
-        }
-
-        /* The port is out of range or the ip is an ipv6 or ipv4 address */
-        else;
-    }
-
-    /* No port found in the string, let's skip */
-    else;
-
-    return valid;
-}
 
 int
 main(int argc, char **argv)
@@ -722,34 +656,6 @@ get_rand_port(fko_ctx_t ctx)
     return port;
 }
 
-/* See if the string is of the format "<ipv4 addr>:<port>",
- */
-static int
-ipv4_str_has_port(char *str)
-{
-    int o1, o2, o3, o4, p;
-
-    /* Force the ':' (if any) to a ','
-    */
-    char *ndx = strchr(str, ':');
-    if(ndx != NULL)
-        *ndx = ',';
-
-    /* Check format and values.
-    */
-    if((sscanf(str, "%u.%u.%u.%u,%u", &o1, &o2, &o3, &o4, &p)) == 5
-        && o1 >= 0 && o1 <= 255
-        && o2 >= 0 && o2 <= 255
-        && o3 >= 0 && o3 <= 255
-        && o4 >= 0 && o4 <= 255
-        && p  >  0 && p  <  65536)
-    {
-        return 1;
-    }
-
-    return 0;
-}
-
 /* Set access buf
 */
 static int
@@ -826,6 +732,7 @@ static int
 set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const access_buf)
 {
     char                nat_access_buf[MAX_LINE_LEN] = {0};
+    char                tmp_nat_port[MAX_LINE_LEN] = {0};
     char                tmp_access_port[MAX_PORT_STR_LEN+1] = {0}, *ndx = NULL;
     int                 access_port = 0, i = 0, is_err = 0;
     struct addrinfo     hints;
@@ -865,15 +772,56 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
 
     if (nat_access_buf[0] == 0x0 && options->nat_access_str[0] != 0x0)
     {
-        if (ipv4_str_has_port(options->nat_access_str) || is_hostname_str_with_port(options->nat_access_str))
+        /* Force the ':' (if any) to a ','
+        */
+        ndx = strchr(options->nat_access_str, ':');
+        if (ndx != NULL)
+            *ndx = ',';
+
+        ndx = strchr(options->nat_access_str, ',');
+        if (ndx != NULL)
         {
-            snprintf(nat_access_buf, MAX_LINE_LEN, "%s",
-                options->nat_access_str);
+            *ndx = 0;
+
+            ndx++;
+            i = 0;
+            while(*ndx != '\0')
+            {
+                if ((!isdigit(*ndx)) || (i >= MAX_PORT_STR_LEN)) {
+                    log_msg(LOG_VERBOSITY_ERROR, "[*] Invalid port value in -N arg.");
+                    return FKO_ERROR_INVALID_DATA;
+                }
+                tmp_nat_port[i] = *ndx;
+                ndx++;
+                i++;
+            }
+            tmp_nat_port[i] = '\0';
+            access_port = strtol_wrapper(tmp_nat_port, 1,
+                        MAX_PORT, NO_EXIT_UPON_ERR, &is_err);
+            if (is_err != FKO_SUCCESS)
+            {
+                log_msg(LOG_VERBOSITY_ERROR, "[*] Invalid port value in -N arg.");
+                return FKO_ERROR_INVALID_DATA;
+            }
         }
-        else
+
+        if ((access_port < 1) | (access_port > 65535))
+        {
+            log_msg(LOG_VERBOSITY_ERROR, "[*] Invalid port value.");
+            return FKO_ERROR_INVALID_DATA;
+        }
+
+
+        if (is_valid_ipv4_addr(options->nat_access_str) || is_valid_hostname(options->nat_access_str))
         {
             snprintf(nat_access_buf, MAX_LINE_LEN, NAT_ACCESS_STR_TEMPLATE,
                 options->nat_access_str, access_port);
+        }
+        else
+        {
+            log_msg(LOG_VERBOSITY_ERROR, "[*] Invalid NAT destination '%s' for -N arg.",
+                options->nat_access_str);
+            return FKO_ERROR_INVALID_DATA;
         }
     }
 
