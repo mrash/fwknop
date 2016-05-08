@@ -1538,10 +1538,15 @@ process_spa_request(const fko_srv_options_t * const opts,
             if(ndx != NULL) && (str_len <= MAX_HOSTNAME_LEN)
             {
                 strlcpy(nat_dst, spadat->nat_access, str_len+1);
-                if(! is_valid_ipv4_addr(nat_dst, strlen(nat_dst)))
+                if(! is_valid_ipv4_addr(nat_dst, str_len))
                 {
                     if(strncasecmp(opts->config[CONF_ENABLE_NAT_DNS], "Y", 1) == 0)
                     {
+                        if (!is_valid_hostname(nat_dst, str_len))
+                        {
+                            log_msg(LOG_INFO, "Invalid Hostname in NAT SPA message");
+                            return res;
+                        }
                         if (ipv4_resolve(nat_dst, nat_ip) == 0)
                         {
                             log_msg(LOG_INFO, "Resolved NAT IP in SPA message");
