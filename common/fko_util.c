@@ -1091,6 +1091,17 @@ count_characters(const char *str, const char match, int len)
 
 #ifdef HAVE_C_UNIT_TESTS /* LCOV_EXCL_START */
 
+DECLARE_UTEST(test_ipv4_validator, "test the is_valid_ipv4_addr function")
+{
+    char test_str[32];
+    strcpy(test_str, "1.2.3.4");
+    CU_ASSERT(is_valid_ipv4_addr(test_str, strlen(test_str)));
+    strcpy(test_str, "127.0.0.2");
+    CU_ASSERT(is_valid_ipv4_addr(test_str, 9));
+    strcpy(test_str, "1.2.3.400");
+    CU_ASSERT(is_valid_ipv4_addr(test_str, strlen(test_str)) == 0);
+}
+
 DECLARE_UTEST(test_count_characters, "test the count_characters function")
 {
     char test_str[32];
@@ -1110,7 +1121,7 @@ int register_utils_test(void)
 {
     ts_init(&TEST_SUITE(utils_test), TEST_SUITE_DESCR(utils_test), NULL, NULL);
     ts_add_utest(&TEST_SUITE(utils_test), UTEST_FCT(test_count_characters), UTEST_DESCR(test_count_characters));
-
+    ts_add_utest(&TEST_SUITE(utils_test), UTEST_FCT(test_ipv4_validator), UTEST_DESCR(test_ipv4_validator));
     return register_ts(&TEST_SUITE(utils_test));
 }
 #endif /* LCOV_EXCL_STOP */
