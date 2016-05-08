@@ -64,7 +64,7 @@ have_allow_ip(const char *msg)
         res = FKO_ERROR_INVALID_ALLOW_IP;
 
     if(res == FKO_SUCCESS)
-        if (! is_valid_ipv4_addr(ip_str))
+        if (! is_valid_ipv4_addr(ip_str, strlen(ip_str)))
             res = FKO_ERROR_INVALID_ALLOW_IP;
 
     return(res);

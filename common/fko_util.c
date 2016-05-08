@@ -122,9 +122,10 @@ is_valid_encoded_msg_len(const int len)
 /* Validate an IPv4 address
 */
 int
-is_valid_ipv4_addr(const char * const ip_str)
+is_valid_ipv4_addr(const char * const ip_str, const int len)
 {
     const char         *ndx     = ip_str;
+    char         tmp_ip_str[MAX_IPV4_STR_LEN + 1]={0};
     int                 dot_ctr = 0, char_ctr = 0;
     int                 res     = 1;
 #if HAVE_SYS_SOCKET_H
@@ -134,14 +135,18 @@ is_valid_ipv4_addr(const char * const ip_str)
     if(ip_str == NULL)
         return 0;
 
-    while(*ndx != '\0')
+    if((len > MAX_IPV4_STR_LEN) || (len < MIN_IPV4_STR_LEN))
+        return 0;
+
+
+    while(char_ctr < len)
     {
+        /* If we've hit a null within the given length, then not valid regardless*/
+        if(*ndx == '\0')
+            return 0;
+
         char_ctr++;
-        if(char_ctr >= MAX_IPV4_STR_LEN)
-        {
-            res = 0;
-            break;
-        }
+
         if(*ndx == '.')
             dot_ctr++;
         else if(isdigit(*ndx) == 0)
@@ -151,23 +156,22 @@ is_valid_ipv4_addr(const char * const ip_str)
         }
         ndx++;
     }
-    if(char_ctr >= MAX_IPV4_STR_LEN)
-        res = 0;
 
-    if ((res == 1) && (char_ctr < MIN_IPV4_STR_LEN))
-        res = 0;
 
-    if((res == 1) && dot_ctr != 3)
+
+    if((res == 1) && (dot_ctr != 3))
         res = 0;
 
 #if HAVE_SYS_SOCKET_H
     /* Stronger IP validation now that we have a candidate that looks
      * close enough
     */
-    if((res == 1) && (inet_aton(ip_str, &in) == 0))
-        res = 0;
+    if(res == 1) {
+        strncpy(tmp_ip_str, ip_str, len);
+        if (inet_aton(tmp_ip_str, &in) == 0)
+            res = 0;
+    }
 #endif
-
     return(res);
 }
 

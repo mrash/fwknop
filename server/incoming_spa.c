@@ -119,7 +119,7 @@ preprocess_spa_data(const fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt, spa_
 
             xff -= i - 1;
 
-            if (!is_valid_ipv4_addr(xff))
+            if (!is_valid_ipv4_addr(xff, strlen(xff)))
                 log_msg(LOG_WARNING,
                 "Error parsing X-Forwarded-For header: value '%s' is not an IP address",
                 xff);
@@ -1090,7 +1090,7 @@ incoming_spa(fko_srv_options_t *opts)
         strlcpy(spadat.spa_message_src_ip,
             spadat.spa_message, (spa_ip_demark-spadat.spa_message)+1);
 
-        if(! is_valid_ipv4_addr(spadat.spa_message_src_ip))
+        if(! is_valid_ipv4_addr(spadat.spa_message_src_ip, strlen(spadat.spa_message_src_ip)))
         {
             log_msg(LOG_WARNING,
                 "[%s] (stanza #%d) Invalid source IP in SPA message, ignoring SPA packet",

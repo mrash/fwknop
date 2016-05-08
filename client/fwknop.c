@@ -124,7 +124,7 @@ is_hostname_str_with_port(const char *str)
 
         /* If the string does not match an ipv4 or ipv6 address we assume this
          * is an hostname. We make sure the port is in the good range too */
-        if (   (is_valid_ipv4_addr(buf) == 0)
+        if (   (is_valid_ipv4_addr(buf, strlen(buf)) == 0)
             && (is_ipv6_str(buf) == 0)
             && ((port > 0) && (port < 65536)) )
         {
