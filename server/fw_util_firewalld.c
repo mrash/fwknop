@@ -1389,7 +1389,7 @@ static void snat_rule(const fko_srv_options_t * const opts,
 
         /* Add SNAT or MASQUERADE rules.
         */
-        if(acc->force_snat && is_valid_ipv4_addr(acc->force_snat_ip, strlen(acc->force_snat_ip)))
+        if(acc->force_snat && acc->force_snat_ip != NULL && is_valid_ipv4_addr(acc->force_snat_ip, strlen(acc->force_snat_ip)))
         {
             /* Using static SNAT */
             snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
@@ -1423,7 +1423,7 @@ static void snat_rule(const fko_srv_options_t * const opts,
     {
         /* Add SNAT or MASQUERADE rules.
         */
-        if(acc->force_snat && is_valid_ipv4_addr(acc->force_snat_ip, strlen(acc->force_snat_ip)))
+        if(acc->force_snat && acc->force_snat_ip != NULL && is_valid_ipv4_addr(acc->force_snat_ip, strlen(acc->force_snat_ip)))
         {
             /* Using static SNAT */
             snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
