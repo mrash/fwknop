@@ -5934,6 +5934,7 @@ sub client_server_interaction() {
                 last;
             }
         }
+        precise_sleep(.5); # brief timeout to avoid race condition
         ### check to see if the SPA packet resulted in a new fw access rule
         ($rv, $fw_rule_created, $fw_rule_removed)
             = &fw_check($rv, $fw_rule_created, $fw_rule_removed, $test_hr);
