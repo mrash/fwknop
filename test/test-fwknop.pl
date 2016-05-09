@@ -2645,7 +2645,10 @@ sub _client_send_spa_packet() {
     if (-e $server_cmd_tmp) {
 
         my $tries = 0;
+        my $quickcount = 0;
+        my $nummatches = 0;
         for (;;) {
+            $rv = 1;
             $tries++;
 
             ### default stanza regex match
@@ -2679,12 +2682,24 @@ sub _client_send_spa_packet() {
                         $cmd_out_tmp, $curr_test_file);
             }
 
+            $quickcount = 0;
+            $nummatches = 0;
+            $nummatches = &file_find_num_matches(qr/Final\sSPA\sData/, $NO_APPEND_RESULTS, $server_cmd_tmp);
+            while ($nummatches < 1 && $quickcount < 10 ) {
+                print ".";
+                precise_sleep(.5);
+                $quickcount++;
+                $nummatches = &file_find_num_matches(qr/Final\sSPA\sData/, $NO_APPEND_RESULTS, $server_cmd_tmp);
+            };
+
             if ($test_hr->{'relax_receive_cycle_num_check'}) {
                 $rv = 0 unless &file_find_regex([qr/Final\sSPA\sData/],
                     $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
             } else {
-                $rv = 0 unless &file_find_num_matches(qr/Final\sSPA\sData/,
-                    $NO_APPEND_RESULTS, $curr_test_file) == $cycle_ctr+1;
+                $rv = 0 unless (&file_find_num_matches(qr/Final\sSPA\sData/,
+                    $NO_APPEND_RESULTS, $server_cmd_tmp) > 0) || (&file_find_num_matches(qr/SPA\sPacket\sfrom\sIP:/,
+                    $NO_APPEND_RESULTS, $server_cmd_tmp) > 0) || (&file_find_num_matches(qr/SPA\sdata:/,
+                    $NO_APPEND_RESULTS, $server_cmd_tmp) > 0);
             }
 
             last if $server_receive_check == $NO_SERVER_RECEIVE_CHECK;
@@ -5910,7 +5925,15 @@ sub client_server_interaction() {
         } else {
             ### pcap file mode, nothing to do
         }
-
+        my $quickcount = 0; ### Adds up to 5 seconds of time
+        while (&file_find_num_matches(qr/SPA\sData/, $NO_APPEND_RESULTS, $server_cmd_tmp) == 0 ) {
+            precise_sleep(.5);
+            print ".";
+            $quickcount += 1;
+            if ($quickcount > 10) {
+                last;
+            }
+        }
         ### check to see if the SPA packet resulted in a new fw access rule
         ($rv, $fw_rule_created, $fw_rule_removed)
             = &fw_check($rv, $fw_rule_created, $fw_rule_removed, $test_hr);
@@ -5976,7 +5999,7 @@ sub fw_check() {
                 "$default_server_conf_args --fw-flush $verbose_str",
                 $cmd_out_tmp, $curr_test_file);
         }
-        sleep 3;  ### allow time for rule time out.
+        sleep 5;  ### allow time for rule time out.
         if (&is_fw_rule_active($test_hr)) {
             if ($test_hr->{'fw_rule_removed'} ne $REQUIRE_NO_NEW_REMOVED) {
                 &write_test_file("[-] new fw rule not timed out, setting rv=0.\n",
