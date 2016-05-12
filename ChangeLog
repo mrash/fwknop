@@ -1,4 +1,11 @@
 fwknop-2.6.9 (04//2016):
+    - (Jonathan Bennett) Added support for the SHA3 "Keccak" algorithm
+      (specifically SHA3_256 and SHA3_512) for SPA HMAC and digest checking.
+      Enabling SHA3 from the fwknop client command line is done with the '-m'
+      option for the embedded SPA digest, or with the --hmac-digest-type
+      argument for the HMAC. On the server side, SHA3_256 or SHA3_512 can be
+      required for incoming SPA packet HMAC'c via the HMAC_DIGEST_TYPE
+      configuration variable in access.conf stanzas.
     - (Vlad Glagolev) Added support for deriving the source IP from the
       X-Forwarded-For HTTP header when SPA packets are sent over HTTP
       connections.
@@ -7,6 +14,10 @@ fwknop-2.6.9 (04//2016):
       stanza processing. That is, no other stanzas should be looked at after
       the first match, and this is consistent with other SPA modes (such as
       basic access requests). This bug was reported by Jonathan Bennett.
+    - (Jonathan Bennett) Various fixes and enhancements to the test suite to
+      extend code coverage to new code, ensure valgrind bytes lost detection
+      works for amount of memory less than 10 bytes, better timing strategy
+      for fwknop client/server interactions, and more.
 
 fwknop-2.6.8 (12/23/2015):
     - [server] Added a major new feature that allows fwknopd to easily

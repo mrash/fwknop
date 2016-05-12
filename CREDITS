@@ -7,6 +7,8 @@ Jonathan Bennett
     - Wrote a new fwknop client for Android called "Fwknop2" - see:
         https://f-droid.org/repository/browse/?fdid=org.cipherdyne.fwknop2
     - Developed the access.conf %include and %include_folder directives.
+    - Developed a cross-platform UI for the fwknop client. This UI runs on
+      Linux, Windows, and Mac OS X.
 
 Sebastien Jeanquier
     - Assisted with getting fwknop included in BackTrack Linux - the choice
