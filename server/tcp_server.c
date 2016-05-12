@@ -146,6 +146,11 @@ run_tcp_server(fko_srv_options_t *opts)
         log_msg(LOG_ERR, "run_tcp_server: bind() failed: %s",
             strerror(errno));
         close(s_sock);
+
+    /* In the case of code coverage, don't die on bind() fail, as netcat may be running  */
+#if CODE_COVERAGE
+        return 0;
+#endif
         return -1;
     }
 

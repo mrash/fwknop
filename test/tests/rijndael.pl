@@ -599,7 +599,7 @@
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
         'detail'   => "SPA over TCP connection",
-        'function' => \&spa_cycle,
+        'function' => \&tcp_spa_cycle,
         'cmdline'  => "$default_client_args -P tcp",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'tcp_server'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",

@@ -2882,6 +2882,25 @@ sub spa_cycle() {
 
     return $rv;
 }
+sub tcp_spa_cycle() {
+    my $test_hr = shift;
+
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+            = &client_server_interaction($test_hr, [], $USE_CLIENT);
+    if (!$rv) {
+        $rv = 1;
+        #start netcat listening on tcp/62201
+        system("nc -k -l 62201 > /dev/null 2>&1 &");
+        my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+                = &client_server_interaction($test_hr, [], $USE_CLIENT);
+
+        #stop netcat
+        system("killall nc");
+}
+    $rv = 0 unless &process_output_matches($test_hr);
+
+    return $rv;
+}
 
 sub iptables_no_flush_init_exit() {
     my $test_hr = shift;

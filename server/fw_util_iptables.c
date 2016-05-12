@@ -1535,7 +1535,7 @@ process_spa_request(const fko_srv_options_t * const opts,
         {
             ndx = strchr(spadat->nat_access, ',');
             str_len = strcspn(spadat->nat_access, ",");
-            if(ndx != NULL) && (str_len <= MAX_HOSTNAME_LEN)
+            if((ndx != NULL) && (str_len <= MAX_HOSTNAME_LEN))
             {
                 strlcpy(nat_dst, spadat->nat_access, str_len+1);
                 if(! is_valid_ipv4_addr(nat_dst, str_len))
