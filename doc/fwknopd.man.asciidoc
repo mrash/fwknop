@@ -550,9 +550,9 @@ directive starts a new stanza.
 
 *HMAC_DIGEST_TYPE* '<digest algorithm>'::
     Specify the digest algorithm for incoming SPA packet authentication. Must
-    be one of *MD5*, *SHA1*, *SHA256*, *SHA384*, or *SHA512*. This is an
-    optional field, and if not specified then *fwknopd* defaults to using
-    SHA256 if the access stanza requires an HMAC.
+    be one of *MD5*, *SHA1*, *SHA256*, *SHA384*, *SHA512*, *SHA3_256*, or
+    *SHA3_512*. This is an optional field, and if not specified then *fwknopd*
+    defaults to using SHA256 if the access stanza requires an HMAC.
 
 *ACCESS_EXPIRE* '<MM/DD/YYYY>'::
     Defines an expiration date for the access stanza in MM/DD/YYYY format.
