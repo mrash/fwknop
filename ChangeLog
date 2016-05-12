@@ -5,7 +5,10 @@ fwknop-2.6.9 (04//2016):
       option for the embedded SPA digest, or with the --hmac-digest-type
       argument for the HMAC. On the server side, SHA3_256 or SHA3_512 can be
       required for incoming SPA packet HMAC'c via the HMAC_DIGEST_TYPE
-      configuration variable in access.conf stanzas.
+      configuration variable in access.conf stanzas. The SHA3 implementation
+      is from, Keyak and Ketje Teams, namely, Guido Bertoni, Joan Daemen,
+      Michael Peeters, Gilles Van Assche and Ronny Van Keer - see:
+      http://keyak.noekeon.org/
     - (Vlad Glagolev) Added support for deriving the source IP from the
       X-Forwarded-For HTTP header when SPA packets are sent over HTTP
       connections.
