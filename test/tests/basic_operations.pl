@@ -1176,6 +1176,17 @@
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA512'}}],
         'positive_output_matches' => [qr/Digest\sType\:\s.*SHA512/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
+        'detail'   => 'digest SHA3_512',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA3_512'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA3_512/],
+    },
+
     ### rc tests: spa server proto
     {
         'category' => 'basic operations',
