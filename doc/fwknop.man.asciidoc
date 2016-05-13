@@ -86,7 +86,7 @@ format (before encryption and the HMAC is applied):
     mode (command mode (0) or access mode (1))
     if command mode => command to execute
     else access mode  => IP,proto,port
-    message digest (SHA512 / SHA384 / SHA256 / SHA1 / MD5)
+    message digest (SHA512 / SHA384 / SHA256 / SHA1 / MD5 / SHA3_256 / SHA3_512)
 ..........................
 
 Each of the above fields are separated by a ":" character due to the variable
@@ -348,7 +348,8 @@ SPA OPTIONS
 
 *--hmac-digest-type*='<digest>'::
     Set the HMAC digest algorithm for authenticated encryption of SPA packets.
-    Choices are: *MD5*, *SHA1*, *SHA256* (the default), *SHA384*, and *SHA512*.
+    Choices are: *MD5*, *SHA1*, *SHA256* (the default), *SHA384*, *SHA512*,
+    *SHA3_256*, and *SHA3_512*.
 
 *-N, --nat-access*='<internalIP:forwardPort>'::
     The *fwknopd* server offers the ability to provide SPA access through
@@ -500,7 +501,8 @@ SPA OPTIONS
 
 *-m, --digest-type*='<digest>'::
     Specify the message digest algorithm to use in the SPA data. Choices
-    are: *MD5*, *SHA1*, *SHA256* (the default), *SHA384*, and *SHA512*.
+    are: *MD5*, *SHA1*, *SHA256* (the default), *SHA384*, and *SHA512*,
+    *SHA3_256*, and *SHA3_512*.
 
 *-M, --encryption-mode*='<mode>'::
     Specify the encryption mode when AES is used for encrypting SPA packets.
@@ -685,7 +687,7 @@ description and its matching command-line option(s):
 *HMAC_DIGEST_TYPE* '<digest algorithm>'::
     Set the HMAC digest algorithm used for authenticated encryption of SPA
     packets. Choices are: *MD5*, *SHA1*, *SHA256* (the default), *SHA384*,
-    and *SHA512*.
+    *SHA512*, *SHA3_256*, and *SHA3_512*.
 
 *SPA_SOURCE_PORT* '<port>'::
     Set the source port to use for sending the SPA packet ('-S, --source-port').
@@ -727,7 +729,8 @@ description and its matching command-line option(s):
 
 *DIGEST_TYPE* '<digest algorithm>'::
     Set the SPA message digest type ('-m, --digest-type'). Choices are: *MD5*,
-    *SHA1*, *SHA256* (the default), *SHA384*, and *SHA512*.
+    *SHA1*, *SHA256* (the default), *SHA384*, *SHA512*, *SHA3_256*, and
+    *SHA3_512*.
 
 *USE_GPG* '<Y/N>'::
     Set to 'Y' to specify the use of GPG for encryption ('--gpg-encryption').
