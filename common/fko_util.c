@@ -253,7 +253,7 @@ digest_strtoint(const char *dt_str)
     else if(strcasecmp(dt_str, "sha512") == 0)
         return(FKO_DIGEST_SHA512);
     else if(strcasecmp(dt_str, "sha3_256") == 0)
-        return(FKO_DIGEST_SHA3_512);
+        return(FKO_DIGEST_SHA3_256);
     else if(strcasecmp(dt_str, "sha3_512") == 0)
         return(FKO_DIGEST_SHA3_512);
     else
