@@ -126,6 +126,7 @@ verify_digest(char *tbuf, int t_size, fko_ctx_t ctx)
         /* Could potentially also have been SHA3_256 or SHA3_512 */
         if(ctx->digest_type == FKO_DIGEST_SHA256)
         {
+            memset(tbuf, 0, FKO_ENCODE_TMP_BUF_SIZE);
             sha3_256_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
             if(constant_runtime_cmp(ctx->digest, tbuf, t_size) != 0)
             {
@@ -140,6 +141,7 @@ verify_digest(char *tbuf, int t_size, fko_ctx_t ctx)
         }
         else if(ctx->digest_type == FKO_DIGEST_SHA512)
         {
+            memset(tbuf, 0, FKO_ENCODE_TMP_BUF_SIZE);
             sha3_512_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
             if(constant_runtime_cmp(ctx->digest, tbuf, t_size) != 0)
             {
