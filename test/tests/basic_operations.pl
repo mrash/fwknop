@@ -1179,6 +1179,16 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'client rc file',
+        'detail'   => 'digest SHA3_256',
+        'function' => \&client_rc_file,
+        'cmdline'  => $client_rewrite_rc_args,
+        'write_rc_file' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA3_256'}}],
+        'positive_output_matches' => [qr/Digest\sType\:\s.*SHA3_256/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client rc file',
         'detail'   => 'digest SHA3_512',
         'function' => \&client_rc_file,
         'cmdline'  => $client_rewrite_rc_args,

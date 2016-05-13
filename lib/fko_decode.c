@@ -107,6 +107,13 @@ verify_digest(char *tbuf, int t_size, fko_ctx_t ctx)
             sha512_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
             break;
 
+        /* Note that we check SHA3_256 and SHA3_512 below because the
+         * digest lengths for these are the same as SHA256 and SHA512
+         * respectively, and setting the digest type for an incoming
+         * decrypted SPA packet is done initially by looking at the
+         * length.
+         */
+
         default: /* Invalid or unsupported digest */
             return(FKO_ERROR_INVALID_DIGEST_TYPE);
     }
@@ -115,7 +122,39 @@ verify_digest(char *tbuf, int t_size, fko_ctx_t ctx)
      * digest in the message data.
     */
     if(constant_runtime_cmp(ctx->digest, tbuf, t_size) != 0)
-        return(FKO_ERROR_DIGEST_VERIFICATION_FAILED);
+    {
+        /* Could potentially also have been SHA3_256 or SHA3_512 */
+        if(ctx->digest_type == FKO_DIGEST_SHA256)
+        {
+            sha3_256_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
+            if(constant_runtime_cmp(ctx->digest, tbuf, t_size) != 0)
+            {
+                return(FKO_ERROR_DIGEST_VERIFICATION_FAILED);
+            }
+            else
+            {
+                ctx->digest_type = FKO_DIGEST_SHA3_256;
+                ctx->digest_len  = SHA3_256_B64_LEN;
+            }
+
+        }
+        else if(ctx->digest_type == FKO_DIGEST_SHA512)
+        {
+            sha3_512_base64(tbuf, (unsigned char*)ctx->encoded_msg, ctx->encoded_msg_len);
+            if(constant_runtime_cmp(ctx->digest, tbuf, t_size) != 0)
+            {
+                return(FKO_ERROR_DIGEST_VERIFICATION_FAILED);
+            }
+            else
+            {
+                ctx->digest_type = FKO_DIGEST_SHA3_512;
+                ctx->digest_len  = SHA3_512_B64_LEN;
+            }
+
+        }
+        else
+            return(FKO_ERROR_DIGEST_VERIFICATION_FAILED);
+    }
 
     return FKO_SUCCESS;
 }
@@ -135,6 +174,7 @@ is_valid_digest_len(int t_size, fko_ctx_t ctx)
             ctx->digest_len  = SHA1_B64_LEN;
             break;
 
+        /* Could also match SHA3_256_B64_LEN, handled in verify_digest() */
         case SHA256_B64_LEN:
             ctx->digest_type = FKO_DIGEST_SHA256;
             ctx->digest_len  = SHA256_B64_LEN;
@@ -145,6 +185,7 @@ is_valid_digest_len(int t_size, fko_ctx_t ctx)
             ctx->digest_len  = SHA384_B64_LEN;
             break;
 
+        /* Could also match SHA3_512_B64_LEN, handled in verify_digest() */
         case SHA512_B64_LEN:
             ctx->digest_type = FKO_DIGEST_SHA512;
             ctx->digest_len  = SHA512_B64_LEN;
