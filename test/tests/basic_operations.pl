@@ -1896,7 +1896,7 @@
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA1', 'NAT_PORT' => '11111'}}],
         'exec_err' => $YES,
-        'positive_output_matches' => [qr/Unable\sto\sresolve/]
+        'positive_output_matches' => [qr/Invalid\sNAT\sdestination/]
     },
     {
         'category' => 'basic operations',
