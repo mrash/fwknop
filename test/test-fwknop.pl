@@ -8179,12 +8179,14 @@ sub file_find_regex() {
         return 0 if $tries == 5;
     }
 
-    open RE, "< $file" or
-        (&write_test_file("[-] Could not open $file: $!\n", $curr_test_file) and return 0);
-    while (<RE>) {
-        push @file_lines, $_;
+    if (open (RE, "<", $file)) {
+        while (<RE>) {
+            push @file_lines, $_;
+        }
+        close RE;
+    } else {
+         &write_test_file("[-] Could not open $file: $!\n", $curr_test_file) and return 0;
     }
-    close RE;
 
     for my $re (@$re_ar) {
         my $matched = 0;
