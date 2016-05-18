@@ -52,6 +52,7 @@ our $tmp_rc_file          = "$run_dir/fwknoprc";
 our $rewrite_rc_file      = "$run_dir/rewrite_fwknoprc";
 our $rewrite_fwknopd_conf = "$run_dir/rewrite_fwknopd.conf";
 our $rewrite_access_conf  = "$run_dir/rewrite_access.conf";
+our $rewrite_include_keys_access_conf  = "$run_dir/rewrite_include_keys_access.conf";
 our $rewrite_digest_file  = "$run_dir/rewrite_digest.cache";
 our $save_rc_file         = "$run_dir/save_fwknoprc";
 our $tmp_pkt_file         = "$run_dir/tmp_spa.pkt";
@@ -957,6 +958,7 @@ my %test_keys = (
     'fiu_injection_style' => $OPTIONAL,
     'fiu_iterations'      => $OPTIONAL_NUMERIC,
     'server_access_file'  => $OPTIONAL,
+    'server_include_keys_access_file' => $OPTIONAL,
     'server_conf_file'    => $OPTIONAL,
     'digest_cache_file'   => $OPTIONAL,
     'cmd_cycle_open_file'  => $OPTIONAL,
@@ -2369,6 +2371,11 @@ sub server_conf_files() {
         }
         &write_server_conf_file($test_hr->{'server_access_file'},
             $rewrite_access_conf);
+    }
+
+    if ($test_hr->{'server_include_keys_access_file'}) {
+        &write_server_conf_file($test_hr->{'server_include_keys_access_file'},
+            $rewrite_include_keys_access_conf);
     }
 
     if ($test_hr->{'server_conf_file'}) {

@@ -2848,6 +2848,191 @@
         'positive_output_matches' => [qr/NOT a directory/],
     },
 
+    ### include_keys_file() code coverage
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'include_keys CHANGEME',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            "%include_keys $rewrite_include_keys_access_conf",
+            'SOURCE any',
+            'KEY    testtest'
+        ],
+        'server_include_keys_access_file' => [
+            'KEY    __CHANGEME__'
+        ],
+
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/KEY value is not properly/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'include_keys base64 CHANGEME',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            "%include_keys $rewrite_include_keys_access_conf",
+            'SOURCE any',
+            'KEY    testtest'
+        ],
+        'server_include_keys_access_file' => [
+            'KEY_BASE64    __CHANGEME__'
+        ],
+
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/KEY_BASE64 value is not properly/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'include_keys base64 invalid',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            "%include_keys $rewrite_include_keys_access_conf",
+            'SOURCE any',
+            'KEY    testtest'
+        ],
+        'server_include_keys_access_file' => [
+            'KEY_BASE64    $$$$$$$$'
+        ],
+
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/look like base64/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'include_keys HMAC base64 CHANGEME',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            "%include_keys $rewrite_include_keys_access_conf",
+            'SOURCE any',
+            'KEY    testtest'
+        ],
+        'server_include_keys_access_file' => [
+            'HMAC_KEY_BASE64    __CHANGEME__'
+        ],
+
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/HMAC_KEY_BASE64 value is not properly/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'include_keys HMAC base64 invalid',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            "%include_keys $rewrite_include_keys_access_conf",
+            'SOURCE any',
+            'KEY    testtest'
+        ],
+        'server_include_keys_access_file' => [
+            'HMAC_KEY_BASE64    $$$$$$$$'
+        ],
+
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/look like base64/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'include_keys GPG_DECRYPT_PW valid',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            "%include_keys $rewrite_include_keys_access_conf",
+            'SOURCE any',
+            'KEY    testtest'
+        ],
+        'server_include_keys_access_file' => [
+            'GPG_REMOTE_ID      eaee1234',
+            'GPG_FINGERPRINT_ID ffee1234',
+            'GPG_DECRYPT_ID     aabb1234',
+            'GPG_DECRYPT_PW     somepass',
+            'GPG_REQUIRE_SIG    Y',
+            'GPG_DISABLE_SIG    Y',
+            'GPG_IGNORE_SIG_VERIFY_ERROR    Y',
+            'GPG_ALLOW_NO_PW    Y'
+        ],
+
+        'server_conf_file' => [
+            '### comment line'
+        ],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'include_keys GPG_DECRYPT_PW invalid',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            "%include_keys $rewrite_include_keys_access_conf",
+            'SOURCE any',
+            'KEY    testtest'
+        ],
+        'server_include_keys_access_file' => [
+            'GPG_DECRYPT_PW     __CHANGEME__'
+        ],
+
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/value is not properly/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'include_keys invalid line',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            "%include_keys $rewrite_include_keys_access_conf",
+            'SOURCE any',
+            'KEY    testtest'
+        ],
+        'server_include_keys_access_file' => [
+            'KEYinvalidline'
+        ],
+
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/Invalid access file entry/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
