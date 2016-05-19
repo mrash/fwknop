@@ -11,6 +11,7 @@ use IO::Socket;
 use Data::Dumper;
 use Getopt::Long 'GetOptions';
 use strict;
+use POSIX;
 
 #==================== config =====================
 my $logfile         = 'test.log';
@@ -2850,6 +2851,7 @@ sub _client_send_spa_packet() {
                 close K;
                 if (!$found_success) {
                     $rv = 0;
+                }
             }
         }
     }
@@ -6399,7 +6401,6 @@ sub rm_last_args() {
 }
 
 sub generic_exec() {
-use POSIX;
     my $test_hr = shift;
     my $num_loops = 0;
     my $rv = 1;
@@ -6572,7 +6573,6 @@ sub openssl_hmac_verification() {
     $openssl_hmac_ctr++;
 
     my $hmac_digest_search = quotemeta $hmac_digest;
-
     ### see if OpenSSL produces the same HMAC digest value from the encrypted
     ### data and corresponding HMAC key
 
