@@ -190,7 +190,7 @@ my $list_mode = 0;
 my $diff_dir1 = '';
 my $diff_dir2 = '';
 our $loopback_intf = '';
-my $default_pkt_tries = 10;
+my $default_pkt_tries = 20;
 my $send_all_loop_once = 0;
 my $detect_server_loop_once = 0;
 my $default_server_tries = 10;
@@ -2591,8 +2591,9 @@ sub insert_dupe_rule() {
     &run_cmd("LD_LIBRARY_PATH=$lib_path $fwknopdCmd -c " .
         "$fwknopd_conf -a $access_conf --fw-list",
         $cmd_out_tmp, $curr_test_file);
-    for (my $i=0; $i < 4; $i++) {
-        my $time_prefix = '_exp_' . (time() + 2+$i); ### default timeout
+    my $time_now = time();
+    for (my $i=0; $i < 15; $i++) {
+        my $time_prefix = '_exp_' . ($time_now + 45+$i); ### default timeout
         &write_test_file("[+] Inserting duplicate rule with expire comment: $time_prefix\n",
             $curr_test_file);
         if ($test_hr->{'fw_dupe_rule_args'}) {
@@ -2619,6 +2620,9 @@ sub insert_dupe_rule() {
 
     &cache_fw_policy($cmd_out_tmp);
 
+until($time_now + 45 == time()) {
+sleep 1;
+}
     return;
 }
 
@@ -5891,6 +5895,7 @@ sub client_server_interaction() {
 
     ### start fwknopd to monitor for the SPA packet over the loopback interface
     my $fwknopd_parent_pid = &start_fwknopd($test_hr);
+    sleep 1;
 
     if ($test_hr->{'server_exec_err'}) {
         if (&is_fwknopd_running()) {
@@ -6004,15 +6009,15 @@ sub fw_check() {
         if ($test_hr->{'sleep_cycles'}) {
             last if $ctr == $test_hr->{'sleep_cycles'};
         } else {
-            last if $ctr == 6;
+            last if $ctr == 12;
         }
-        precise_sleep(.5);
+        precise_sleep(.2);
     }
     if ($test_hr->{'sleep_cycles'} and ($ctr == $test_hr->{'sleep_cycles'})) {
         $fw_rule_created = 0;
         $fw_rule_removed = 0;
     } else {
-        if ($ctr == 6) {
+        if ($ctr == 12) {
             $fw_rule_created = 0;
             $fw_rule_removed = 0;
         }
@@ -6246,7 +6251,7 @@ sub send_packets() {
     if (-e $server_cmd_tmp) {
 
         &send_all_pkts($pkts_ar);
-        sleep 1;
+        #precise_sleep(.5);
 
         my $tries = 0;
         while (not &file_find_regex(
@@ -6266,7 +6271,7 @@ sub send_packets() {
             } else {
                 last if $tries == $max_tries * 10;
             }
-            sleep 1;
+            precise_sleep(.5);
         }
 
         $default_pkt_tries = $tries+5 if $tries > $default_pkt_tries;
