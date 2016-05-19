@@ -2787,6 +2787,7 @@ sub _client_send_spa_packet() {
 
         my $key = '';
         my $hmac_key = '';
+        my $num_hmac_keys = 0;
         my $b64_decode_key = 0;
         if ($test_hr->{'key_file'}) {
             open K, "< $test_hr->{'key_file'}" or die $!;
@@ -2799,8 +2800,10 @@ sub _client_send_spa_packet() {
                 } elsif (/^HMAC_KEY_BASE64\:?\s+(\S+)/) {
                     $hmac_key = $1;
                     $b64_decode_key = 1;
+                    $num_hmac_keys++;
                 } elsif (/^HMAC_KEY\:?\s+(\S+)/) {
                     $hmac_key = $1;
+                    $num_hmac_keys++;
                 }
             }
             close K;
@@ -2817,10 +2820,36 @@ sub _client_send_spa_packet() {
             my $enc_mode = $ENC_RIJNDAEL;
             $enc_mode = $ENC_GPG if $test_hr->{'msg'} =~ /gpg/i
                     or $test_hr->{'msg'} =~ /gnupg/i;
-            unless (&openssl_hmac_verification($encrypted_msg,
-                    $encoded_msg, '', $hmac_key, $b64_decode_key,
-                    $hmac_digest, $hmac_mode, $enc_mode)) {
-                $rv = 0;
+            if ($num_hmac_keys == 1) {
+                unless (&openssl_hmac_verification($encrypted_msg,
+                        $encoded_msg, '', $hmac_key, $b64_decode_key,
+                        $hmac_digest, $hmac_mode, $enc_mode, 0)) {
+                    $rv = 0;
+                }
+            } else { #Try for each of the keys
+                my $found_success = 0;
+                open K, "< $test_hr->{'key_file'}" or die $!;
+                while (<K>) {
+                    if (/^HMAC_KEY_BASE64\:?\s+(\S+)/) {
+                        $hmac_key = $1;
+                        $b64_decode_key = 1;
+                        if (&openssl_hmac_verification($encrypted_msg,
+                                $encoded_msg, '', $hmac_key, $b64_decode_key,
+                                $hmac_digest, $hmac_mode, $enc_mode, 1)) {
+                            $found_success = 1;
+                        }
+                    } elsif (/^HMAC_KEY\:?\s+(\S+)/) {
+                        $hmac_key = $1;
+                        if (&openssl_hmac_verification($encrypted_msg,
+                                $encoded_msg, '', $hmac_key, $b64_decode_key,
+                                $hmac_digest, $hmac_mode, $enc_mode, 1)) {
+                            $found_success = 1;
+                        }
+                    }
+                }
+                close K;
+                if (!$found_success) {
+                    $rv = 0;
             }
         }
     }
@@ -4323,7 +4352,7 @@ sub perl_fko_module_complete_cycle_hmac() {
                             if ($enable_openssl_compatibility_tests) {
                                 unless (&openssl_hmac_verification($encrypted_msg,
                                         '', $msg, $hmac_key, 0, $hmac_digest,
-                                        &hmac_type_to_str($hmac_type), $ENC_RIJNDAEL)) {
+                                        &hmac_type_to_str($hmac_type), $ENC_RIJNDAEL, 0)) {
                                     $rv = 0;
                                 }
 
@@ -6489,7 +6518,7 @@ sub immediate_binding() {
 
 sub openssl_hmac_verification() {
     my ($encrypted_msg, $encoded_msg, $access_msg, $tmp_key,
-        $b64_decode_key, $hmac_digest, $hmac_mode, $enc_mode) = @_;
+        $b64_decode_key, $hmac_digest, $hmac_mode, $enc_mode, $tolerate_failure) = @_;
 
     my $hmac_key = '';
     my $enc_msg_without_hmac = '';
@@ -6597,7 +6626,9 @@ sub openssl_hmac_verification() {
         &write_test_file("[-] OpenSSL HMAC mismatch " .
             "(openssl): '$openssl_hmac' != (fwknop): '$hmac_digest'\n",
             $curr_test_file);
-        $openssl_hmac_failure_ctr++;
+        unless ($tolerate_failure){
+            $openssl_hmac_failure_ctr++;
+        }
         return 0;
     }
 
