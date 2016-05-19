@@ -6194,7 +6194,6 @@ sub get_spa_packet_from_file() {
     while (<G2>) {
         if (/Final\sSPA\sData\:\s(\S+)/) {
             $spa_pkt = $1;
-            last;
         }
     }
     close G2;
