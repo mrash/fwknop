@@ -640,7 +640,7 @@ static int handle_signals(fko_srv_options_t *opts)
 
 static int stop_fwknopd(fko_srv_options_t * const opts)
 {
-    int      res = 0, is_err = 0;
+    int      res = 0, is_err = 0, sleep_num = 0;
     pid_t    old_pid;
 
     old_pid = get_running_pid(opts);
@@ -659,8 +659,16 @@ static int stop_fwknopd(fko_srv_options_t * const opts)
         {
             /* give a bit of time for process shutdown and check again
             */
-            sleep(1);
-            is_err = kill(old_pid, 0);
+            for (sleep_num = 0; sleep_num < 4; sleep_num++) {
+                is_err = kill(old_pid, 0);
+                if(is_err != 0)
+                {
+                    fprintf(stdout, "Killed fwknopd (pid=%i) via SIGTERM\n",
+                            old_pid);
+                    return EXIT_SUCCESS;
+                }
+                sleep(1);
+            }
             if(is_err != 0)
             {
                 fprintf(stdout, "Killed fwknopd (pid=%i) via SIGTERM\n",
