@@ -6399,12 +6399,35 @@ sub rm_last_args() {
 }
 
 sub generic_exec() {
+use POSIX;
     my $test_hr = shift;
-
+    my $num_loops = 0;
     my $rv = 1;
+    my $pid = fork();
+    die "[*] Could not fork: $!" unless defined $pid;
 
-    my $exec_rv = &run_cmd($test_hr->{'cmdline'},
-                $cmd_out_tmp, $curr_test_file);
+    if ($pid == 0) {
+        exit &run_cmd($test_hr->{'cmdline'},
+                    $cmd_out_tmp, $curr_test_file);
+    }
+
+    while (1) {
+        sleep 5;
+        $num_loops++;
+        $rv = waitpid($pid, WNOHANG);
+        if ($rv != 0) {
+            $rv = 1;
+            last;
+        }
+        if ($num_loops > 99) { #5 minutes to run
+            $rv = 0;
+            kill(9, $pid);
+            &write_test_file("Command timed out, killing process\n", $curr_test_file);
+            last;
+        }
+    }
+
+    my $exec_rv = $?;
 
     if ($test_hr->{'exec_err'} eq $YES) {
         $rv = 0 if $exec_rv;
