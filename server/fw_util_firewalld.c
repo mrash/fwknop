@@ -348,6 +348,11 @@ comment_match_exists(const fko_srv_options_t * const opts)
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE,
             WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
     chop_newline(err_buf);
+    if((!EXTCMD_IS_SUCCESS(res)) || (pid_status != 0)) {
+        log_msg(LOG_ERR, "comment_match_exists() Error %i from cmd:'%s': %s",
+                res, cmd_buf, cmd_out);
+        return 0; /* Errored out*/
+    }
 
     log_msg(LOG_DEBUG, "comment_match_exists() CMD: '%s' (res: %d, err: %s)",
             cmd_buf, res, err_buf);
