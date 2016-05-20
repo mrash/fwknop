@@ -6062,8 +6062,18 @@ sub fw_check() {
                 "$default_server_conf_args --fw-flush $verbose_str",
                 $cmd_out_tmp, $curr_test_file);
         }
-        sleep 5;  ### allow time for rule time out.
-        if (&is_fw_rule_active($test_hr)) {
+
+        my $timeout_loop = 0;
+        while ($timeout_loop < 15) {
+            $timeout_loop++;
+            if (!&is_fw_rule_active($test_hr)) {
+                &write_test_file("[+] new fw rule timed out.\n", $curr_test_file);
+                $fw_rule_removed = 1;
+                last;
+            }
+            sleep 1;
+        }
+        if (!$fw_rule_removed) {
             if ($test_hr->{'fw_rule_removed'} ne $REQUIRE_NO_NEW_REMOVED) {
                 &write_test_file("[-] new fw rule not timed out, setting rv=0.\n",
                     $curr_test_file);
