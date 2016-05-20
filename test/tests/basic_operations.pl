@@ -2918,6 +2918,29 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'include_keys HMAC CHANGEME',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE any',
+            "%include_keys $rewrite_include_keys_access_conf",
+            'SOURCE any',
+            'KEY    testtest'
+        ],
+        'server_include_keys_access_file' => [
+            'HMAC_KEY    __CHANGEME__'
+        ],
+
+        'server_conf_file' => [
+            '### comment line'
+        ],
+        'positive_output_matches' => [qr/HMAC_KEY value is not properly/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'include_keys HMAC base64 CHANGEME',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
