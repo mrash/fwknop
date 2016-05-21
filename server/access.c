@@ -2327,7 +2327,7 @@ include_keys_file(acc_stanza_t *curr_acc, const char *access_filename, fko_srv_o
     char            val[MAX_LINE_LEN] = {0};
     char           *ndx;
 
-    printf("including key file %s\n", access_filename);
+    log_msg(LOG_INFO, "Including key file: '%s'", access_filename);
     if(stat(access_filename, &st) != 0)
     {
         log_msg(LOG_ERR, "[*] Access file: '%s' was not found.",
