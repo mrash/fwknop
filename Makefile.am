@@ -189,6 +189,7 @@ EXTRA_DIST = \
     test/conf/fwknoprc_hmac_http_only_resolve \
     test/conf/fwknoprc_gpg_hmac_sha512_key \
     test/conf/gpg_hmac_sha512_access.conf \
+    test/conf/gpg_hmac_sha3_512_access.conf \
     test/conf/fwknoprc_hmac_sha512_base64_key \
     test/conf/fwknoprc_hmac_multi_base64_key \
     test/conf/gpg_no_pw_hmac_sha512_access.conf \
@@ -229,6 +230,7 @@ EXTRA_DIST = \
     test/conf/hmac_sha384_short_key_access.conf \
     test/conf/hmac_sha384_long_key_access.conf \
     test/conf/hmac_sha512_access.conf \
+    test/conf/hmac_sha3_512_access.conf \
     test/conf/hmac_sha512_short_key_access.conf \
     test/conf/hmac_sha512_short_key2_access.conf \
     test/conf/hmac_sha512_long_key_access.conf \
@@ -264,6 +266,7 @@ EXTRA_DIST = \
     test/conf/fwknoprc_hmac_sha384_long_key \
     test/conf/fwknoprc_hmac_sha384_short_key \
     test/conf/fwknoprc_hmac_sha512_key \
+    test/conf/fwknoprc_hmac_sha3_512_key \
     test/conf/fwknoprc_hmac_sha512_short_key \
     test/conf/fwknoprc_hmac_sha512_long_key \
     test/conf/fwknoprc_hmac_simple_keys \
