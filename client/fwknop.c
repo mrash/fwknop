@@ -575,12 +575,14 @@ main(int argc, char **argv)
             clean_exit(ctx, &options, key, &orig_key_len,
                 hmac_key, &hmac_key_len, EXIT_FAILURE);
         }
-
-        res = dump_ctx_to_buffer(ctx2, dump_buf, sizeof(dump_buf));
-        if (res == FKO_SUCCESS)
-            log_msg(LOG_VERBOSITY_NORMAL, "\nDump of the Decoded Data\n%s", dump_buf);
-        else
-            log_msg(LOG_VERBOSITY_WARNING, "Unable to dump FKO context: %s", fko_errstr(res));
+        /* Only dump out the SPA data after the test in verbose mode */
+        if (options.verbose) {
+            res = dump_ctx_to_buffer(ctx2, dump_buf, sizeof(dump_buf));
+            if (res == FKO_SUCCESS)
+                log_msg(LOG_VERBOSITY_NORMAL, "\nDump of the Decoded Data\n%s", dump_buf);
+            else
+                log_msg(LOG_VERBOSITY_WARNING, "Unable to dump FKO context: %s", fko_errstr(res));
+        }
 
         if(fko_destroy(ctx2) == FKO_ERROR_ZERO_OUT_DATA)
             log_msg(LOG_VERBOSITY_ERROR,
