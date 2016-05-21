@@ -2151,7 +2151,9 @@
         'subcategory' => 'client+server',
         'detail'   => "$FW_TYPE rules not duplicated",
         'function' => \&iptables_rules_not_duplicated,
-        'cmdline'  => "$default_client_hmac_args --test",
+        'cmdline'  => "$lib_view_str " .
+            "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
+            "--no-save-args --rc-file $cf{'rc_hmac_b64_key'} --test",
         'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'key_file' => $cf{'rc_hmac_b64_key'},
