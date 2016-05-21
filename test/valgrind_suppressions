@@ -109,3 +109,17 @@
    fun:fiu_init
    ...
 }
+
+### libfaketime supression
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   fun:calloc
+   fun:_dlerror_run
+   fun:dlsym
+   fun:ftpl_init
+   fun:call_init.part.0
+   fun:_dl_init
+   ...
+}
