@@ -10,6 +10,7 @@ use File::Path;
 use IO::Socket;
 use Data::Dumper;
 use Getopt::Long 'GetOptions';
+use Getopt::Long 'GetOptionsFromString';
 use strict;
 use POSIX;
 
@@ -114,6 +115,8 @@ my $default_key = 'fwknoptest';
 my $asan_dir = 'asan';
 
 my $tests_dir = 'tests';
+
+our $rerun_failed_mode = 0;
 
 my @test_files = (
     "$tests_dir/configure_args.pl",
@@ -403,6 +406,7 @@ exit 1 unless GetOptions(
     'cmd-verbose=s'     => \$verbose_str,
     'client-only-mode'  => \$client_only_mode,
     'server-only-mode'  => \$server_only_mode,
+    'rerun-failed-mode'  => \$rerun_failed_mode,
     'diff'              => \$diff_mode,
     'diff-dir1=s'       => \$diff_dir1,
     'diff-dir2=s'       => \$diff_dir2,
@@ -625,6 +629,94 @@ our %cf = (
 
 our $lib_view_str = "LD_LIBRARY_PATH=$lib_dir";
 our $libfko_bin = "$lib_dir/libfko.so";  ### this is usually a link
+our @last_logfile = ();
+
+if ($rerun_failed_mode) {
+    unless (open (RE, "<", "test.log")) {  # check for test.log
+        die "[*] Can't find test.log";
+    }
+    while (<RE>) {
+        push @last_logfile, $_;
+    }
+    close RE;
+    my $arg_line = "";
+    for my $line (@last_logfile) {
+        if ($line =~ /args:(.+)/) {
+            $arg_line = $1;
+            last;
+        }
+    }
+    unless ($arg_line) {
+        die "[*] Can't find arguments";
+    }
+    system("cp -f test.log test.log.bak");
+
+my $ret = 0;
+my $leftovers = "";
+($ret, $leftovers) = GetOptionsFromString(
+    $arg_line,
+    'fwknop-path=s'     => \$fwknopCmd,
+    'fwknopd-path=s'    => \$fwknopdCmd,
+    'lib-dir=s'         => \$lib_dir,  ### for LD_LIBRARY_PATH
+    'loopback-intf=s'   => \$loopback_intf,
+    'test-include=s'    => \$test_include,
+    'include=s'         => \$test_include,  ### synonym
+    'test-exclude=s'    => \$test_exclude,
+    'exclude=s'         => \$test_exclude,  ### synonym
+    'enable-perl-module-checks' => \$enable_perl_module_checks,
+    'enable-perl-module-pkt-generation' => \$enable_perl_module_fuzzing_spa_pkt_generation,
+    'enable-python-module-checks' => \$enable_python_module_checks,
+    'fuzzing-pkts-file=s' => \$fuzzing_pkts_file,
+    'fuzzing-pkts-append' => \$fuzzing_pkts_append,
+    'fuzzing-test-tag=s'  => \$fuzzing_test_tag,
+    'fuzzing-class=s'     => \$fuzzing_class,
+    'prefer-iptables' => \$prefer_iptables,
+    'enable-recompile-check' => \$enable_recompilation_warnings_check,
+    'enable-configure-args-checks' => \$enable_configure_args_checks,
+    'enable-profile-coverage-check' => \$enable_profile_coverage_check,
+    'enable-cores-pattern' => \$enable_cores_pattern_mode,
+    'enable-profile-coverage-init' => \$enable_profile_coverage_init,
+    'enable-ip-resolve' => \$enable_client_ip_resolve_test,
+    'enable-distcheck'  => \$enable_make_distcheck,
+    'enable-dist-check' => \$enable_make_distcheck,  ### synonym
+    'enable-openssl-checks' => \$enable_openssl_compatibility_tests,
+    'enable-cunit' => \$enable_cunit_tests,
+    'gdb-test=s'        => \$gdb_test_file,
+    'List-mode'         => \$list_mode,
+    'test-limit=i'      => \$test_limit,
+    'enable-fault-injection'   => \$enable_fault_injection,
+    'disable-fault-injection'  => \$disable_fault_injection,
+    'enable-valgrind'   => \$enable_valgrind,
+    'disable-valgrind'  => \$disable_valgrind,
+    'valgrind-disable-suppressions'  => \$valgrind_disable_suppressions,
+    'valgrind-disable-child-silent'  => \$valgrind_disable_child_silent,
+    'enable-all'        => \$enable_all,
+    'enable-complete'   => \$enable_complete,
+    'enable-fuzzing-interfaces-tests' => \$enable_fuzzing_interfaces_tests,
+    'valgrind-path=s'   => \$valgrind_path,
+    'valgrind-suppression-file' => \$valgrind_suppressions_file,
+    'enable-valgrind-gen-suppressions' => \$enable_valgrind_gen_suppressions,
+    ### can set the following to "output.last/valgrind-coverage" if
+    ### a full test suite run has already been executed with --enable-valgrind
+    'valgrind-prev-cov-dir=s' => \$previous_valgrind_coverage_dir,
+    'openssl-path=s'    => \$openssl_path,
+    'fiu-run-path=s'    => \$fiu_run_path,
+    'output-dir=s'      => \$output_dir,
+    'cmd-verbose=s'     => \$verbose_str,
+    'client-only-mode'  => \$client_only_mode,
+    'server-only-mode'  => \$server_only_mode,
+    'diff'              => \$diff_mode,
+    'diff-dir1=s'       => \$diff_dir1,
+    'diff-dir2=s'       => \$diff_dir2
+);
+
+
+
+
+# grab args:, split the args: off, use GetOptionsFromString()
+# at this point, process as normal
+#
+}
 
 if ($enable_all or $enable_complete) {
     $enable_valgrind = 1;
@@ -1006,6 +1098,84 @@ my %test_keys = (
 ### make sure no fwknopd instance is currently running
 die "[*] Please stop the running fwknopd instance."
     if &global_fwknopd_pgrep_check();
+
+
+if ($rerun_failed_mode) {
+    my $test_num = 0;
+    my $test_category = "";
+    my $test_subcategory = "";
+    my $test_detail = "";
+    &logr("\nRunning previously failed tests\n");
+
+    for my $line (@last_logfile) {
+        if ($line =~ /fail \((\d+)\)/ || $line =~ /valgrind output/ || $line =~ /Look for crashes/ || $line =~ /profile coverage/ ) {
+            $test_num = $line =~ /\((\d+)\)\n/;
+            $test_num = $1;
+            $executed = $test_num - 1;
+            if( $line =~ /\[(.+)\]\s+\[(.+)\]\s+([\w \(\)\/\-]+)/) {
+                $test_category = $1;
+                $test_subcategory = $2;
+                $test_detail = $3;
+            } elsif ($line =~ /^\[(.+)\]\s+\[(.+)\]/) {
+                $test_category = $1;
+                $test_subcategory = $2;
+            } elsif ($line =~ /^\[(.+)\]/) {
+                $test_category = $1;
+            }
+            for my $test_hr (@tests) {
+                if ($test_hr->{'category'} eq $test_category
+                        && $test_hr->{'detail'} eq $test_detail) {
+                    &run_test($test_hr);
+                } elsif ($test_hr->{'category'} eq "valgrind output" && $test_category eq "valgrind output") {
+                    &run_test($test_hr);
+                    if ($line =~ /pass \(\d+\)/) {
+                        $passed--;
+                    }
+                } elsif ($test_hr->{'category'} eq "profile coverage" && $test_category eq "profile coverage") {
+                    &run_test($test_hr);
+                    if ($line =~ /pass \(\d+\)/) {
+                        $passed--;
+                    }
+                } elsif ($test_hr->{'category'} eq "Look for crashes" && $test_category eq "Look for crashes") {
+                    &run_test($test_hr);
+                    if ($line =~ /pass \(\d+\)/) {
+                        $passed--;
+                    }
+                }
+            }
+
+        } elsif ($line =~ /Run time: ([\d\.]+) minutes/) {
+            my $total_elapsed_seconds = time() - $start_time;
+            my $total_elapsed_minutes = sprintf "%.2f", ($total_elapsed_seconds / 60);
+            $total_elapsed_minutes = $total_elapsed_minutes + $1;
+            &logr("    Run time: $total_elapsed_minutes minutes\n");
+
+        } elsif ($line =~ /Run time: ([\d\.]+) seconds/) {
+            my $total_elapsed_seconds = time() - $start_time + $1;
+            if ($total_elapsed_seconds > 60) {
+                my $total_elapsed_minutes = sprintf "%.2f", ($total_elapsed_seconds / 60);
+                &logr("    Run time: $total_elapsed_minutes minutes\n");
+            } else {
+                &logr("    Run time: $total_elapsed_seconds seconds\n");
+            }
+
+#        } elsif ($line =~ /OpenSSL tests passed/) {
+
+#        } elsif ($line =~ /OpenSSL HMAC tests passed/) {
+
+#        } elsif ($line =~ /Fuzzing tests passed/) {
+
+        } elsif ($line =~ /(\d+)\/(\d+)\/(\d+) test buckets passed/) {
+            $passed = $1 + $passed;
+            $executed = $3;
+            &logr("[+] $passed/$failed/$executed test buckets passed/failed/executed\n");
+        } else {
+            &logr($line);
+        }
+    }
+
+exit 0;
+}
 
 ### now that we're ready to run, preserve any previous test
 ### suite output
@@ -7180,7 +7350,7 @@ sub run_cmd() {
 
 sub dots_print() {
     my $msg = shift;
-    &logr($msg);
+    &logr($msg . '.');
     my $dots = '';
     for (my $i=length($msg); $i < $PRINT_LEN; $i++) {
         $dots .= '.';
@@ -7314,7 +7484,7 @@ sub init() {
     unlink $init_file if -e $init_file;
     unlink $logfile   if -e $logfile;
 
-    $do_profile_init = 1 unless $test_include;
+    $do_profile_init = 1 unless $test_include or $rerun_failed_mode;
 
     ### always restore the gpg and access %include directories before
     ### tests are executed
