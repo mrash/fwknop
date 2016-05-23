@@ -6817,6 +6817,11 @@ sub openssl_hmac_verification() {
         $openssl_hmac_line = <HMAC1>;
         close HMAC1;
     }
+    if ($openssl_hmac_line =~ /unknown option/) { ###Primarily for SHA 3, not supported at this time
+        &write_test_file("[.] Openssl doesn't support this command: '$openssl_hmac_cmd'\n",
+            $curr_test_file);
+        return 1;
+    }
 
     if ($base64_path) {
         $openssl_hmac = $openssl_hmac_line;
