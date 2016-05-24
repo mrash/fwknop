@@ -250,5 +250,23 @@
         'cmd_exec_file_owner' => 'USER',
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => "command exec sudo current user (9)",
+        'function' => \&spa_cmd_exec_cycle,
+        'cmdline'  => qq|$fwknopCmd --server-cmd "touch $cmd_exec_test_file" | .
+            "-a $fake_ip -D $loopback_ip --rc-file $cf{'rc_hmac_b64_key'} " .
+            $verbose_str,
+        'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $sudo_access_conf " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'sudo_test' => $YES,
+        'exec_user' => $YES,
+        'sudo_conf' => 'USER    ALL = NOPASSWD: /usr/bin/cat, (USER : USER) TOUCH',
+        'sudo_exec_user'  => $YES,
+        'sudo_exec_group' => $YES,
+        'cmd_exec_file_owner' => 'USER',
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
 
 );

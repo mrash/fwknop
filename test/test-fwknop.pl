@@ -5195,6 +5195,7 @@ sub write_sudo_access_conf() {
         print CA "CMD_SUDO_EXEC_USER           $username\n";
     }
     if ($test_hr->{'sudo_exec_group'} eq $YES) {
+        print CA "CMD_EXEC_GROUP                $username\n";
         print CA "CMD_SUDO_EXEC_GROUP           $username\n";
     }
 
