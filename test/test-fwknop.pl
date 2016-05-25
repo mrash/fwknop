@@ -1818,6 +1818,17 @@ sub fault_injection_tag() {
 
         $rv = 0 unless $server_was_stopped;
 
+        if ($test_hr->{'server_positive_output_matches'}) {
+            unless (&file_find_regex(
+                    $test_hr->{'server_positive_output_matches'},
+                    $MATCH_ALL, $APPEND_RESULTS, $server_test_file)) {
+                &write_test_file(
+                    "[-] server_positive_output_matches not met, setting rv=0\n",
+                    $curr_test_file);
+                $rv = 0;
+            }
+        }
+
     } else {
 
         ### we are testing the fwknop client, server, or other command
