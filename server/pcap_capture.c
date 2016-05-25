@@ -183,13 +183,6 @@ pcap_capture(fko_srv_options_t *opts)
         clean_exit(opts, FW_CLEANUP, EXIT_FAILURE);
     }
 
-    /* Initialize our signal handlers. You can check the return value for
-     * the number of signals that were *not* set.  Those that were not set
-     * will be listed in the log/stderr output.
-    */
-    if(set_sig_handlers() > 0)
-        log_msg(LOG_ERR, "Errors encountered when setting signal handlers.");
-
     log_msg(LOG_INFO, "Starting fwknopd main event loop.");
 
     /* Jump into our home-grown packet cature loop.
