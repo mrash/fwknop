@@ -70,7 +70,6 @@
         'fiu_injection_style' => 'enable_random name=posix/io/rw/*,probability=0.05',
         'fiu_iterations' => 1000
     },
-
     {
         'category' => 'fault injection',
         'subcategory' => 'fiu-run libc/mm/*',
@@ -79,6 +78,16 @@
         'cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str --exit-parse-config",
         'fiu_injection_style' => 'enable_random name=libc/mm/*,probability=0.05',
         'fiu_iterations' => 1000
+    },
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'fiu-run sigaction',
+        'detail'   => 'server',
+        'function' => \&fiu_run_fault_injection,
+        'cmdline'  => "$fwknopdCmd $default_server_conf_args $intf_str --exit-parse-config",
+        'fiu_injection_style' => 'enable name=posix/proc/sigaction',
+        'fiu_iterations' => 1,
+        'server_positive_output_matches' => [qr/Errors\sencountered\swhen\ssetting\ssignal\shandlers/],
     },
     {
         'category' => 'fault injection',
