@@ -128,6 +128,12 @@ main(int argc, char **argv)
         if(!opts.afl_fuzzing
                 && ! check_dir_path((const char *)opts.config[CONF_FWKNOP_RUN_DIR], "Run", 0))
             clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        /* Initialize our signal handlers. You can check the return value for
+         * the number of signals that were *not* set.  Those that were not set
+         * will be listed in the log/stderr output.
+        */
+        if(set_sig_handlers() > 0)
+            log_msg(LOG_ERR, "Errors encountered when setting signal handlers.");
 
         /* Initialize the firewall rules handler based on the fwknopd.conf
          * file, but (for iptables firewalls) don't flush any rules or create
