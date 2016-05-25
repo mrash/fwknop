@@ -132,8 +132,10 @@ main(int argc, char **argv)
          * the number of signals that were *not* set.  Those that were not set
          * will be listed in the log/stderr output.
         */
-        if(set_sig_handlers() > 0)
+        if(set_sig_handlers() > 0) {
             log_msg(LOG_ERR, "Errors encountered when setting signal handlers.");
+            clean_exit(&opts, NO_FW_CLEANUP, EXIT_FAILURE);
+        }
 
         /* Initialize the firewall rules handler based on the fwknopd.conf
          * file, but (for iptables firewalls) don't flush any rules or create
