@@ -128,6 +128,25 @@
         'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
             "--get-key $local_key_file --save-args-file too_long.args " . "-A tcp/22 "x300
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'no-home-dir (1)',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/must\sset\s\-\-rc\-file\spath/],
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
+            "--get-key $local_key_file --no-home-dir --save-rc-stanza -A tcp/22 "
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'no-home-dir (2)',
+        'function' => \&generic_exec,
+        'exec_err' => $NO,
+        'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
+            "--get-key $local_key_file -A tcp/22 "
+    },
 
     {
         'category' => 'basic operations',
