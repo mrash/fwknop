@@ -724,6 +724,22 @@
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 
+    ### cmd cycle
+    {
+        'category' => 'fault injection',
+        'subcategory' => 'server',
+        'detail' => 'tag cmd_cycle_build_err',
+        'function' => \&fault_injection_tag,
+        'no_ip_check' => 1,
+        'client_pkt_tries' => 1,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'disable_aging'} -a " .
+            "$cf{'hmac_cmd_open_close_multi_cycle_access'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str " .
+            "--fault-injection-tag cmd_cycle_build_err",
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+    },
+
     ### client timeout tags
     {
         'category' => 'fault injection',

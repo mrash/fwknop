@@ -69,6 +69,10 @@ build_cmd(spa_data_t *spadat, const char * const cmd_cycle_str, int timer)
     acc_port_list_t *port_list = NULL;
     int              i=0, buf_idx=0;
 
+#if HAVE_LIBFIU
+    fiu_return_on("cmd_cycle_build_err", 0);
+#endif
+
     if(expand_acc_port_list(&port_list, spadat->spa_message_remain) != 1)
     {
         free_acc_port_list(port_list);
