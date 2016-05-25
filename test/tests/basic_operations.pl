@@ -192,6 +192,27 @@
         'exec_err' => $YES,
         'cmdline' => "$fwknopCmd -A tcp/600001 -a $fake_ip -D $loopback_ip",
     },
+
+    ### trigger strtol() error
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'invalid SPA destination port (1)',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip -p 9999999999999999999999999999999999999999999999999999999999",
+    },
+
+    ### trigger MAX_PORT error
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'invalid SPA destination port (2)',
+        'function' => \&generic_exec,
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip -p 99999",
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'client',

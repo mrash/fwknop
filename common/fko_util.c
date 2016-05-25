@@ -1142,11 +1142,9 @@ count_characters(const char *str, const char match, int len)
 {
     int i, count = 0;
 
-    for (i=0; i < len; i++) {
+    for (i=0; i < len && str[i] != '\0'; i++) {
         if (str[i] == match)
             count++;
-        if (str[i] == '\0')
-            return count;
     }
     return count;
 }
