@@ -1793,28 +1793,6 @@ update_rc(fko_cli_options_t *options, fko_var_bitmask_t *bitmask)
 static void
 validate_options(fko_cli_options_t *options)
 {
-    if(options->no_rc_file)
-    {
-        if(options->save_rc_stanza)
-        {
-            log_msg(LOG_VERBOSITY_ERROR,
-                    "Cannot save an rc stanza in --no-rc-file mode.");
-            exit(EXIT_FAILURE);
-        }
-        if (options->use_rc_stanza[0] != 0x0)
-        {
-            log_msg(LOG_VERBOSITY_ERROR,
-                    "Cannot set stanza name in --no-rc-file mode.");
-            exit(EXIT_FAILURE);
-        }
-        if (options->stanza_list)
-        {
-            log_msg(LOG_VERBOSITY_ERROR,
-                    "Cannot list stanzas in --no-rc-file mode.");
-            exit(EXIT_FAILURE);
-        }
-    }
-
     if ( (options->use_rc_stanza[0] != 0x0)
         && (options->got_named_stanza == 0)
         && (options->save_rc_stanza == 0) )
