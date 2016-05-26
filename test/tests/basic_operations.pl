@@ -147,6 +147,35 @@
         'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
             "--get-key $local_key_file -A tcp/22 "
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'no-rc-file (1)',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/Cannot save an rc stanza in/],
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
+            "--get-key $local_key_file -A tcp/22 --no-rc-file --save-rc-stanza "
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'no-rc-file (2)',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/Cannot list stanzas in/],
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopCmd --no-rc-file --stanza-list "
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client',
+        'detail'   => 'no-rc-file (3)',
+        'function' => \&generic_exec,
+        'positive_output_matches' => [qr/Cannot set stanza name/],
+        'exec_err' => $YES,
+        'cmdline' => "$fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
+            "--get-key $local_key_file -A tcp/22 --no-rc-file -n test "
+    },
 
     {
         'category' => 'basic operations',
