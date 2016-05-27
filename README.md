@@ -83,6 +83,16 @@ computing environments such as Amazon's AWS:
 ![alt text][SPA-Amazon-AWS-cloud]
 [SPA-Amazon-AWS-cloud]: /doc/images/SPA_AWS_network_setup.png "SPA usage on Amazon AWS cloud environments"
 
+## User Interface
+The official cross-platform fwknop client user interface *fwknop-gui*
+([download](https://incomsystems.biz/fwknop-gui/), [github](https://github.com/oneru/fwknop-gui))
+is developed by Jonathan Bennett. All major client-side SPA modes are supported
+including NAT requests, HMAC and Rijndael keys, fwknoprc stanza saving, and more.
+Currently fwknop-gui runs on Linux, Mac OS X, and Windows - here is a screenshot from
+OS X:
+![alt text][fwknop-gui-OS-X-screenshot]
+[fwknop-gui-OS-X-screenshot]: /doc/images/fwknop-gui-OSX.png "fwknop-gui on Mac OS X"
+
 ## Tutorial
 A comprehensive tutorial on fwknop can be found here:
 
