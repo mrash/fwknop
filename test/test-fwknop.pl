@@ -8642,6 +8642,15 @@ sub usage() {
                                          option (enabled because of gpgme).
     --enable-valgrind-gen-suppressions - Generate valgrind suppressions for any
                                          valgrind error discoveries.
+    --rerun-failed                     - Repeats the last test run, but only runs
+                                         the failed tests.  This command does not
+                                         reset the coverage statistics.  A useful
+                                         tactic is to couple this flag with
+                                         the faketime command in order to allow
+                                         tests with timing problems to pass on
+                                         slower systems.  Suggested command would be
+                                         \"sudo faketime -f \'+0 x0.25\'
+                                         ./test-fwknop.pl --rerun-failed\"
     --cmd-verbose=<str>                - Set the verbosity level of executed fwknop
                                          commands, default is:
                                          $verbose_str
