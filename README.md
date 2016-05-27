@@ -86,12 +86,15 @@ computing environments such as Amazon's AWS:
 ## User Interface
 The official cross-platform fwknop client user interface *fwknop-gui*
 ([download](https://incomsystems.biz/fwknop-gui/), [github](https://github.com/oneru/fwknop-gui))
-is developed by Jonathan Bennett. All major client-side SPA modes are supported
-including NAT requests, HMAC and Rijndael keys, fwknoprc stanza saving, and more.
-Currently fwknop-gui runs on Linux, Mac OS X, and Windows - here is a screenshot from
-OS X:
+is developed by Jonathan Bennett. Most major client-side SPA modes are supported
+including NAT requests, HMAC and Rijndael keys (GnuPG is not yet supported), fwknoprc
+stanza saving, and more.  Currently fwknop-gui runs on Linux, Mac OS X, and
+Windows - here is a screenshot from OS X:
 ![alt text][fwknop-gui-OS-X-screenshot]
 [fwknop-gui-OS-X-screenshot]: /doc/images/fwknop-gui-OSX.png "fwknop-gui on Mac OS X"
+Similarly, an updated
+[Android client](https://github.com/oneru/Fwknop2) is
+[available](https://incomsystems.biz/fwknop-gui/android.php) as well.
 
 ## Tutorial
 A comprehensive tutorial on fwknop can be found here:
