@@ -884,8 +884,8 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_ENABLE_X_FORWARDED_FOR, DEF_ENABLE_X_FORWARDED_FOR);
 
     /* Prepend firewall rules*/
-    if(opts->config[CONF_ENABLE_PREPEND] == NULL)
-        set_config_entry(opts, CONF_ENABLE_PREPEND, DEF_ENABLE_PREPEND);
+    if(opts->config[CONF_ENABLE_RULE_PREPEND] == NULL)
+        set_config_entry(opts, CONF_ENABLE_RULE_PREPEND, DEF_ENABLE_RULE_PREPEND);
 
     /* NAT DNS enabled*/
     if(opts->config[CONF_ENABLE_NAT_DNS] == NULL)

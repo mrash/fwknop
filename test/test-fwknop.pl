@@ -434,6 +434,7 @@ our %cf = (
     'include_m1_hmac_access'       => "$conf_dir/include_m1_hmac_access.conf",
     'include_def_hmac_access'      => "$conf_dir/include_def_hmac_access.conf",
     'include_keys1_hmac_access'    => "$conf_dir/include_keys1_hmac_access.conf",
+    'prepend_fwknopd'              => "$conf_dir/prepend_fwknopd.conf",
     'hmac_cmd_access'              => "$conf_dir/hmac_cmd_access.conf",
     'hmac_cmd_setuid_access'       => "$conf_dir/hmac_cmd_setuid_access.conf",
     'hmac_cmd_giduid_access'       => "$conf_dir/hmac_cmd_giduid_access.conf",

@@ -1154,7 +1154,7 @@ create_rule(const fko_srv_options_t * const opts,
 
     zero_cmd_buffers();
 
-    if (strncasecmp(opts->config[CONF_ENABLE_PREPEND], "Y", 1) == 0) {
+    if (strncasecmp(opts->config[CONF_ENABLE_RULE_PREPEND], "Y", 1) == 0) {
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s -I %s %s",
                 opts->fw_config->fw_command, fw_chain, fw_rule);
     } else {

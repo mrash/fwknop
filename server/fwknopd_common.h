@@ -95,7 +95,7 @@
 #define DEF_MAX_SNIFF_BYTES             "1500"
 #define DEF_GPG_HOME_DIR                "/root/.gnupg"
 #define DEF_ENABLE_X_FORWARDED_FOR      "N"
-#define DEF_ENABLE_PREPEND              "N"
+#define DEF_ENABLE_RULE_PREPEND         "N"
 #define DEF_ENABLE_NAT_DNS              "Y"
 #ifdef  GPG_EXE
   #define DEF_GPG_EXE                   GPG_EXE
@@ -282,7 +282,7 @@ enum {
     //CONF_EXT_CMD_PREFIX,
     CONF_ENABLE_X_FORWARDED_FOR,
     CONF_ENABLE_DESTINATION_RULE,
-    CONF_ENABLE_PREPEND,
+    CONF_ENABLE_RULE_PREPEND,
     CONF_ENABLE_NAT_DNS,
 #if FIREWALL_FIREWALLD
     CONF_ENABLE_FIREWD_FORWARDING,
