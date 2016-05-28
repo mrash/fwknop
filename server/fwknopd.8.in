@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 05/12/2016
+.\"      Date: 05/28/2016
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "05/12/2016" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "05/28/2016" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -480,6 +480,18 @@ When
 is sniffing an interface, if the interface is administratively downed or unplugged, fwknopd will cleanly exit and an assumption is made that any process monitoring infrastructure like systemd or upstart will restart it\&. However, if fwknopd is not being monitored by systemd, upstart, or anything else, this behavior can be disabled with the \(lqEXIT_AT_INTF_DOWN\(rq variable\&. If disabled, fwknopd will try to recover when a downed interface comes back up\&.
 .RE
 .PP
+\fBENABLE_RULE_PREPEND\fR \fI<Y/N>\fR
+.RS 4
+For systems running iptables or firewalld, have
+\fBfwknopd\fR
+insert new SPA rules at the beginning of the relevant chain (such as \(lqFWKNOP_INPUT\(rq) instead of appending them to the end of the chain\&. This causes newly created rules to have precedence over older ones\&.
+.RE
+.PP
+\fBENABLE_NAT_DNS\fR \fI<Y/N>\fR
+.RS 4
+Allow fwknopd to resolve hostnames in NAT access messages\&.
+.RE
+.PP
 \fBGPG_HOME_DIR\fR \fI<path>\fR
 .RS 4
 If GPG keys are used instead of a Rijndael symmetric key, this is the default GPG keys directory\&. Note that each access stanza in
@@ -513,6 +525,13 @@ to acquire SPA data from HTTP requests (generated with the fwknop client in
 \fB\-\-HTTP\fR
 mode)\&. Note that when this is enabled, the \(lqPCAP_FILTER\(rq variable would need to be updated to sniff traffic over TCP/80 connections and a web server should be running on the same server as
 \fBfwknopd\fR\&.
+.RE
+.PP
+\fBENABLE_X_FORWARDED_FOR\fR \fI<Y/N>\fR
+.RS 4
+Allows
+\fBfwknopd\fR
+to use the X\-Forwarded\-for header from a captured SPA packet over HTTP as the source IP\&. This can happen when using SPA through an HTTP proxy\&.
 .RE
 .PP
 \fBENABLE_TCP_SERVER\fR \fI<Y/N>\fR
