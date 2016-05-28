@@ -420,6 +420,7 @@ exit 1 unless GetOptions(
 ### main configuration file paths
 our %cf = (
     "${fw_conf_prefix}_nat"                  => "$conf_dir/${fw_conf_prefix}_nat_fwknopd.conf",
+    "${fw_conf_prefix}_nat_disable_aging"    => "$conf_dir/${fw_conf_prefix}_nat_disable_aging_fwknopd.conf",
     "${fw_conf_prefix}_snat"                 => "$conf_dir/${fw_conf_prefix}_snat_fwknopd.conf",
     "${fw_conf_prefix}_snat_no_translate_ip" => "$conf_dir/${fw_conf_prefix}_snat_no_translate_ip_fwknopd.conf",
     "${fw_conf_prefix}_snat_translate_ip"    => "$conf_dir/${fw_conf_prefix}_snat_translate_ip_fwknopd.conf",

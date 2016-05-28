@@ -1638,6 +1638,43 @@
         'key_file' => $cf{'rc_hmac_b64_key'},
         'server_conf' => $cf{"${fw_conf_prefix}_no_nat_dns_fwknopd"}
     },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => "NAT_DNS invalid host",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            "$cf{'rc_hmac_b64_key'} -N bad%host:22",
+        'pkt' =>
+            '86uMfbb7AitlOEck6O0qJDtKK+GyTSnpxaL3iyCTzg+P0iRgMLRjt3Og4YmrG' .
+            '54AqaCg5M3tsqr3lF0E+mlMnNDtTy40nPc46psbreD1GqZ5fQkxri2IhhCSbA' .
+            'PeivyVE2cTB223gk9RDhaOMoHd8HtqwhMNiSGy8hU1dwCXo1Sjmx5kZ8Nnt91' .
+            'U82wW4jFTUObg83iJqz72xPw6sf7bvnZWeIbgE56pA',
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat_disable_aging"} -a $cf{'hmac_open_ports_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/Invalid Hostname in NAT SPA message/
+        ],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_conf' => $cf{"${fw_conf_prefix}_nat_disable_aging"}
+    },
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => "NAT_DNS resolution error",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            "$cf{'rc_hmac_b64_key'} -N somehost:22",
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{"${fw_conf_prefix}_nat"} -a $cf{'hmac_open_ports_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/Unable to resolve Hostname/
+        ],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_conf' => $cf{"${fw_conf_prefix}_nat"}
+    },
 
     {
         'category' => 'Rijndael+HMAC',

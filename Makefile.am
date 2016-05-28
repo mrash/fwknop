@@ -145,6 +145,8 @@ EXTRA_DIST = \
     test/conf/ipt_custom_nat_chain_fwknopd.conf \
     test/conf/firewd_custom_nat_chain_fwknopd.conf \
     test/conf/gpg_invalid_exe_access.conf \
+    test/conf/ipt_nat_disable_aging_fwknopd.conf \
+    test/conf/firewd_nat_disable_aging_fwknopd.conf \
     test/conf/disable_aging_fwknopd.conf \
     test/conf/disable_aging_nat_fwknopd.conf \
     test/conf/dual_key_usage_access.conf \
