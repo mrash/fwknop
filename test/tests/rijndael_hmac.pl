@@ -1642,9 +1642,7 @@
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
         'detail'   => "NAT_DNS invalid host",
-        'function' => \&spa_cycle,
-        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
-            "$cf{'rc_hmac_b64_key'} -N bad%host:22",
+        'function' => \&predef_pkts_spa_cycle,
         'pkt' =>
             '86uMfbb7AitlOEck6O0qJDtKK+GyTSnpxaL3iyCTzg+P0iRgMLRjt3Og4YmrG' .
             '54AqaCg5M3tsqr3lF0E+mlMnNDtTy40nPc46psbreD1GqZ5fQkxri2IhhCSbA' .
@@ -1656,7 +1654,6 @@
             qr/Invalid Hostname in NAT SPA message/
         ],
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'key_file' => $cf{'rc_hmac_b64_key'},
         'server_conf' => $cf{"${fw_conf_prefix}_nat_disable_aging"}
     },
     {

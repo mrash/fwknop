@@ -3103,6 +3103,26 @@ sub use_terminal_run_client() {
     return &run_cmd($test_hr->{'cmdline'}, $cmd_out_tmp, $curr_test_file);
 }
 
+sub predef_pkts_spa_cycle() {
+    my $test_hr = shift;
+
+    my @packets = (
+        {
+            'proto'  => 'udp',
+            'port'   => $default_spa_port,
+            'dst_ip' => $loopback_ip,
+            'data'   => $test_hr->{'pkt'},
+        },
+    );
+
+    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
+            = &client_server_interaction($test_hr, \@packets, $USE_PREDEF_PKTS);
+
+    $rv = 0 unless &process_output_matches($test_hr);
+
+    return $rv;
+}
+
 sub spa_cycle() {
     my $test_hr = shift;
 
@@ -3113,6 +3133,7 @@ sub spa_cycle() {
 
     return $rv;
 }
+
 sub tcp_spa_cycle() {
     my $test_hr = shift;
 
