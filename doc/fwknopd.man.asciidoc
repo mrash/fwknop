@@ -81,7 +81,8 @@ COMMAND-LINE OPTIONS
 
 *-D, --dump-config*::
     Dump the configuration values that *fwknopd* derives from the
-    '@sysconfdir@/fwknop/fwknopd.conf' (or override files) and '@sysconfdir@/fwknop/access.conf' on stderr.
+    '@sysconfdir@/fwknop/fwknopd.conf' (or override files) and
+    '@sysconfdir@/fwknop/access.conf' on stderr.
 
 *--dump-serv-err-codes*::
     Dump all possible *fwknopd* error codes to stdout and exit. This option is
@@ -358,6 +359,15 @@ the '@sysconfdir@/fwknop/fwknopd.conf' file for additional details.
     ``EXIT_AT_INTF_DOWN'' variable. If disabled, fwknopd will try to recover
     when a downed interface comes back up.
 
+*ENABLE_RULE_PREPEND* '<Y/N>'::
+    For systems running iptables or firewalld, have *fwknopd* insert new SPA
+    rules at the beginning of the relevant chain (such as ``FWKNOP_INPUT'') instead
+    of appending them to the end of the chain. This causes newly created rules to
+    have precedence over older ones.
+
+*ENABLE_NAT_DNS* '<Y/N>'::
+    Allow fwknopd to resolve hostnames in NAT access messages.
+
 *GPG_HOME_DIR* '<path>'::
     If GPG keys are used instead of a Rijndael symmetric key, this is
     the default GPG keys directory. Note that each access stanza in
@@ -379,6 +389,11 @@ the '@sysconfdir@/fwknop/fwknopd.conf' file for additional details.
     the ``PCAP_FILTER'' variable would need to be updated to sniff traffic
     over TCP/80 connections and a web server should be running on the same
     server as *fwknopd*.
+
+*ENABLE_X_FORWARDED_FOR* '<Y/N>'::
+    Allows *fwknopd* to use the X-Forwarded-for header from a captured SPA
+    packet over HTTP as the source IP. This can happen when using SPA through
+    an HTTP proxy.
 
 *ENABLE_TCP_SERVER* '<Y/N>'::
     Enable the fwknopd TCP server. This is a "dummy" TCP server that will

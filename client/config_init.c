@@ -2619,6 +2619,8 @@ usage(void)
       "     --gpg-encryption        Use GPG encryption (default is Rijndael).\n"
       "     --gpg-recipient-key     Specify the recipient GPG key name or ID.\n"
       "     --gpg-signer-key        Specify the signer's GPG key name or ID.\n"
+      "     --gpg-no-signing-pw     Allow no signing password if none associated\n"
+      "                             with GPG key.\n"
       "     --gpg-home-dir          Specify the GPG home directory.\n"
       "     --gpg-agent             Use GPG agent if available.\n"
       "     --gpg-exe               Set path to GPG binary.\n"
