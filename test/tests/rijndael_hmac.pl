@@ -1625,6 +1625,22 @@
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',
+        'detail'   => "NAT_DNS disabled",
+        'function' => \&spa_cycle,
+        'cmdline'  => "$default_client_args_no_get_key --rc-file " .
+            "$cf{'rc_hmac_b64_key'} -N somehost:22",
+        'fwknopd_cmdline' => qq/$fwknopdCmd -c $cf{'no_nat_dns_fwknopd'} -a $cf{'hmac_open_ports_access'} / .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'server_positive_output_matches' => [
+            qr/requested NAT.*\snot enabled/],
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_conf' => $cf{'no_nat_dns_fwknopd'}
+    },
+
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
         'detail'   => "NAT to $internal_nat_host --no-ipt-check",
         'function' => \&spa_cycle,
         'cmdline'  => "$default_client_args_no_get_key --rc-file " .
