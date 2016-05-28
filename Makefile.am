@@ -138,7 +138,8 @@ EXTRA_DIST = \
     test/conf/default_fwknopd.conf \
     test/conf/portrange_fwknopd.conf \
     test/conf/prepend_fwknopd.conf \
-    test/conf/no_nat_dns_fwknopd.conf \
+    test/conf/firewd_no_nat_dns_fwknopd.conf \
+    test/conf/ipt_no_nat_dns_fwknopd.conf \
     test/conf/ipt_custom_input_chain_fwknopd.conf \
     test/conf/firewd_custom_input_chain_fwknopd.conf \
     test/conf/ipt_custom_nat_chain_fwknopd.conf \
