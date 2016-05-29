@@ -1417,10 +1417,9 @@ acc_data_is_valid(fko_srv_options_t *opts,
         }
     }
 
-    /* For any non-command access stanza, we enable global firewall handling
+    /* For any non-command cycle stanza, we enable global firewall handling
     */
-    if(!acc->enable_cmd_exec && !acc->enable_cmd_sudo_exec &&
-            acc->cmd_cycle_open == NULL)
+    if(acc->cmd_cycle_open == NULL)
         opts->enable_fw = 1;
 
     return(1);
