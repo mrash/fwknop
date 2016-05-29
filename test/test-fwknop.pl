@@ -2810,7 +2810,7 @@ sub insert_dupe_rule() {
 
     &cache_fw_policy($cmd_out_tmp);
 
-until($time_now + 45 == time()) {
+until($time_now + 44 < time()) {
 sleep 1;
 }
     return;
