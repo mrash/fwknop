@@ -4202,7 +4202,7 @@
             "ENABLE_${FW_PREFIX}_FORWARDING       N;",
             "ENABLE_${FW_PREFIX}_LOCAL_NAT        N;"
         ],
-        'positive_output_matches' => [qr/requires either ENABLE_${FW_PREfIX}_FORWARDING/i],
+        'positive_output_matches' => [qr/requires either ENABLE_${FW_PREFIX}_FORWARDING/i],
     },
 
     {
