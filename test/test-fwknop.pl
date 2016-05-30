@@ -1112,7 +1112,7 @@ if ($rerun_failed_mode) {
             $test_num = $line =~ /\((\d+)\)\n/;
             $test_num = $1;
             $executed = $test_num - 1;
-            if( $line =~ /\[(.+)\]\s+\[(.+)\]\s+([\w \(\)\/\-]+)/) {
+            if( $line =~ /\[(.+)\]\s+\[(.+)\]\s+([\w \(\)\/\-\>]+)/) {
                 $test_category = $1;
                 $test_subcategory = $2;
                 $test_detail = $3;
