@@ -1936,7 +1936,7 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                 && (strncasecmp(opts->config[CONF_ENABLE_IPT_LOCAL_NAT], "Y", 1) !=0 ))
             {
                 log_msg(LOG_ERR,
-                    "[*] FORCE_SNAT requires ENABLE_IPT_FORWARDING ENABLE_IPT_LOCAL_NAT in fwknopd.conf");
+                    "[*] FORCE_SNAT requires either ENABLE_IPT_FORWARDING or ENABLE_IPT_LOCAL_NAT in fwknopd.conf");
                 fclose(file_ptr);
                 return EXIT_FAILURE;
             }
