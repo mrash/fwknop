@@ -1561,6 +1561,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                         if (!is_valid_hostname(nat_dst, str_len))
                         {
                             log_msg(LOG_INFO, "Invalid Hostname in NAT SPA message");
+                            free_acc_port_list(port_list);
                             return res;
                         }
                         if (ipv4_resolve(nat_dst, nat_ip) == 0)
