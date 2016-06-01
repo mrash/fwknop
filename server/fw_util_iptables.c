@@ -1262,9 +1262,9 @@ static void forward_access_rule(const fko_srv_options_t * const opts,
             "forward_access_rule() forward_all: %d, nat_ip: %s, nat_port: %d",
             acc->forward_all, nat_ip, nat_port);
 
+    memset(rule_buf, 0, CMD_BUFSIZE);
     if(acc->forward_all)
     {
-        memset(rule_buf, 0, CMD_BUFSIZE);
 
         snprintf(rule_buf, CMD_BUFSIZE-1, IPT_FWD_ALL_RULE_ARGS,
             fwd_chain->table,
@@ -1281,10 +1281,18 @@ static void forward_access_rule(const fko_srv_options_t * const opts,
     }
     else
     {
+        snprintf(rule_buf, CMD_BUFSIZE-1, IPT_FWD_RULE_ARGS,
+            fwd_chain->table,
+            fst_proto,
+            spadat->use_src_ip,
+            nat_port,
+            exp_ts,
+            fwd_chain->target
+        );
         /* Make the FORWARD access rule
         */
-        ipt_rule(opts, NULL, IPT_FWD_RULE_ARGS, spadat->use_src_ip,
-            nat_ip, fst_proto, nat_port, NULL, NAT_ANY_PORT,
+        ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
+            NULL, fst_proto, nat_port, NULL, NAT_ANY_PORT,
             fwd_chain, exp_ts, now, "FORWARD", spadat->spa_message_remain);
     }
     return;
@@ -1416,7 +1424,7 @@ static void snat_rule(const fko_srv_options_t * const opts,
             /* Using static SNAT */
             snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
             snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
-                "--to-source %s:%i", acc->force_snat_ip, fst_port);
+                "--to-source %s", acc->force_snat_ip);
         }
         else if(acc->force_snat && acc->force_masquerade)
         {
@@ -1431,8 +1439,7 @@ static void snat_rule(const fko_srv_options_t * const opts,
             /* Using static SNAT */
             snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
             snprintf(snat_target, SNAT_TARGET_BUFSIZE-1,
-                "--to-source %s:%i", opts->config[CONF_SNAT_TRANSLATE_IP],
-                fst_port);
+                "--to-source %s", opts->config[CONF_SNAT_TRANSLATE_IP]);
         }
         else
         {
