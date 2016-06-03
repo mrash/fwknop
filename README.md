@@ -175,8 +175,9 @@ The following is a complete list of features supported by the fwknop project:
 
 ## License
 The fwknop project is released as open source software under the terms of
-the **GNU General Public License (GPL v2)**. The latest release can be found
-at [http://www.cipherdyne.org/fwknop/](http://www.cipherdyne.org/fwknop/)
+the **GNU General Public License (GPL v2)** or (at your option) any later
+version. The latest release can be found at
+[http://www.cipherdyne.org/fwknop/](http://www.cipherdyne.org/fwknop/)
 
 
 ## Current State
