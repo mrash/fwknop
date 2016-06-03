@@ -47,7 +47,7 @@ setup (
     description = 'Wrapper for Fwknop library (libfko)',
     author = 'Damien S. Stuart',
     author_email = 'dstuart@dstuart.org',
-    license = 'GPL2',
+    license = 'GPL2+',
     long_description = '''
 Python module that wraps the fwknop library to provide the ability to
 generate, decode, parse, and process SPA formatted messages.
