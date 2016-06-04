@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 05/28/2016
+.\"      Date: 06/03/2016
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "05/28/2016" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "06/03/2016" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -65,7 +65,7 @@ Each of the above fields are separated by a ":" character due to the variable le
 .sp
 By default, the \fBfwknop\fR client sends authorization packets over UDP port 62201, but this can be altered with the \fB\-\-server\-port\fR argument (this requires \fBfwknopd\fR to be configured to acquire SPA data over the selected port)\&. Also, \fBfwknop\fR can send the SPA packet over a random port via the \fB\-\-rand\-port\fR argument\&. See \fIfwknopd(8)\fR for further details\&. See the \fBEXAMPLES\fR section for example invocations of the \fBfwknop\fR client\&.
 .sp
-The \fBfwknop\fR client is quite portable, and is known to run on various Linux distributions (all major distros and embedded ones such as OpenWRT as well), FreeBSD, OpenBSD, and Cygwin on Windows\&. There is also a library \fBlibfko\fR that both \fBfwknop\fR and \fBfwknopd\fR use for SPA packet encryption/decryption and HMAC authentication operations\&. This library can be used to allow third party applications to use SPA subject to the terms of the GNU Public License (GPL)\&.
+The \fBfwknop\fR client is quite portable, and is known to run on various Linux distributions (all major distros and embedded ones such as OpenWRT as well), FreeBSD, OpenBSD, and Cygwin on Windows\&. There is also a library \fBlibfko\fR that both \fBfwknop\fR and \fBfwknopd\fR use for SPA packet encryption/decryption and HMAC authentication operations\&. This library can be used to allow third party applications to use SPA subject to the terms of the GNU Public License (GPL v2+)\&.
 .SH "REQUIRED ARGUMENTS"
 .sp
 These required arguments can be specified via command\-line or from within the \fI~/\&.fwknoprc\fR file (see \fI\-n, \-\-named\-config\fR option and the FWKNOPRC FILE section below)\&.
@@ -1302,4 +1302,4 @@ The phrase \(lqSingle Packet Authorization\(rq was coined by MadHat and Simple N
 Send bug reports to dstuart@dstuart\&.org or mbr@cipherdyne\&.org, or open a new issue on Github (see \fIhttps://github\&.com/mrash/fwknop\&.git\fR)\&. Suggestions and/or comments are always welcome as well\&. Additional information may be found in the \fBfwknop\fR mailing list archives (see: \fIhttps://lists\&.sourceforge\&.net/lists/listinfo/fwknop\-discuss\fR)\&.
 .SH "DISTRIBUTION"
 .sp
-\fBfwknop\fR is distributed under the GNU General Public License (GPL) version 2, and the latest version may be downloaded from \fIhttp://www\&.cipherdyne\&.org\fR\&.
+\fBfwknop\fR is distributed under the GNU General Public License (GPL v2+), and the latest version may be downloaded from \fIhttp://www\&.cipherdyne\&.org\fR\&.

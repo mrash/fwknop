@@ -9,7 +9,7 @@
 #
 # Author: Michael Rash <mbr@cipherdyne.org>
 #
-# License: GPL v2
+# License: GPL v2+
 #
 
 use MIME::Base64;

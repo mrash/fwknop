@@ -874,5 +874,5 @@ found in the *fwknop* mailing list archives (see:
 
 DISTRIBUTION
 ------------
-*fwknopd* is distributed under the GNU General Public License (GPL), and
+*fwknopd* is distributed under the GNU General Public License (GPL v2+), and
 the latest version may be downloaded from 'http://www.cipherdyne.org'.

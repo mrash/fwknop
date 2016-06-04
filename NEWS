@@ -1,3 +1,6 @@
+
+*** Current news is available in the ChangeLog file, or in git history ***
+
 Noteworthy changes in version 2.5 (2013-06-16)
 -------------------------------------------------------
 
@@ -54,7 +57,7 @@ Noteworthy changes in version 0.0.0-alpha (2008-12-21)
 
 
  fwknop is distributed under the terms of the GNU General Public License
- (GPL v2).
+ (GPL v2+).
 
  Copyright 2009-2013, Damien Stuart
 

@@ -19,7 +19,7 @@ Release:	1%{?dist}
 Summary:	Firewall Knock Operator client. An implementation of Single Packet Authorization.
 
 Group:		Applications/Internet
-License:	GPL
+License:	GPL v2+
 URL:		http://www.cipherdyne.org/fwknop/
 Source0:	fwknop-%{version}.tar.gz
 BuildRoot:	%(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)

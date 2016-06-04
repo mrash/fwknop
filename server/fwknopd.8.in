@@ -2,12 +2,12 @@
 .\"     Title: fwknopd
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 05/28/2016
+.\"      Date: 06/03/2016
 .\"    Manual: Fwknop Server
 .\"    Source: Fwknop Server
 .\"  Language: English
 .\"
-.TH "FWKNOPD" "8" "05/28/2016" "Fwknop Server" "Fwknop Server"
+.TH "FWKNOPD" "8" "06/03/2016" "Fwknop Server" "Fwknop Server"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -993,4 +993,4 @@ The phrase \(lqSingle Packet Authorization\(rq was coined by MadHat and Simple N
 Send bug reports to dstuart@dstuart\&.org or mbr@cipherdyne\&.org, or open a new issue on Github (see \fIhttps://github\&.com/mrash/fwknop\&.git\fR)\&. Suggestions and/or comments are always welcome as well\&. Additional information may be found in the \fBfwknop\fR mailing list archives (see: \fIhttps://lists\&.sourceforge\&.net/lists/listinfo/fwknop\-discuss\fR)\&.
 .SH "DISTRIBUTION"
 .sp
-\fBfwknopd\fR is distributed under the GNU General Public License (GPL), and the latest version may be downloaded from \fIhttp://www\&.cipherdyne\&.org\fR\&.
+\fBfwknopd\fR is distributed under the GNU General Public License (GPL v2+), and the latest version may be downloaded from \fIhttp://www\&.cipherdyne\&.org\fR\&.
