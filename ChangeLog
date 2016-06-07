@@ -9,6 +9,13 @@ fwknop-2.6.9 (04//2016):
       is from, Keyak and Ketje Teams, namely, Guido Bertoni, Joan Daemen,
       Michael Peeters, Gilles Van Assche and Ronny Van Keer - see:
       http://keyak.noekeon.org/
+    - (Damien Stuart) Added support for libnetfilter_queue so that fwknopd can
+      acquire SPA packets via the NFQ target. This feature is enabled with a
+      new command line switch '--enable-nfq-capture' for the configure script,
+      and libpcap is not required in this mode. In support of capturing SPA
+      packets via the NFQ target, new configuration variables have been added
+      to the fwknopd.conf file: ENABLE_NFQ_CAPTURE, NFQ_INTERFACE, NFQ_PORT,
+      NFQ_TABLE, NFQ_CHAIN, NFQ_QUEUE_NUMBER, and NFQ_LOOP_SLEEP.
     - (Vlad Glagolev) Added support for deriving the source IP from the
       X-Forwarded-For HTTP header when SPA packets are sent over HTTP
       connections.
