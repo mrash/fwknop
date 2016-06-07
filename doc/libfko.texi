@@ -185,7 +185,7 @@ creating or parsing @acronym{SPA} data.  Additional advantages include:
 @table @asis
 @item It's free software
 Anybody can use, modify, and redistribute it under the terms of the GNU
-General Public License (@pxref{Library Copying}).
+General Public License v2 or any later version (@pxref{Library Copying}).
 
 @item It's lightweight
 The Perl-based implementation requires several additional Perl
