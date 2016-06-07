@@ -2,12 +2,12 @@
 .\"     Title: fwknop
 .\"    Author: [see the "AUTHORS" section]
 .\" Generator: DocBook XSL Stylesheets v1.79.1 <http://docbook.sf.net/>
-.\"      Date: 06/03/2016
+.\"      Date: 06/06/2016
 .\"    Manual: Fwknop Client
 .\"    Source: Fwknop Client
 .\"  Language: English
 .\"
-.TH "FWKNOP" "8" "06/03/2016" "Fwknop Client" "Fwknop Client"
+.TH "FWKNOP" "8" "06/06/2016" "Fwknop Client" "Fwknop Client"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -1291,10 +1291,10 @@ More information on Single Packet Authorization can be found in the paper \(lqSi
 Additional commentary on Single Packet Authorization can be found via Michael Rash\(cqs Twitter feed: http://twitter\&.com/michaelrash, @michaelrash
 .SH "AUTHORS"
 .sp
-Damien Stuart <dstuart@dstuart\&.org>, Michael Rash <mbr@cipherdyne\&.org>
+The primary developers of \fBfwknop\fR are Michael Rash (project creator) <mbr@cipherdyne\&.org>, Damien Stuart <dstuart@dstuart\&.org>, and Jonathan Bennett\&.
 .SH "CONTRIBUTORS"
 .sp
-This \(lqC\(rq version of fwknop was derived from the original Perl\-based version on which many people who are active in the open source community have contributed\&. See the CREDITS file in the fwknop sources, or visit \fIhttps://github\&.com/mrash/fwknop/blob/master/CREDITS\fR to view the online list of contributors\&. A few contributors deserve to be singled out including: Jonathan Bennett, Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven, Hank Leininger, Fernando Arnaboldi, and Erik Gomez\&.
+This \(lqC\(rq version of fwknop was derived from the original Perl\-based version on which many people who are active in the open source community have contributed\&. See the CREDITS file in the fwknop sources, or visit \fIhttps://github\&.com/mrash/fwknop/blob/master/CREDITS\fR to view the online list of contributors\&. A few contributors deserve to be singled out including: Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven, Hank Leininger, Fernando Arnaboldi, and Erik Gomez\&.
 .sp
 The phrase \(lqSingle Packet Authorization\(rq was coined by MadHat and Simple Nomad at the BlackHat Briefings of 2005\&.
 .SH "BUGS"

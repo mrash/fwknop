@@ -1097,8 +1097,9 @@ Rash's Twitter feed: http://twitter.com/michaelrash, @michaelrash
 
 AUTHORS
 -------
-Damien Stuart <dstuart@dstuart.org>,
-Michael Rash <mbr@cipherdyne.org>
+The primary developers of *fwknop* are Michael Rash (project creator)
+<mbr@cipherdyne.org>, Damien Stuart <dstuart@dstuart.org>, and Jonathan
+Bennett.
 
 CONTRIBUTORS
 ------------
@@ -1107,8 +1108,8 @@ on which many people who are active in the open source community have
 contributed. See the CREDITS file in the fwknop sources, or visit
 'https://github.com/mrash/fwknop/blob/master/CREDITS' to view the online
 list of contributors. A few contributors deserve to be singled out including:
-Jonathan Bennett, Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven,
-Hank Leininger, Fernando Arnaboldi, and Erik Gomez.
+Franck Joncourt, Max Kastanas, Vlad Glagolev, Sean Greven, Hank Leininger,
+Fernando Arnaboldi, and Erik Gomez.
 
 The phrase ``Single Packet Authorization'' was coined by MadHat and Simple
 Nomad at the BlackHat Briefings of 2005.
