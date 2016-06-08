@@ -1099,7 +1099,7 @@ AUTHORS
 -------
 The primary developers of *fwknop* are Michael Rash (project creator)
 <mbr@cipherdyne.org>, Damien Stuart <dstuart@dstuart.org>, and Jonathan
-Bennett.
+Bennett <jbennett@incomsystems.biz>.
 
 CONTRIBUTORS
 ------------
