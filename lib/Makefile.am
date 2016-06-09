@@ -16,18 +16,18 @@ fko_utests_SOURCES  = fko_utests.c $(libfko_source_files)
 fko_utests_CPPFLAGS = -I $(top_builddir)/lib -I $(top_builddir)/common $(GPGME_CFLAGS)
 fko_utests_LDADD    = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.a
 fko_utests_LDFLAGS  = -lcunit $(GPGME_LIBS)
-libfko_la_LDFLAGS   = -version-info 2:4:0 $(GPGME_LIBS) -export-symbols-regex '^fko_' \
+libfko_la_LDFLAGS   = -version-info 3:0:0 $(GPGME_LIBS) -export-symbols-regex '^fko_' \
                       -Wl,--whole-archive,$(top_builddir)/common/libfko_util.a,--no-whole-archive
 else
 if APPLE_PLATFORM
-libfko_la_LDFLAGS   = -version-info 2:4:0 $(GPGME_LIBS) -export-symbols-regex '^fko_'
+libfko_la_LDFLAGS   = -version-info 3:0:0 $(GPGME_LIBS) -export-symbols-regex '^fko_'
 else
 if USE_MINGW
-libfko_la_LDFLAGS   = -version-info 2:4:0 $(GPGME_LIBS) \
+libfko_la_LDFLAGS   = -version-info 3:0:0 $(GPGME_LIBS) \
                       -export-symbols-regex '^fko_' -no-undefined \
                       -Wl,--whole-archive,$(top_builddir)/common/libfko_util.a,--no-whole-archive,-lwsock32,-lws2_32
 else
-libfko_la_LDFLAGS   = -version-info 2:4:0 $(GPGME_LIBS) \
+libfko_la_LDFLAGS   = -version-info 3:0:0 $(GPGME_LIBS) \
                       -export-symbols-regex '^fko_' \
                       -Wl,--whole-archive,$(top_builddir)/common/libfko_util.a,--no-whole-archive
 endif

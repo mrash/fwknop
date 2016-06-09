@@ -1,4 +1,4 @@
-fwknop-2.6.9 (04//2016):
+fwknop-2.6.9 (06/08/2016):
     - (Jonathan Bennett) Added support for the SHA3 "Keccak" algorithm
       (specifically SHA3_256 and SHA3_512) for SPA HMAC and digest checking.
       Enabling SHA3 from the fwknop client command line is done with the '-m'
