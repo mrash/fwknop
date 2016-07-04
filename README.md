@@ -85,7 +85,7 @@ computing environments such as Amazon's AWS:
 
 ## User Interface
 The official cross-platform fwknop client user interface *fwknop-gui*
-([download](https://incomsystems.biz/fwknop-gui/), [github](https://github.com/oneru/fwknop-gui))
+([download](https://incomsystems.biz/fwknop-gui/), [github](https://github.com/jp-bennett/fwknop-gui))
 is developed by Jonathan Bennett. Most major client-side SPA modes are supported
 including NAT requests, HMAC and Rijndael keys (GnuPG is not yet supported), fwknoprc
 stanza saving, and more.  Currently fwknop-gui runs on Linux, Mac OS X, and
@@ -93,7 +93,7 @@ Windows - here is a screenshot from OS X:
 ![alt text][fwknop-gui-OS-X-screenshot]
 [fwknop-gui-OS-X-screenshot]: /doc/images/fwknop-gui-OSX.png "fwknop-gui on Mac OS X"
 Similarly, an updated
-[Android client](https://github.com/oneru/Fwknop2) is
+[Android client](https://github.com/jp-bennett/Fwknop2) is
 [available](https://incomsystems.biz/fwknop-gui/android.php) as well.
 
 ## Tutorial
@@ -108,7 +108,7 @@ The following is a complete list of features supported by the fwknop project:
  * Implements Single Packet Authorization around iptables and firewalld firewalls
    on Linux, ipfw firewalls on *BSD and Mac OS X, and PF on OpenBSD.
  * The fwknop client runs on Linux, Mac OS X, *BSD, and Windows under Cygwin.
-   In addition, there is an [Android app](https://github.com/oneru/Fwknop2/releases)
+   In addition, there is an [Android app](https://github.com/jp-bennett/Fwknop2/releases)
    to generate SPA packets.
  * Supports both Rijndael and GnuPG methods for the encryption/decryption of
    SPA packets.

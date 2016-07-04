@@ -287,7 +287,7 @@
     },
 
     ### tests for Jonathan Bennett's Fwknop2 Android app. All commit hashes
-    ### are from: https://github.com/oneru/Fwknop2
+    ### are from: https://github.com/jp-bennett/Fwknop2
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'Android compatibility',
