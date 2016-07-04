@@ -108,8 +108,6 @@
   #define DEF_SUDO_EXE                   "/usr/bin/sudo"
 #endif
 #define DEF_ENABLE_SPA_OVER_HTTP        "N"
-#define DEF_ENABLE_TCP_SERVER           "N"
-#define DEF_TCPSERV_PORT                "62201"
 #if USE_LIBPCAP
   #define DEF_ENABLE_UDP_SERVER           "N"
 #else
@@ -138,7 +136,6 @@
 #define RCHK_MAX_PCAP_LOOP_SLEEP        (2 << 22)
 #define RCHK_MAX_SPA_PACKET_AGE         100000  /* seconds, can disable */
 #define RCHK_MAX_SNIFF_BYTES            (2 << 14)
-#define RCHK_MAX_TCPSERV_PORT           ((2 << 16) - 1)
 #define RCHK_MAX_UDPSERV_PORT           ((2 << 16) - 1)
 #define RCHK_MAX_UDPSERV_SELECT_TIMEOUT (2 << 22)
 #define RCHK_MAX_PCAP_DISPATCH_COUNT    (2 << 22)
@@ -256,8 +253,6 @@ enum {
     CONF_CMD_EXEC_TIMEOUT,
     //CONF_BLACKLIST,
     CONF_ENABLE_SPA_OVER_HTTP,
-    CONF_ENABLE_TCP_SERVER,
-    CONF_TCPSERV_PORT,
     CONF_ENABLE_UDP_SERVER,
     CONF_UDPSERV_PORT,
     CONF_UDPSERV_SELECT_TIMEOUT,
@@ -667,7 +662,6 @@ typedef struct fko_srv_options
     unsigned char   pcap_any_direction;
 
     int             data_link_offset;
-    int             tcp_server_pid;
     int             lock_fd;
 
     /* Values used in --key-gen mode only
@@ -697,7 +691,6 @@ typedef struct fko_srv_options
     /* Data elements that are derived from configuration entries - avoids
      * calling strtol_wrapper() after the config is parsed.
     */
-    unsigned short tcpserv_port;
     unsigned short udpserv_port;
     int            udpserv_select_timeout;
     int            rules_chk_threshold;

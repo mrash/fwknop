@@ -592,20 +592,6 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'server_positive_output_matches' => [qr/SPA\sPacket\sfrom\sIP\:\s$spoof_ip\s/],
     },
-
-    ### SPA over TCP (not really "single" packet auth since a TCP connection
-    ### is established)
-    {
-        'category' => 'Rijndael',
-        'subcategory' => 'client+server',
-        'detail'   => "SPA over TCP connection",
-        'function' => \&tcp_spa_cycle,
-        'cmdline'  => "$default_client_args -P tcp",
-        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'tcp_server'} -a $cf{'def_access'} " .
-            "-d $default_digest_file -p $default_pid_file $intf_str",
-        'fw_rule_created' => $NEW_RULE_REQUIRED,
-        'fw_rule_removed' => $NEW_RULE_REMOVED,
-    },
     {
         'category' => 'Rijndael',
         'subcategory' => 'client+server',
