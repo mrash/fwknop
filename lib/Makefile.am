@@ -20,7 +20,8 @@ libfko_la_LDFLAGS   = -version-info 3:0:0 $(GPGME_LIBS) -export-symbols-regex '^
                       -Wl,--whole-archive,$(top_builddir)/common/libfko_util.a,--no-whole-archive
 else
 if APPLE_PLATFORM
-libfko_la_LDFLAGS   = -version-info 3:0:0 $(GPGME_LIBS) -export-symbols-regex '^fko_'
+libfko_la_LDFLAGS   = -version-info 3:0:0 $(GPGME_LIBS) -export-symbols-regex '^fko_' \
+                      -Wl,-force_load,$(top_builddir)/common/libfko_util.a
 else
 if USE_MINGW
 libfko_la_LDFLAGS   = -version-info 3:0:0 $(GPGME_LIBS) \
