@@ -136,6 +136,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="Ws2_32.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -428,7 +429,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\lib\fko_util.c"
+				RelativePath="..\common\fko_util.c"
 				>
 			</File>
 			<File
@@ -460,11 +461,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\lib\strlcat.c"
+				RelativePath="..\lib\sha3.c"
 				>
 			</File>
 			<File
-				RelativePath="..\lib\strlcpy.c"
+				RelativePath="..\common\strlcat.c"
+				>
+			</File>
+			<File
+				RelativePath="..\common\strlcpy.c"
 				>
 			</File>
 		</Filter>
@@ -514,7 +519,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\lib\fko_util.h"
+				RelativePath="..\common\fko_util.h"
 				>
 			</File>
 			<File
@@ -543,6 +548,10 @@
 			</File>
 			<File
 				RelativePath="..\lib\sha2.h"
+				>
+			</File>
+			<File
+				RelativePath="..\lib\sha3.h"
 				>
 			</File>
 		</Filter>
