@@ -65,7 +65,7 @@ Each of the above fields are separated by a ":" character due to the variable le
 .sp
 By default, the \fBfwknop\fR client sends authorization packets over UDP port 62201, but this can be altered with the \fB\-\-server\-port\fR argument (this requires \fBfwknopd\fR to be configured to acquire SPA data over the selected port)\&. Also, \fBfwknop\fR can send the SPA packet over a random port via the \fB\-\-rand\-port\fR argument\&. See \fIfwknopd(8)\fR for further details\&. See the \fBEXAMPLES\fR section for example invocations of the \fBfwknop\fR client\&.
 .sp
-The \fBfwknop\fR client is quite portable, and is known to run on various Linux distributions (all major distros and embedded ones such as OpenWRT as well), FreeBSD, OpenBSD, and Cygwin on Windows\&. There is also a library \fBlibfko\fR that both \fBfwknop\fR and \fBfwknopd\fR use for SPA packet encryption/decryption and HMAC authentication operations\&. This library can be used to allow third party applications to use SPA subject to the terms of the GNU Public License (GPL v2+)\&.
+The \fBfwknop\fR client is quite portable, and is known to run on various Linux distributions (all major distros and embedded ones such as OpenWRT as well), FreeBSD, OpenBSD, and Cygwin on Windows\&. There is also a library \fBlibfko\fR that both \fBfwknop\fR and \fBfwknopd\fR use for SPA packet encryption/decryption and HMAC authentication operations\&. This library can be used to allow third party applications to use SPA subject to the terms of the GNU General Public License (GPL v2+)\&.
 .SH "REQUIRED ARGUMENTS"
 .sp
 These required arguments can be specified via command\-line or from within the \fI~/\&.fwknoprc\fR file (see \fI\-n, \-\-named\-config\fR option and the FWKNOPRC FILE section below)\&.
