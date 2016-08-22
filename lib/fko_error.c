@@ -420,7 +420,7 @@ fko_errstr(const int err_code)
             return("The key for the given signer was not found");
 
         case FKO_ERROR_GPGME_SIGNER_KEY_AMBIGUOUS:
-            return("Ambiguous name/id for the signer key (mulitple matches)");
+            return("Ambiguous name/id for the signer key (multiple matches)");
 
         case FKO_ERROR_GPGME_ADD_SIGNER:
             return("Error adding the signer key to the gpgme context");
@@ -435,7 +435,7 @@ fko_errstr(const int err_code)
             return("The key for the given recipient was not found");
 
         case FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS:
-            return("Ambiguous name/id for the recipient key (mulitple matches)");
+            return("Ambiguous name/id for the recipient key (multiple matches)");
 
         case FKO_ERROR_GPGME_DECRYPT_FAILED:
             return("Decryption operation failed");

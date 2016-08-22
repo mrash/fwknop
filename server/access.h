@@ -119,7 +119,7 @@ int compare_addr_list(acc_int_list_t *source_list, const uint32_t ip);
 /**
  * \brief Check for a proto-port string
  *
- * Take a proto/port string (or mulitple comma-separated strings) and check
+ * Take a proto/port string (or multiple comma-separated strings) and check
  * them against the list for the given access stanza.
  *
  * \param acc Pointer to the acc_stanza_t struct that holds the access stanzas

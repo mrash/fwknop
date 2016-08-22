@@ -1510,7 +1510,7 @@ usage(void)
       "                           back to UDP server mode if not used).\n"
 #endif
       " -O, --override-config   - Specify a file with configuration entries that will\n"
-      "                           overide those in fwknopd.conf\n"
+      "                           override those in fwknopd.conf\n"
       " -p, --pid-file          - Specify an alternate fwknopd.pid file.\n"
       " -P, --pcap-filter       - Specify a Berkeley packet filter statement to\n"
       "                           override the PCAP_FILTER variable in fwknopd.conf.\n"
