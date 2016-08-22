@@ -425,7 +425,7 @@ for this type is: @samp{<ip of requestor>,<command text>}.
 @item FKO_ACCESS_MSG
 A basic access request.  This is the most common type in use. The format
 for this type is: @samp{<ip of requestor>,<protocol>/<port>}.  Note that
-mulitple protocol/port entries are allowed.
+multiple protocol/port entries are allowed.
 @example
 "192.168.1.2,tcp/22"
 "192.168.1.2,tcp/22,udp/5005"
@@ -1548,7 +1548,7 @@ Error from signer keylist start operation
 @item FKO_ERROR_GPGME_SIGNER_KEY_NOT_FOUND
 The key for the given signer was not found
 @item FKO_ERROR_GPGME_SIGNER_KEY_AMBIGUOUS
-Ambiguous name/id for the signer key (mulitple matches)
+Ambiguous name/id for the signer key (multiple matches)
 @item FKO_ERROR_GPGME_ADD_SIGNER
 Error adding the signer key to the gpgme context
 @item FKO_ERROR_GPGME_CONTEXT_RECIPIENT_KEY
@@ -1558,7 +1558,7 @@ Error from signer keylist start operation
 @item FKO_ERROR_GPGME_RECIPIENT_KEY_NOT_FOUND
 The key for the given recipient was not found
 @item FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS
-Ambiguous name/id for the recipient key (mulitple matches)
+Ambiguous name/id for the recipient key (multiple matches)
 @item FKO_ERROR_GPGME_DECRYPT_FAILED
 Decryption operation failed
 @item FKO_ERROR_GPGME_BAD_GPG_EXE

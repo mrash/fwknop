@@ -288,12 +288,12 @@ typedef enum {
     FKO_ERROR_GPGME_CONTEXT_SIGNER_KEY, /**< Unable to create GPGME context for the signer key*/
     FKO_ERROR_GPGME_SIGNER_KEYLIST_START, /**< Error from signer keylist start operation*/
     FKO_ERROR_GPGME_SIGNER_KEY_NOT_FOUND, /**< The key for the given signer was not found*/
-    FKO_ERROR_GPGME_SIGNER_KEY_AMBIGUOUS, /**< Ambiguous name/id for the signer key (mulitple matches)*/
+    FKO_ERROR_GPGME_SIGNER_KEY_AMBIGUOUS, /**< Ambiguous name/id for the signer key (multiple matches)*/
     FKO_ERROR_GPGME_ADD_SIGNER, /**< Error adding the signer key to the gpgme context*/
     FKO_ERROR_GPGME_CONTEXT_RECIPIENT_KEY, /**< Unable to create GPGME context for the recipient key*/
     FKO_ERROR_GPGME_RECIPIENT_KEYLIST_START, /**< Error from signer keylist start operation*/
     FKO_ERROR_GPGME_RECIPIENT_KEY_NOT_FOUND, /**< The key for the given recipient was not found*/
-    FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS, /**< Ambiguous name/id for the recipient key (mulitple matches)*/
+    FKO_ERROR_GPGME_RECIPIENT_KEY_AMBIGUOUS, /**< Ambiguous name/id for the recipient key (multiple matches)*/
     FKO_ERROR_GPGME_DECRYPT_FAILED, /**< Decryption operation failed*/
     FKO_ERROR_GPGME_DECRYPT_UNSUPPORTED_ALGORITHM, /**< Decryption operation failed due to unsupported algorithm*/
     FKO_ERROR_GPGME_BAD_GPG_EXE, /**< Unable to stat the given GPG executable*/

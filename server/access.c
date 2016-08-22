@@ -2108,7 +2108,7 @@ compare_port_list(acc_port_list_t *in, acc_port_list_t *ac, const int match_any)
     return(i_cnt == a_cnt);
 }
 
-/* Take a proto/port string (or mulitple comma-separated strings) and check
+/* Take a proto/port string (or multiple comma-separated strings) and check
  * them against the list for the given access stanza.
  *
  * Return 1 if we are allowed
