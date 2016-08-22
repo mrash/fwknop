@@ -114,7 +114,7 @@ FreeBSD, OpenBSD, and Cygwin on Windows. There is also a library *libfko*
 that both *fwknop* and *fwknopd* use for SPA packet encryption/decryption
 and HMAC authentication operations. This library can be used to allow
 third party applications to use SPA subject to the terms of the GNU
-Public License (GPL v2+).
+General Public License (GPL v2+).
 
 
 REQUIRED ARGUMENTS
