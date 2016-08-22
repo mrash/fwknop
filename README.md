@@ -202,7 +202,7 @@ following link to ensure a smooth transition to fwknop-2.5 or later:
  * Questions or comments about fwknop will be fielded on the
 [fwknop mailing list](http://lists.sourceforge.net/lists/listinfo/fwknop-discuss]).
  * For static analysis, fwknop uses the CLANG static analyzer and also the powerful
-Coverity Scan tool: ![](https://scan.coverity.com/projects/403/badge.svg)
+Coverity Scan tool: [![](https://scan.coverity.com/projects/403/badge.svg)](https://scan.coverity.com/projects/fwknop)
 
 ## Building fwknop
 This distribution uses GNU autoconf for setting up the build. Please see
