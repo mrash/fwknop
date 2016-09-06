@@ -584,7 +584,7 @@ is_rc_param(const char *line, rc_file_param_t *param)
 }
 
 /**
- * \brief Dump available stanzas from a fwknoprc file
+ * \brief Dump available stanzas from an fwknoprc file
  *
  * This function parses a rcfile and looks for configured stanzas.
  * They are all displayed except the default stanza.
@@ -1510,7 +1510,7 @@ add_multiple_vars_to_rc(FILE* rc, fko_cli_options_t *options, fko_var_bitmask_t 
  * @brief Process the fwknoprc file and lookup a section to extract its settings.
  *
  * This function aims at loading the settings for a specific section in
- * a fwknoprc file.
+ * an fwknoprc file.
  *
  * @param section_name  Name of the section to lookup.
  * @param options       Fwknop option structure where settings have to
