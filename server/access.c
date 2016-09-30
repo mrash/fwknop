@@ -1180,6 +1180,17 @@ set_acc_defaults(fko_srv_options_t *opts)
         if(acc->fw_access_timeout < 1)
             acc->fw_access_timeout = DEF_FW_ACCESS_TIMEOUT;
 
+        /* set default max_fw_timeout if necessary
+        */
+        if(acc->max_fw_timeout < 1)
+            acc->max_fw_timeout = DEF_MAX_FW_TIMEOUT;
+
+        if(acc->max_fw_timeout < acc->fw_access_timeout)
+            log_msg(LOG_INFO,
+                "Warning: MAX_FW_TIMEOUT < FW_ACCESS_TIMEOUT, honoring MAX_FW_TIMEOUT for stanza source: '%s' (#%d)",
+                acc->source, i
+            );
+
         /* set default gpg keyring path if necessary
         */
         if(acc->gpg_decrypt_pw != NULL)
@@ -1760,6 +1771,18 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
                 return EXIT_FAILURE;
             }
         }
+        else if(CONF_VAR_IS(var, "MAX_FW_TIMEOUT"))
+        {
+            curr_acc->max_fw_timeout = strtol_wrapper(val, 0,
+                    RCHK_MAX_FW_TIMEOUT, NO_EXIT_UPON_ERR, &is_err);
+            if(is_err != FKO_SUCCESS)
+            {
+                log_msg(LOG_ERR,
+                    "[*] MAX_FW_TIMEOUT value not in range.");
+                fclose(file_ptr);
+                return EXIT_FAILURE;
+            }
+        }
         else if(CONF_VAR_IS(var, "ENCRYPTION_MODE"))
         {
             if((curr_acc->encryption_mode = enc_mode_strtoint(val)) < 0)
@@ -2236,6 +2259,7 @@ dump_access_list(const fko_srv_options_t *opts)
             "               HMAC_KEY_LEN:  %d\n"
             "           HMAC_DIGEST_TYPE:  %d\n"
             "          FW_ACCESS_TIMEOUT:  %i\n"
+            "             MAX_FW_TIMEOUT:  %i\n"
             "            ENABLE_CMD_EXEC:  %s\n"
             "       ENABLE_CMD_SUDO_EXEC:  %s\n"
             "         CMD_SUDO_EXEC_USER:  %s\n"
@@ -2276,6 +2300,7 @@ dump_access_list(const fko_srv_options_t *opts)
             acc->hmac_key_len ? acc->hmac_key_len : 0,
             acc->hmac_type,
             acc->fw_access_timeout,
+            acc->max_fw_timeout,
             acc->enable_cmd_exec ? "Yes" : "No",
             acc->enable_cmd_sudo_exec ? "Yes" : "No",
             (acc->cmd_sudo_exec_user == NULL) ? "<not set>" : acc->cmd_sudo_exec_user,

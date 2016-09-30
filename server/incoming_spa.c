@@ -874,7 +874,16 @@ set_timeout(acc_stanza_t *acc, spa_data_t *spadat)
     spadat->fw_access_timeout = DEF_FW_ACCESS_TIMEOUT;
 
     if(spadat->client_timeout > 0)
-        spadat->fw_access_timeout = spadat->client_timeout;
+        if(acc->max_fw_timeout < spadat->client_timeout)
+        {
+            /* don't allow clients to request more time than the max
+            */
+            spadat->fw_access_timeout = acc->max_fw_timeout;
+        }
+        else
+        {
+            spadat->fw_access_timeout = spadat->client_timeout;
+        }
     else if(acc->fw_access_timeout > 0)
         spadat->fw_access_timeout = acc->fw_access_timeout;
 

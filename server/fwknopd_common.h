@@ -132,6 +132,7 @@
 #define DEF_ENABLE_DESTINATION_RULE     "N"
 
 #define DEF_FW_ACCESS_TIMEOUT           30
+#define DEF_MAX_FW_TIMEOUT              300
 
 /* For integer variable range checking
 */
@@ -402,6 +403,7 @@ typedef struct acc_stanza
     int                  hmac_type;
     unsigned char        use_rijndael;
     int                  fw_access_timeout;
+    int                  max_fw_timeout;
     unsigned char        enable_cmd_exec;
     unsigned char        enable_cmd_sudo_exec;
     char                *cmd_sudo_exec_user;

@@ -4061,6 +4061,42 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
+        'detail'   => 'invalid MAX_FW_TIMEOUT',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => $server_rewrite_conf_files,
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE                 any',
+            'KEY                    testtest',
+            'MAX_FW_TIMEOUT         999999999999'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/not\sin\srange/],
+    },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'MAX_FW_TIMEOUT < FW_ACCESS_TIMEOUT',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --dump-config",
+        'exec_err' => $NO,
+        'server_access_file' => [
+            'SOURCE                 any',
+            'KEY                    testtest',
+            'FW_ACCESS_TIMEOUT      30',
+            'MAX_FW_TIMEOUT         20'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/honoring\sMAX_FW_TIMEOUT/],
+    },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
         'detail'   => 'invalid ENCRYPTION_MODE',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => $server_rewrite_conf_files,

@@ -1,3 +1,8 @@
+fwknop-2.6.10 (11//2016):
+    - [server] Add MAX_FW_TIMEOUT to access.conf stanzas to allow a maximum
+      number of seconds for client-specified timeouts in SPA packets. This
+      fixes issue #226 which was spotted by Jeremiah Rothschild.
+
 fwknop-2.6.9 (06/08/2016):
     - (Jonathan Bennett) Added support for the SHA3 "Keccak" algorithm
       (specifically SHA3_256 and SHA3_512) for SPA HMAC and digest checking.
