@@ -90,6 +90,8 @@ FKO_DIGEST_SHA1 = 2
 FKO_DIGEST_SHA256 = 3
 FKO_DIGEST_SHA384 = 4
 FKO_DIGEST_SHA512 = 5
+FKO_DIGEST_SHA3_256 = 6
+FKO_DIGEST_SHA3_512 = 7
 
 """Hmac type constants
 """
@@ -100,6 +102,8 @@ FKO_HMAC_SHA1 = 2
 FKO_HMAC_SHA256 = 3
 FKO_HMAC_SHA384 = 4
 FKO_HMAC_SHA512 = 5
+FKO_HMAC_SHA3_256 = 6
+FKO_HMAC_SHA3_512 = 7
 
 """Encryption type constants
 """
@@ -387,11 +391,13 @@ class Fko:
         defined to represent these values.  Currently, the supported digest
         types are:
 
-            FKO_DIGEST_MD5    - The MD5 message digest.
-            FKO_DIGEST_SHA1   - The SHA1 message digest.
-            FKO_DIGEST_SHA256 - The SHA256 message digest (default).
-            FKO_DIGEST_SHA384 - The SHA384 message digest.
-            FKO_DIGEST_SHA512 - The SHA512 message digest.
+            FKO_DIGEST_MD5      - The MD5 message digest.
+            FKO_DIGEST_SHA1     - The SHA1 message digest.
+            FKO_DIGEST_SHA256   - The SHA256 message digest (default).
+            FKO_DIGEST_SHA384   - The SHA384 message digest.
+            FKO_DIGEST_SHA512   - The SHA512 message digest.
+            FKO_DIGEST_SHA3_256 - The SHA3_256 message digest.
+            FKO_DIGEST_SHA3_512 - The SHA3_512 message digest.
         """
         if val != None:
             _fko.set_spa_digest_type(self.ctx, val)
@@ -928,6 +934,10 @@ class Fko:
             dts = "SHA384"
         elif val == FKO_DIGEST_SHA512:
             dts = "SHA512"
+        elif val == FKO_DIGEST_SHA3_256:
+            dts = "SHA3_256"
+        elif val == FKO_DIGEST_SHA3_512:
+            dts = "SHA3_512"
         else:
             dts = "Invalid digest type value"
         return dts
@@ -955,6 +965,10 @@ class Fko:
             ht = "SHA384"
         elif val == FKO_HMAC_SHA512:
             ht = "SHA512"
+        elif val == FKO_HMAC_SHA3_256:
+            ht = "SHA3_256"
+        elif val == FKO_HMAC_SHA3_512:
+            ht = "SHA3_512"
         else:
             ht = "Invalid HMAC digest type value"
         return ht
