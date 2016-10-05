@@ -31,6 +31,8 @@ our @DIGEST_TYPES = qw(
     FKO_DIGEST_SHA256
     FKO_DIGEST_SHA384
     FKO_DIGEST_SHA512
+    FKO_DIGEST_SHA3_256
+    FKO_DIGEST_SHA3_512
 );
 
 # HMAC digest types tag list.
@@ -43,6 +45,8 @@ our @HMAC_DIGEST_TYPES = qw(
     FKO_HMAC_SHA256
     FKO_HMAC_SHA384
     FKO_HMAC_SHA512
+    FKO_HMAC_SHA3_256
+    FKO_HMAC_SHA3_512
 );
 
 # Encryption types tag list.
@@ -233,6 +237,8 @@ use constant {
     FKO_DIGEST_SHA256       => 3,
     FKO_DIGEST_SHA384       => 4,
     FKO_DIGEST_SHA512       => 5,
+    FKO_DIGEST_SHA3_256     => 6,
+    FKO_DIGEST_SHA3_512     => 7,
 
     # HMAC digest types
     FKO_HMAC_INVALID_DATA   => -1,
@@ -242,6 +248,8 @@ use constant {
     FKO_HMAC_SHA256         => 3,
     FKO_HMAC_SHA384         => 4,
     FKO_HMAC_SHA512         => 5,
+    FKO_HMAC_SHA3_256       => 6,
+    FKO_HMAC_SHA3_512       => 7,
 
     # Encryption types
     FKO_ENCRYPTION_INVALID_DATA => -1,

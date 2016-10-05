@@ -10,7 +10,7 @@
 #
 use FKO;
 
-use Test::More tests => 533;
+use Test::More tests => 537;
 
 # Test spa data support vars
 #
@@ -151,8 +151,16 @@ $err = $f1->digest_type(FKO::FKO_DIGEST_MD5);
 ok($err == FKO::FKO_SUCCESS, 'f1 set digest to md5');
 is($f1->digest_type(), FKO::FKO_DIGEST_MD5, 'verify set digest md5');
 
+$err = $f1->digest_type(FKO::FKO_DIGEST_SHA3_256);
+ok($err == FKO::FKO_SUCCESS, 'f1 set digest to sha3_256');
+is($f1->digest_type(), FKO::FKO_DIGEST_SHA3_256, 'verify set digest sha3_256');
+
+$err = $f1->hmac_type(FKO::FKO_HMAC_SHA3_512);
+ok($err == FKO::FKO_SUCCESS, 'f1 set HMAC digest to sha3_512');
+is($f1->hmac_type(), FKO::FKO_HMAC_SHA3_512, 'verify set HMAC digest sha3_512');
+
 $err = $f1->hmac_type($tsd_hmac_digest_type);
-ok($err == FKO::FKO_SUCCESS, 'f1 set set HMAC digest to sha512');
+ok($err == FKO::FKO_SUCCESS, 'f1 set HMAC digest to sha512');
 is($f1->hmac_type(), $tsd_hmac_digest_type, 'verify set HMAC digest sha512');
 
 my $tts = $f1->timestamp();
