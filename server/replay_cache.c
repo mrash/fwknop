@@ -272,8 +272,8 @@ replay_file_cache_init(fko_srv_options_t *opts)
     */
     if ((digest_file_ptr = fopen(opts->config[CONF_DIGEST_FILE], "r")) == NULL)
     {
-        log_msg(LOG_WARNING, "Could not open digest cache: %s",
-            opts->config[CONF_DIGEST_FILE]);
+        log_msg(LOG_WARNING, "Could not open digest cache: %s: %s",
+            opts->config[CONF_DIGEST_FILE], strerror(errno));
         return(-1);
     }
 
@@ -494,8 +494,8 @@ add_replay_file_cache(fko_srv_options_t *opts, char *digest)
     */
     if ((digest_file_ptr = fopen(opts->config[CONF_DIGEST_FILE], "a")) == NULL)
     {
-        log_msg(LOG_WARNING, "Could not open digest cache: %s",
-            opts->config[CONF_DIGEST_FILE]);
+        log_msg(LOG_WARNING, "Could not open digest cache: %s: %s",
+            opts->config[CONF_DIGEST_FILE], strerror(errno));
         return(SPA_MSG_DIGEST_CACHE_ERROR);
     }
 
