@@ -334,7 +334,7 @@ resolve_ip_https(fko_cli_options_t *options)
     int     pipe_fd[2];
     pid_t   pid=0;
     FILE   *output;
-    int     status;
+    int     status, es = 0;
 #else
     FILE *wget;
 #endif
@@ -434,7 +434,18 @@ resolve_ip_https(fko_cli_options_t *options)
         close(pipe_fd[0]);
         dup2(pipe_fd[1], STDOUT_FILENO);
         dup2(pipe_fd[1], STDERR_FILENO);
-        execvpe(wget_argv[0], wget_argv, (char * const *)NULL); /* don't use env */
+        es = execvpe(wget_argv[0], wget_argv, (char * const *)NULL); /* don't use env */
+
+        if(es == -1)
+            log_msg(LOG_VERBOSITY_ERROR,
+                    "[*] resolve_ip_https(): execvpe() failed: %s",
+                    strerror(errno));
+
+        /* We only make it here if there was a problem with execvpe(),
+         * so exit() here either way to not leave another fwknopd process
+         * running after fork().
+        */
+        exit(es);
     }
     else if(pid == -1)
     {
