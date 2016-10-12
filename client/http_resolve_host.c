@@ -442,8 +442,7 @@ resolve_ip_https(fko_cli_options_t *options)
                     strerror(errno));
 
         /* We only make it here if there was a problem with execvpe(),
-         * so exit() here either way to not leave another fwknopd process
-         * running after fork().
+         * so exit() here either way
         */
         exit(es);
     }
