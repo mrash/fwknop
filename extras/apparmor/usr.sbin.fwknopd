@@ -11,6 +11,8 @@
   capability net_raw,
 
   network inet raw,
+  network inet dgram,
+  network inet6 dgram,
   network packet raw,
   network packet dgram,
 
@@ -24,6 +26,7 @@
   /root/.gnupg/* rwkl,
   /run/fwknop/ rw,
   /run/fwknop/* rwk,
+  /run/xtables.lock rwk,
   /sbin/xtables-multi rix,
   /usr/bin/gpg rix,
   /usr/sbin/fwknopd mr,
