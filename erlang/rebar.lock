@@ -1,4 +1,0 @@
-[{<<"pkcs7">>,
-  {git,"https://github.com/camshaft/pkcs7.erl",
-       {ref,"00218999ce9b60848aa1f36612248d1079c7ef06"}},
-  0}].
