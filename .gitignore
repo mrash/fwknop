@@ -78,3 +78,7 @@ android/project/obj
 android/project/jni/fwknop/fko.h
 android/project/jni/libfwknop/*.h
 android/project/jni/libfwknop/*.c
+
+# Erlang
+erlang/_build
+erlang/rebar.lock
