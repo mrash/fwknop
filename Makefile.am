@@ -51,7 +51,6 @@ EXTRA_DIST = \
     android/project/jni/logutils.h \
     android/project/jni/Android.mk \
     ChangeLog \
-    ChangeLog.git \
     CREDITS \
     extras/upstart/fwknop.conf \
     extras/fwknop.init.debian \
