@@ -881,7 +881,7 @@
         'detail'   => "NAT bogus IP validation",
         'function' => \&generic_exec,
         'exec_err' => $YES,
-        'cmdline'  => "$default_client_args -N 192>.168.100.100:22",
+        'cmdline'  => "$default_client_args -N 192,.168.100.100:22",
     },
 
     {
