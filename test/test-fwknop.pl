@@ -7705,7 +7705,8 @@ sub init() {
     }
 
     push @tests_to_exclude, qr/sudo/ unless $sudo_conf_testing;
-    push @tests_to_exclude, qr/user.*\sparity/ unless $username;
+    push @tests_to_exclude, qr/user.*\sparity/
+        unless $username and $username ne 'root';
 
     ### see if the 'nobody' user is on the system
     unless (getpwnam('nobody')) {
