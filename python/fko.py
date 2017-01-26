@@ -1009,8 +1009,8 @@ class Fko:
             dts = "ECB"
         elif val == FKO_ENC_MODE_CBC:
             dts = "CBC"
-        elif val == FKO_ENC_MODE_CBF:
-            dts = "CBF"
+        elif val == FKO_ENC_MODE_CFB:
+            dts = "CFB"
         elif val == FKO_ENC_MODE_PCBC:
             dts = "PCBC"
         elif val == FKO_ENC_MODE_OFB:
