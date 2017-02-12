@@ -883,7 +883,7 @@ class Fko:
         """Returns the descriptive error message string for the
         given error code value.
         """
-        return _fko.errstr(code)
+        return _fko.errstr(val)
 
     # FKO type lookup functions.
 
