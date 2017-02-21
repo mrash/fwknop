@@ -1,4 +1,8 @@
 #!/bin/sh +x
+#
+# Download the latest Coverity scan build here:
+#   https://scan.coverity.com/download
+#
 
 make clean
 ./extras/apparmor/configure_args.sh
