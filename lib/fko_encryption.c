@@ -462,10 +462,10 @@ gpg_decrypt(fko_ctx_t ctx, const char *dec_key)
         if(res != FKO_SUCCESS) /* bail if there was some other problem */
             return(res);
 
-    pt_len = strnlen(ctx->encoded_msg, MAX_SPA_ENCODED_MSG_SIZE);
-
     if(ctx->encoded_msg == NULL)
         return(FKO_ERROR_INVALID_DATA_ENCRYPT_DECRYPTED_MESSAGE_MISSING);
+
+    pt_len = strnlen(ctx->encoded_msg, MAX_SPA_ENCODED_MSG_SIZE);
 
     if(! is_valid_encoded_msg_len(pt_len))
         return(FKO_ERROR_INVALID_DATA_ENCRYPT_DECRYPTED_MSGLEN_VALIDFAIL);
