@@ -66,7 +66,7 @@ SPA daemon reconfigures the firewall to temporarily grant access to a passively
 authenticated SPA client:
 
 ![alt text][SPA-basic-access-SSHD]
-[SPA-basic-access-SSHD]: /doc/images/SPA_basic.png "Basic SPA usage to access SSHD"
+[SPA-basic-access-SSHD]: doc/images/SPA_basic.png "Basic SPA usage to access SSHD"
 
 fwknop supports the above, but also goes much further and makes robust usage of NAT
 (for iptables/firewalld firewalls). After all, *important* firewalls are usually gateways
@@ -81,7 +81,7 @@ applications on modern traditional networks, it also allows fwknop to support cl
 computing environments such as Amazon's AWS:
 
 ![alt text][SPA-Amazon-AWS-cloud]
-[SPA-Amazon-AWS-cloud]: /doc/images/SPA_AWS_network_setup.png "SPA usage on Amazon AWS cloud environments"
+[SPA-Amazon-AWS-cloud]: doc/images/SPA_AWS_network_setup.png "SPA usage on Amazon AWS cloud environments"
 
 ## User Interface
 The official cross-platform fwknop client user interface *fwknop-gui*
@@ -91,7 +91,7 @@ including NAT requests, HMAC and Rijndael keys (GnuPG is not yet supported), fwk
 stanza saving, and more.  Currently fwknop-gui runs on Linux, Mac OS X, and
 Windows - here is a screenshot from OS X:
 ![alt text][fwknop-gui-OS-X-screenshot]
-[fwknop-gui-OS-X-screenshot]: /doc/images/fwknop-gui-OSX.png "fwknop-gui on Mac OS X"
+[fwknop-gui-OS-X-screenshot]: doc/images/fwknop-gui-OSX.png "fwknop-gui on Mac OS X"
 Similarly, an updated
 [Android client](https://github.com/jp-bennett/Fwknop2) is
 [available](https://incomsystems.biz/fwknop-gui/android.php) as well.
