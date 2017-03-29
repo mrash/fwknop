@@ -4076,7 +4076,7 @@ sub fuzzing_encryption_keys() {
 
 sub fuzzing_hmac_keys() {
     my @keys = (
-        'A'x129,
+#        'A'x129,
         'A'x1000,
         'A'x2000,
     );
