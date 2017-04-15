@@ -633,7 +633,7 @@ fwknop-2.0.2 (08/18/2012):
       worse than storing the passphrase in the clear on disk anyway in the
       access.conf file.  Further, this link helps provide additional detail:
 
-      http://www.gnupg.org/faq/GnuPG-FAQ.html#how-can-i-use-gnupg-in-an-automated-environment
+      https://www.gnupg.org/faq/gnupg-faq.html#automated_use
 
     - [client] In IP resolution mode (-R) changed HTTP connection type to
       'close' since there is no need for connection persistence, and indeed the
