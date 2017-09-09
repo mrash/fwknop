@@ -91,9 +91,15 @@
 
 /* Work out endianness
 */
-#if HAVE_ENDIAN_H       /* Should cover most Linux systems */
+#ifdef HAVE_ENDIAN_H /* POSIX proposal, should cover most modern systems */
   #include <endian.h>
-  #define BYTEORDER __BYTE_ORDER
+  #ifndef BYTE_ORDER
+    #ifdef _BYTE_ORDER
+      #define BYTE_ORDER _BYTE_ORDER
+    #elif defined(__BYTE_ORDER)
+      #define BYTE_ORDER __BYTE_ORDER
+    #endif
+  #endif
 #elif HAVE_SYS_ENDIAN_H /* FreeBSD has a sys/endian.h */
   #include <sys/endian.h>
   #define BYTEORDER _BYTE_ORDER
