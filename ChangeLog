@@ -6,6 +6,9 @@ fwknop-2.6.10 (11//2016):
       error from execvpe(). Without this fix, additional fwknopd processes
       would be started upon a user specifying a command without the necessary
       permissions. This bug was reported by Stephen Isard.
+    - [build] Jérémie Courrèges-Anglas and Ingo Feinerer contributed a patch
+      to fix endian detection on OpenBSD systems based on information
+      contained here: https://www.opengroup.org/austin/docs/austin_514.txt
 
 fwknop-2.6.9 (06/08/2016):
     - (Jonathan Bennett) Added support for the SHA3 "Keccak" algorithm
