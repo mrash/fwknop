@@ -435,7 +435,7 @@ the '@sysconfdir@/fwknop/fwknopd.conf' file for additional details.
 
 *PCAP_LOOP_SLEEP* '<microseconds>'::
     Sets the number of microseconds to passed as an argument to usleep() in
-    the pcap loop. The default is 10000, or 1/10th of a second.
+    the pcap loop. The default is 100000, or 1/10th of a second.
 
 *ENABLE_PCAP_ANY_DIRECTION* '<Y/N>'::
     Controls whether fwknopd is permitted to sniff SPA packets regardless of
