@@ -91,14 +91,12 @@
 
 /* Work out endianness
 */
-#ifdef HAVE_ENDIAN_H /* POSIX proposal, should cover most modern systems */
+#ifdef HAVE_ENDIAN_H
   #include <endian.h>
-  #ifndef BYTE_ORDER
-    #ifdef _BYTE_ORDER
-      #define BYTE_ORDER _BYTE_ORDER
-    #elif defined(__BYTE_ORDER)
-      #define BYTE_ORDER __BYTE_ORDER
-    #endif
+  #if defined(BYTE_ORDER) /* POSIX proposal */
+    #define BYTEORDER BYTE_ORDER
+  #elif #defined(__BYTE_ORDER) /* older systems? */
+    #define BYTEORDER __BYTE_ORDER
   #endif
 #elif HAVE_SYS_ENDIAN_H /* FreeBSD has a sys/endian.h */
   #include <sys/endian.h>
