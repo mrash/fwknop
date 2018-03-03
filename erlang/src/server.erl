@@ -36,7 +36,7 @@ accept(Socket, { Key, Hmac } = Creds) ->
 			{ok, Ciphertext} 	= verify( Bin, Hmac ),
 			{ok, Plaintext} 	= decrypt( Ciphertext, Key ),
 			{ok, Message}		= decode( Plaintext ),
-			error_logger:info_msg( "Got message: ~p", [ Message ] ),
+			error_logger:info_msg( "Got message: ~p~n", [ Message ] ),
 
 			accept( Socket, Creds )
 	end.
