@@ -73,7 +73,7 @@ strip_base64( Bin ) ->
 	list_to_binary( reverse( dropwhile( F, reverse( binary_to_list( Bin ) ) ) ) ).
 
 random_digits( N ) ->
-	list_to_binary( [ nth( crypto:rand_uniform( 1, 10 ), "0123456789" ) || _ <- seq( 1, N ) ] ).
+	list_to_binary( [ nth( rand:uniform( 10 ), "0123456789" ) || _ <- seq( 1, N ) ] ).
 
 timestamp() ->
 	{ A, B, _ }	= os:timestamp(),
