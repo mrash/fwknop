@@ -16,7 +16,7 @@ define Package/fwknopd
        CATEGORY:=Network
        DEFAULT:=n
        TITLE:=Firewall Knock Operator Daemon
-       URL:=http://http://www.cipherdyne.org/fwknop/
+       URL:=http://www.cipherdyne.org/fwknop/
        MAINTAINER:=Jonathan Bennett <jbscience87@gmail.com>
        DEPENDS:=+libpcap +iptables
 endef
