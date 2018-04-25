@@ -562,7 +562,7 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
         if(strncasecmp(ndx, "http://", 7) == 0)
             memmove(ndx, ndx+7, strlen(ndx)+1);
 
-        /* If there is a colon assume the proxy hostame or IP is on the left
+        /* If there is a colon assume the proxy hostname or IP is on the left
          * and the proxy port is on the right. So we make the : a \0 and
          * extract the port value.
         */
