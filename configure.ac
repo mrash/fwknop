@@ -412,6 +412,9 @@ use_mingw=no
 case "$host" in
 *-*-linux*)
     ;;
+*-*-netbsd*)
+    AC_DEFINE_UNQUOTED([PLATFORM_NETBSD], [1], [Define if you are running on NetBSD])
+    ;;
 *-*-openbsd*)
     AC_DEFINE_UNQUOTED([PLATFORM_OPENBSD], [1], [Define if you are running on OpenBSD])
     ;;
