@@ -45,7 +45,7 @@
   #if HAVE_NETINET_IN_H
     #include <netinet/in.h>
   #endif
-  #if PLATFORM_OPENBSD  /* OpenBSD hack due to autoconf net/if.h difficulties */
+  #if PLATFORM_NETBSD || PLATFORM_OPENBSD  /* for autoconf net/if.h difficulties */
     #include <net/if.h>
     #include <net/ethertypes.h>
     #include <netinet/if_ether.h>
