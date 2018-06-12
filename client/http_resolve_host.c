@@ -58,9 +58,8 @@ struct url
 static int
 try_url(struct url *url, fko_cli_options_t *options)
 {
-    int     sock=-1, sock_success=0, res, error, http_buf_len, i;
+    int     sock=-1, sock_success=0, res, error, http_buf_len;
     int     bytes_read = 0, position = 0;
-    int     o1, o2, o3, o4;
     struct  addrinfo *result=NULL, *rp, hints;
     char    http_buf[HTTP_MAX_REQUEST_LEN]       = {0};
     char    http_response[HTTP_MAX_RESPONSE_LEN] = {0};
@@ -197,45 +196,35 @@ try_url(struct url *url, fko_cli_options_t *options)
     }
     ndx += 4;
 
-    /* Walk along the content to try to find the end of the IP address.
-     * Note: We are expecting the content to be just an IP address
+    /* Try to parse the content as an IP address.
+     * Note: We are expecting the content to be exactly that
      *       (possibly followed by whitespace or other not-digit value).
      */
-    for(i=0; i<MAX_IPV4_STR_LEN; i++) {
-        if(! isdigit((int)(unsigned char)*(ndx+i)) && *(ndx+i) != '.')
-            break;
-    }
-
-    /* Terminate at the first non-digit and non-dot.
-    */
-    *(ndx+i) = '\0';
-
-    /* Now that we have what we think is an IP address string.  We make
-     * sure the format and values are sane.
-     */
-    if((sscanf(ndx, "%u.%u.%u.%u", &o1, &o2, &o3, &o4)) == 4
-            && o1 >= 0 && o1 <= 255
-            && o2 >= 0 && o2 <= 255
-            && o3 >= 0 && o3 <= 255
-            && o4 >= 0 && o4 <= 255)
-    {
-        strlcpy(options->allow_ip_str, ndx, sizeof(options->allow_ip_str));
-
-        log_msg(LOG_VERBOSITY_INFO,
-                    "\n[+] Resolved external IP (via http://%s%s) as: %s",
-                    url->host,
-                    url->path,
-                    options->allow_ip_str);
-
-        return(1);
-    }
-    else
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
+    hints.ai_flags  = AI_NUMERICHOST | AI_CANONNAME;
+    error = getaddrinfo(ndx, NULL, &hints, &result);
+    if (error != 0)
     {
         log_msg(LOG_VERBOSITY_ERROR,
             "[-] From http://%s%s\n    Invalid IP (%s) in HTTP response:\n\n%s",
             url->host, url->path, ndx, http_response);
         return(-1);
     }
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+	strlcpy(options->allow_ip_str,
+	        rp->ai_canonname, sizeof(options->allow_ip_str));
+	break;
+    }
+    freeaddrinfo(result);
+
+    log_msg(LOG_VERBOSITY_INFO,
+                "\n[+] Resolved external IP (via http://%s%s) as: %s",
+                url->host,
+                url->path,
+                options->allow_ip_str);
+
+    return(1);
 }
 
 static int
