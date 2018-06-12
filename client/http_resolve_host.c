@@ -62,7 +62,7 @@ static int resolve_ip(const char * resp, fko_cli_options_t *options, const char 
   int error;
 
   memset(&hints, 0, sizeof(struct addrinfo));
-  hints.ai_family = AF_INET;
+  hints.ai_family = AF_UNSPEC;
   hints.ai_flags  = AI_NUMERICHOST | AI_CANONNAME;
   error = getaddrinfo(resp, NULL, &hints, &result);
   if (error != 0)
@@ -313,7 +313,7 @@ int
 resolve_ip_https(fko_cli_options_t *options)
 {
     int     got_resp=0;
-    char    resp[MAX_IPV4_STR_LEN+1] = {0};
+    char    resp[MAX_IPV46_STR_LEN+1] = {0};
     struct  url url; /* for validation only */
     char    wget_ssl_cmd[MAX_URL_PATH_LEN] = {0};  /* for verbose logging only */
 
