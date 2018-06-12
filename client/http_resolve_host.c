@@ -212,6 +212,7 @@ try_url(struct url *url, fko_cli_options_t *options)
         return(-1);
     }
     for (rp = result; rp != NULL; rp = rp->ai_next) {
+	/* the canonical value is in the first structure returned */
 	strlcpy(options->allow_ip_str,
 	        rp->ai_canonname, sizeof(options->allow_ip_str));
 	break;
@@ -312,8 +313,9 @@ parse_url(char *res_url, struct url* url)
 int
 resolve_ip_https(fko_cli_options_t *options)
 {
-    int     o1, o2, o3, o4, got_resp=0, i=0;
-    char   *ndx, resp[MAX_IPV4_STR_LEN+1] = {0};
+    int     got_resp=0, error;
+    char    resp[MAX_IPV4_STR_LEN+1] = {0};
+    struct  addrinfo *result=NULL, *rp, hints;
     struct  url url; /* for validation only */
     char    wget_ssl_cmd[MAX_URL_PATH_LEN] = {0};  /* for verbose logging only */
 
@@ -482,32 +484,35 @@ resolve_ip_https(fko_cli_options_t *options)
     pclose(wget);
 #endif
 
-    if(got_resp)
+    if(! got_resp)
     {
-        ndx = resp;
-        for(i=0; i<MAX_IPV4_STR_LEN; i++) {
-            if(! isdigit((int)(unsigned char)*(ndx+i)) && *(ndx+i) != '.')
-                break;
-        }
-        *(ndx+i) = '\0';
-
-        if((sscanf(ndx, "%u.%u.%u.%u", &o1, &o2, &o3, &o4)) == 4
-                && o1 >= 0 && o1 <= 255
-                && o2 >= 0 && o2 <= 255
-                && o3 >= 0 && o3 <= 255
-                && o4 >= 0 && o4 <= 255)
-        {
-            strlcpy(options->allow_ip_str, ndx, sizeof(options->allow_ip_str));
-
-            log_msg(LOG_VERBOSITY_INFO,
-                        "\n[+] Resolved external IP (via '%s') as: %s",
-                        wget_ssl_cmd, options->allow_ip_str);
-            return 1;
-        }
+        log_msg(LOG_VERBOSITY_ERROR,
+            "[-] Could not resolve IP via: '%s'", wget_ssl_cmd);
+        return -1;
     }
-    log_msg(LOG_VERBOSITY_ERROR,
-        "[-] Could not resolve IP via: '%s'", wget_ssl_cmd);
-    return -1;
+
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_UNSPEC; /* Allow IPv4 or IPv6 */
+    hints.ai_flags  = AI_NUMERICHOST | AI_CANONNAME;
+    error = getaddrinfo(resp, NULL, &hints, &result);
+    if (error != 0)
+    {
+        log_msg(LOG_VERBOSITY_ERROR,
+            "[-] Could not resolve IP via: '%s'", wget_ssl_cmd);
+        return(-1);
+    }
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+	/* the canonical value is in the first structure returned */
+	strlcpy(options->allow_ip_str,
+	        rp->ai_canonname, sizeof(options->allow_ip_str));
+	break;
+    }
+    freeaddrinfo(result);
+
+    log_msg(LOG_VERBOSITY_INFO,
+		"\n[+] Resolved external IP (via '%s') as: %s",
+		wget_ssl_cmd, options->allow_ip_str);
+    return 1;
 }
 
 int
