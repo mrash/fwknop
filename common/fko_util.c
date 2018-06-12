@@ -124,52 +124,22 @@ is_valid_encoded_msg_len(const int len)
 int
 is_valid_ip_addr(const char * const ip_str, const int len, const int family)
 {
-    const char         *ndx     = ip_str;
-    char         tmp_ip_str[MAX_IPV4_STR_LEN + 1] = {0};
-    int                 dot_ctr = 0, char_ctr = 0;
-    int                 res     = 1;
-#if HAVE_SYS_SOCKET_H
-    struct in_addr      in;
-#endif
+    struct addrinfo * result, hints;
+    int error;
+    char * p;
 
-    if(ip_str == NULL)
-        return 0;
-
-    if((len > MAX_IPV4_STR_LEN) || (len < MIN_IPV4_STR_LEN))
-        return 0;
-
-    while(char_ctr < len)
-    {
-        /* If we've hit a null within the given length, then not valid regardless */
-        if(*ndx == '\0')
-            return 0;
-
-        char_ctr++;
-
-        if(*ndx == '.')
-            dot_ctr++;
-        else if(isdigit((int)(unsigned char)*ndx) == 0)
-        {
-            res = 0;
-            break;
-        }
-        ndx++;
+    if((p = strndup(ip_str, len)) == NULL)
+	return 0;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = family;
+    hints.ai_flags = AI_NUMERICHOST;
+    error = getaddrinfo(p, NULL, &hints, &result);
+    free(p);
+    if (error) {
+	return 0;
     }
-
-    if((res == 1) && (dot_ctr != 3))
-        res = 0;
-
-#if HAVE_SYS_SOCKET_H
-    /* Stronger IP validation now that we have a candidate that looks
-     * close enough
-    */
-    if(res == 1) {
-        strncpy(tmp_ip_str, ip_str, len);
-        if (inet_aton(tmp_ip_str, &in) == 0)
-            res = 0;
-    }
-#endif
-    return(res);
+    freeaddrinfo(result);
+    return 1;
 }
 
 /* Validate a hostname
