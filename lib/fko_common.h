@@ -95,7 +95,7 @@
   #include <endian.h>
   #if defined(BYTE_ORDER) /* POSIX proposal */
     #define BYTEORDER BYTE_ORDER
-  #elif #defined(__BYTE_ORDER) /* older systems? */
+  #elif defined(__BYTE_ORDER) /* older systems? */
     #define BYTEORDER __BYTE_ORDER
   #endif
 #elif HAVE_SYS_ENDIAN_H /* FreeBSD has a sys/endian.h */
