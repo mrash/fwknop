@@ -1850,7 +1850,8 @@ validate_options(fko_cli_options_t *options)
                 exit(EXIT_FAILURE);
             }
             else if(options->verbose
-                    && strncmp(options->allow_ip_str, "0.0.0.0", strlen("0.0.0.0")) == 0)
+                    && (strncmp(options->allow_ip_str, "0.0.0.0", strlen("0.0.0.0")) == 0
+			    || strncmp(options->allow_ip_str, "::", strlen("::")) == 0))
             {
                 log_msg(LOG_VERBOSITY_WARNING,
                     "[-] WARNING: Should use -a or -R to harden SPA against potential MITM attacks");
