@@ -986,7 +986,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         else /* Assume IP address and validate */
         {
             strlcpy(options->allow_ip_str, val, sizeof(options->allow_ip_str));
-            if(! is_valid_ipv4_addr(options->allow_ip_str, strlen(options->allow_ip_str)))
+            if(! is_valid_ip_addr(options->allow_ip_str, strlen(options->allow_ip_str), AF_INET))
                 parse_error = -1;
         }
     }
@@ -1866,7 +1866,7 @@ validate_options(fko_cli_options_t *options)
     {
         options->resolve_ip_http_https = 0;
 
-        if(! is_valid_ipv4_addr(options->allow_ip_str, strlen(options->allow_ip_str)))
+        if(! is_valid_ip_addr(options->allow_ip_str, strlen(options->allow_ip_str), AF_UNSPEC))
         {
             log_msg(LOG_VERBOSITY_ERROR,
                 "Invalid allow IP specified for SPA access");
@@ -1876,7 +1876,7 @@ validate_options(fko_cli_options_t *options)
 
     if (options->spoof_ip_src_str[0] != 0x00)
     {
-        if(! is_valid_ipv4_addr(options->spoof_ip_src_str, strlen(options->spoof_ip_src_str)))
+        if(! is_valid_ip_addr(options->spoof_ip_src_str, strlen(options->spoof_ip_src_str), AF_UNSPEC))
         {
             log_msg(LOG_VERBOSITY_ERROR, "Invalid spoof IP");
             exit(EXIT_FAILURE);

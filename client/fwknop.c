@@ -820,7 +820,7 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
         }
 
 
-        if (is_valid_ipv4_addr(options->nat_access_str, hostlen) || is_valid_hostname(options->nat_access_str, hostlen))
+        if (is_valid_ip_addr(options->nat_access_str, hostlen, AF_UNSPEC) || is_valid_hostname(options->nat_access_str, hostlen))
         {
             snprintf(nat_access_buf, MAX_LINE_LEN, NAT_ACCESS_STR_TEMPLATE,
                 options->nat_access_str, access_port);

@@ -122,7 +122,7 @@ is_valid_encoded_msg_len(const int len)
 /* Validate an IPv4 address
 */
 int
-is_valid_ipv4_addr(const char * const ip_str, const int len)
+is_valid_ip_addr(const char * const ip_str, const int len, const int family)
 {
     const char         *ndx     = ip_str;
     char         tmp_ip_str[MAX_IPV4_STR_LEN + 1] = {0};
