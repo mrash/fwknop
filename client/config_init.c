@@ -514,7 +514,7 @@ is_rc_section(const char* line, uint16_t line_size, char* rc_section, uint16_t r
 
         ndx = buf;
 
-        while(isspace(*ndx))
+        while(isspace((int)(unsigned char)*ndx))
             ndx++;
 
         if(*ndx == '[')
@@ -761,7 +761,7 @@ parse_time_offset(const char *offset_str, int *offset)
 
     j=0;
     for (i=0; i < os_len; i++) {
-        if (isdigit(offset_str[i])) {
+        if (isdigit((int)(unsigned char)offset_str[i])) {
             offset_digits[j] = offset_str[i];
             j++;
             if(j >= MAX_TIME_STR_LEN)

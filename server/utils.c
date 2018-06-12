@@ -212,7 +212,7 @@ is_digits(const char * const str)
     {
         for (i=0; i<strlen(str); i++)
         {
-            if(!isdigit(str[i]))
+            if(!isdigit((int)(unsigned char)str[i]))
                 return 0;
             i++;
         }

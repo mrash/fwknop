@@ -524,7 +524,7 @@ expand_acc_int_list(acc_int_list_t **ilist, char *ip)
         {
             /* Skip over any leading whitespace.
             */
-            while(isspace(*start))
+            while(isspace((int)(unsigned char)*start))
                 start++;
 
             if(((ndx-start)+1) >= ACCESS_BUF_LEN)
@@ -542,7 +542,7 @@ expand_acc_int_list(acc_int_list_t **ilist, char *ip)
 
     /* Skip over any leading whitespace (once again for the last in the list).
     */
-    while(isspace(*start))
+    while(isspace((int)(unsigned char)*start))
         start++;
 
     if(((ndx-start)+1) >= ACCESS_BUF_LEN)
@@ -716,7 +716,7 @@ expand_acc_port_list(acc_port_list_t **plist, char *plist_str)
         {
             /* Skip over any leading whitespace.
             */
-            while(isspace(*start))
+            while(isspace((int)(unsigned char)*start))
                 start++;
 
             if(((ndx-start)+1) >= ACCESS_BUF_LEN)
@@ -733,7 +733,7 @@ expand_acc_port_list(acc_port_list_t **plist, char *plist_str)
 
     /* Skip over any leading whitespace (once again for the last in the list).
     */
-    while(isspace(*start))
+    while(isspace((int)(unsigned char)*start))
         start++;
 
     if(((ndx-start)+1) >= ACCESS_BUF_LEN)
@@ -763,7 +763,7 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
         {
             /* Skip over any leading whitespace.
             */
-            while(isspace(*start))
+            while(isspace((int)(unsigned char)*start))
                 start++;
 
             if(((ndx-start)+1) >= MAX_LINE_LEN)
@@ -779,7 +779,7 @@ expand_acc_string_list(acc_string_list_t **stlist, char *stlist_str)
 
     /* Skip over any leading whitespace (once again for the last in the list).
     */
-    while(isspace(*start))
+    while(isspace((int)(unsigned char)*start))
         start++;
 
     if(((ndx-start)+1) >= MAX_LINE_LEN)

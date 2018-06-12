@@ -749,7 +749,7 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
     }
     ndx++;
 
-    while(*ndx != '\0' && isdigit(*ndx) && i < MAX_PORT_STR_LEN)
+    while(*ndx != '\0' && isdigit((int)(unsigned char)*ndx) && i < MAX_PORT_STR_LEN)
     {
         tmp_access_port[i] = *ndx;
         ndx++;
@@ -793,7 +793,7 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
 
             {
                 tmp_nat_port[i] = *ndx;
-                if ((i > MAX_PORT_STR_LEN) || (!isdigit(*ndx)))
+                if ((i > MAX_PORT_STR_LEN) || (!isdigit((int)(unsigned char)*ndx)))
                 {
                     log_msg(LOG_VERBOSITY_ERROR, "[*] Invalid port value in -N arg.");
                     return FKO_ERROR_INVALID_DATA;

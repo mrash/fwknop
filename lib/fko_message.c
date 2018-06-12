@@ -50,7 +50,7 @@ have_allow_ip(const char *msg)
         }
         if(*ndx == '.')
             dot_ctr++;
-        else if(isdigit(*ndx) == 0)
+        else if(isdigit((int)(unsigned char)*ndx) == 0)
         {
             res = FKO_ERROR_INVALID_ALLOW_IP;
             break;
@@ -83,13 +83,13 @@ have_port(const char *msg)
 
     /* Must have at least one digit for the port number
     */
-    if(isdigit(*ndx) == 0)
+    if(isdigit((int)(unsigned char)*ndx) == 0)
         return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
 
     while(*ndx != '\0' && *ndx != ',')
     {
         port_str_len++;
-        if((isdigit(*ndx) == 0) || (port_str_len > MAX_PORT_STR_LEN))
+        if((isdigit((int)(unsigned char)*ndx) == 0) || (port_str_len > MAX_PORT_STR_LEN))
             return(FKO_ERROR_INVALID_SPA_ACCESS_MSG);
         port_str[i] = *ndx;
         ndx++;

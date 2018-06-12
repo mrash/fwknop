@@ -202,7 +202,7 @@ try_url(struct url *url, fko_cli_options_t *options)
      *       (possibly followed by whitespace or other not-digit value).
      */
     for(i=0; i<MAX_IPV4_STR_LEN; i++) {
-        if(! isdigit(*(ndx+i)) && *(ndx+i) != '.')
+        if(! isdigit((int)(unsigned char)*(ndx+i)) && *(ndx+i) != '.')
             break;
     }
 
@@ -497,7 +497,7 @@ resolve_ip_https(fko_cli_options_t *options)
     {
         ndx = resp;
         for(i=0; i<MAX_IPV4_STR_LEN; i++) {
-            if(! isdigit(*(ndx+i)) && *(ndx+i) != '.')
+            if(! isdigit((int)(unsigned char)*(ndx+i)) && *(ndx+i) != '.')
                 break;
         }
         *(ndx+i) = '\0';
