@@ -73,6 +73,16 @@
 #endif
 #define MIN_IPV4_STR_LEN              (strlen("0.0.0.0"))
 
+#ifdef INET6_ADDRSTRLEN
+#define MAX_IPV6_STR_LEN              INET6_ADDRSTRLEN
+#else
+#define MAX_IPV6_STR_LEN              46
+#endif
+#define MIN_IPV6_STR_LEN              (strlen("::"))
+
+#define MAX_IPV46_STR_LEN             (MAX_IPV6_STR_LEN > MAX_IPV4_STR_LEN ? MAX_IPV6_STR_LEN : MAX_IPV4_STR_LEN)
+#define MIN_IPV46_STR_LEN             (MIN_IPV6_STR_LEN < MIN_IPV4_STR_LEN ? MIN_IPV6_STR_LEN : MIN_IPV4_STR_LEN)
+
 #define MAX_PROTO_STR_LEN             4  /* tcp, udp, icmp for now */
 #define MAX_PORT_STR_LEN              5
 #define MAX_PORT                  65535
