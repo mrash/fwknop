@@ -35,7 +35,7 @@ static int
 have_allow_ip(const char *msg)
 {
     const char         *ndx     = msg;
-    char                ip_str[MAX_IPV4_STR_LEN];
+    char                ip_str[MAX_IPV46_STR_LEN];
     int                 dot_ctr = 0, char_ctr = 0;
     int                 res     = FKO_SUCCESS;
 
@@ -43,14 +43,14 @@ have_allow_ip(const char *msg)
     {
         ip_str[char_ctr] = *ndx;
         char_ctr++;
-        if(char_ctr >= MAX_IPV4_STR_LEN)
+        if(char_ctr >= sizeof(ip_str))
         {
             res = FKO_ERROR_INVALID_ALLOW_IP;
             break;
         }
-        if(*ndx == '.')
+        if(*ndx == '.' || *ndx == ':')
             dot_ctr++;
-        else if(isdigit((int)(unsigned char)*ndx) == 0)
+        else if(isdigit((int)(unsigned char)*ndx) == 0 && !((*ndx >= 'a' && *ndx <= 'f') || (*ndx >= 'A' && *ndx <= 'F')))
         {
             res = FKO_ERROR_INVALID_ALLOW_IP;
             break;
@@ -58,13 +58,13 @@ have_allow_ip(const char *msg)
         ndx++;
     }
 
-    if(char_ctr < MAX_IPV4_STR_LEN)
+    if(char_ctr < sizeof(ip_str))
         ip_str[char_ctr] = '\0';
     else
         res = FKO_ERROR_INVALID_ALLOW_IP;
 
     if(res == FKO_SUCCESS)
-        if (! is_valid_ip_addr(ip_str, strlen(ip_str), AF_INET))
+        if (! is_valid_ip_addr(ip_str, strlen(ip_str), AF_UNSPEC))
             res = FKO_ERROR_INVALID_ALLOW_IP;
 
     return(res);
