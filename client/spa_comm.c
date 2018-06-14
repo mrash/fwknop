@@ -719,7 +719,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
         if (resolve_dst_addr(options->spa_server_str,
                     &hints, ip_str, sizeof(ip_str), options) != 0)
         {
-            log_msg(LOG_VERBOSITY_ERROR, "[*] Unable to resolve %s as an ip address",
+            log_msg(LOG_VERBOSITY_ERROR, "[*] Unable to resolve %s as an IP address",
                     options->spa_server_str);
             return -1;
         }
