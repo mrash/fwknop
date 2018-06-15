@@ -35,9 +35,15 @@
 #ifndef WIN32
   /* for inet_aton() IP validation
   */
-  #include <sys/socket.h>
-  #include <netinet/in.h>
-  #include <arpa/inet.h>
+# if HAVE_SYS_SOCKET_H
+#  include <sys/socket.h>
+#endif
+# if HAVE_NETINET_IN_H
+#  include <netinet/in.h>
+# endif
+# if HAVE_ARPA_INET_H
+#  include <arpa/inet.h>
+# endif
 #endif
 
 /* Check for a FKO error returned by a function an return the error code */
