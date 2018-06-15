@@ -265,14 +265,13 @@ process_packet_ipv4(fko_srv_options_t * opts, const unsigned char * packet,
 
     opts->spa_pkt.packet_data_len = pkt_data_len;
     opts->spa_pkt.packet_proto    = proto;
+    opts->spa_pkt.packet_family   = AF_INET;
     opts->spa_pkt.packet_src_ip   = src_ip;
     opts->spa_pkt.packet_dst_ip   = dst_ip;
     opts->spa_pkt.packet_src_port = src_port;
     opts->spa_pkt.packet_dst_port = dst_port;
 
     incoming_spa(opts);
-
-    return;
 }
 
 
@@ -280,7 +279,107 @@ static void
 process_packet_ipv6(fko_srv_options_t * opts, const unsigned char * packet,
 		int offset, unsigned char const * fr_end)
 {
-    /* FIXME implement */
+    struct ip6_hdr *iph_p;
+    struct tcphdr  *tcph_p;
+    struct udphdr  *udph_p;
+
+    unsigned char  *pkt_data;
+    unsigned short  pkt_data_len;
+    unsigned char  *pkt_end;
+
+    unsigned char   proto;
+    struct in6_addr src_ip;
+    struct in6_addr dst_ip;
+
+    unsigned short  src_port = 0;
+    unsigned short  dst_port = 0;
+
+    /* Pull the IPv6 header.
+    */
+    iph_p = (struct ip6_hdr*)(packet + offset);
+
+    /* If IPv6 header is past calculated packet end, bail.
+    */
+    if ((unsigned char*)(iph_p + 1) > fr_end)
+        return;
+
+    /* Make sure to calculate the packet end based on the length in the
+     * IP header. This allows additional bytes that may be added to the
+     * frame (such as a 4-byte Ethernet Frame Check Sequence) to not
+     * interfere with SPA operations.
+    */
+    pkt_end = ((unsigned char*)iph_p)+ntohs(iph_p->ip6_plen);
+    if(pkt_end > fr_end)
+        return;
+
+    /* Now, find the packet data payload (depending on IPPROTO).
+    */
+    src_ip = iph_p->ip6_src;
+    dst_ip = iph_p->ip6_dst;
+
+    /* FIXME look for the last header */
+    proto = iph_p->ip6_nxt;
+
+    if (proto == IPPROTO_TCP)
+    {
+        /* Process TCP packet
+        */
+        tcph_p = (struct tcphdr*)(iph_p + 1);
+
+        src_port = ntohs(tcph_p->source);
+        dst_port = ntohs(tcph_p->dest);
+
+        pkt_data = ((unsigned char*)(tcph_p+1))+((tcph_p->doff)<<2)-sizeof(struct tcphdr);
+
+        pkt_data_len = (pkt_end-(unsigned char*)iph_p)-(pkt_data-(unsigned char*)iph_p);
+    }
+    else if (proto == IPPROTO_UDP)
+    {
+        /* Process UDP packet
+        */
+        udph_p = (struct udphdr*)(iph_p + 1);
+
+        src_port = ntohs(udph_p->source);
+        dst_port = ntohs(udph_p->dest);
+
+        pkt_data = ((unsigned char*)(udph_p + 1));
+        pkt_data_len = (pkt_end-(unsigned char*)iph_p)-(pkt_data-(unsigned char*)iph_p);
+    }
+
+    else
+        return;
+
+    /*
+     * Now we have data. For now, we are not checking IP or port values. We
+     * are relying on the pcap filter. This may change so we do retain the IP
+     * addresses and ports just in case. We just go ahead and queue the
+     * data.
+    */
+
+    /* Expect the data to be at least the minimum required size.  This check
+     * will weed out a lot of things like small TCP ACK's if the user has a
+     * permissive pcap filter
+    */
+    if(pkt_data_len < MIN_SPA_DATA_SIZE)
+        return;
+
+    /* Expect the data to not be too large
+    */
+    if(pkt_data_len > MAX_SPA_PACKET_LEN)
+        return;
+
+    /* Copy the packet for SPA processing
+    */
+    strlcpy((char *)opts->spa_pkt.packet_data, (char *)pkt_data, pkt_data_len+1);
+    opts->spa_pkt.packet_data_len          = pkt_data_len;
+    opts->spa_pkt.packet_proto             = proto;
+    opts->spa_pkt.packet_family            = AF_INET6;
+    opts->spa_pkt.packet_addr.inet6.src_ip = src_ip;
+    opts->spa_pkt.packet_addr.inet6.dst_ip = dst_ip;
+    opts->spa_pkt.packet_src_port          = src_port;
+    opts->spa_pkt.packet_dst_port          = dst_port;
+
+    incoming_spa(opts);
 }
 
 
