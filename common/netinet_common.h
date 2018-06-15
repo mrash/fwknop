@@ -45,6 +45,9 @@
   #if HAVE_NETINET_IN_H
     #include <netinet/in.h>
   #endif
+  #if HAVE_NETINET_IP6_H
+    #include <netinet/ip6.h>
+  #endif
   #if PLATFORM_NETBSD || PLATFORM_OPENBSD  /* for autoconf net/if.h difficulties */
     #include <net/if.h>
     #include <net/ethertypes.h>
