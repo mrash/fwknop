@@ -46,12 +46,16 @@ process_packet_ethernet(fko_srv_options_t * opts, const unsigned char * packet,
 		unsigned short pkt_len, int caplen, int offset);
 static void
 process_packet_ipv4(fko_srv_options_t * opts, const unsigned char * packet,
-		int offset, unsigned char * fr_end);
+		int offset, unsigned char const * fr_end);
 static void
 process_packet_ipv6(fko_srv_options_t * opts, const unsigned char * packet,
-		int offset, unsigned char * fr_end);
+		int offset, unsigned char const * fr_end);
 static void
-process_packet_raw(fko_srv_options_t * opts, const unsigned char * packet);
+process_packet_loop(fko_srv_options_t * opts, const unsigned char * packet,
+		unsigned short pkt_len, int caplen);
+static void
+process_packet_raw(fko_srv_options_t * opts, const unsigned char * packet,
+		unsigned short pkt_len, int caplen);
 
 
 void
@@ -62,15 +66,19 @@ process_packet(PROCESS_PKT_ARGS_TYPE *args, PACKET_HEADER_META,
 
     int                 offset = opts->data_link_offset;
 
-    if (offset != 0)
 #if USE_LIBPCAP
+    if (offset == sizeof(struct ether_header))
 	process_packet_ethernet(opts, packet, packet_header->len,
 			packet_header->caplen, offset);
+    else if (offset == 4)
+	process_packet_loop(opts, packet, packet_header->len,
+			packet_header->caplen);
+    else if (offset == 0)
+	process_packet_raw(opts, packet, packet_header->len,
+			packet_header->caplen);
 #else
-	process_packet_ethernet(opts, packet, pkt_len, pkt_len, offset);
+    process_packet_raw(opts, packet, pkt_len, pkt_len);
 #endif
-    else
-	process_packet_raw(opts, packet);
 }
 
 
@@ -84,7 +92,6 @@ process_packet_ethernet(fko_srv_options_t * opts, const unsigned char * packet,
 
     unsigned short      eth_type;
 
-#if USE_LIBPCAP
     /* Gotta have a complete ethernet header.
     */
     if (caplen < ETHER_HDR_LEN)
@@ -93,13 +100,6 @@ process_packet_ethernet(fko_srv_options_t * opts, const unsigned char * packet,
     /* Determine packet end.
     */
     fr_end = (unsigned char *) packet + caplen;
-#else
-    /* This is coming from NFQ and we get the packet length as an arg.
-    */
-    if (pkt_len < ETHER_HDR_LEN)
-        return;
-    fr_end = (unsigned char *) packet + pkt_len;
-#endif
 
     /* This is a hack to determine if we are using the linux cooked
      * interface.  We base it on the offset being 16 which is the
@@ -147,7 +147,7 @@ process_packet_ethernet(fko_srv_options_t * opts, const unsigned char * packet,
 
 static void
 process_packet_ipv4(fko_srv_options_t * opts, const unsigned char * packet,
-		int offset, unsigned char * fr_end)
+		int offset, unsigned char const * fr_end)
 {
     struct iphdr        *iph_p;
     struct tcphdr       *tcph_p;
@@ -278,16 +278,62 @@ process_packet_ipv4(fko_srv_options_t * opts, const unsigned char * packet,
 
 static void
 process_packet_ipv6(fko_srv_options_t * opts, const unsigned char * packet,
-		int offset, unsigned char * fr_end)
+		int offset, unsigned char const * fr_end)
 {
     /* FIXME implement */
 }
 
 
 static void
-process_packet_raw(fko_srv_options_t * opts, const unsigned char * packet)
+process_packet_loop(fko_srv_options_t * opts, const unsigned char * packet,
+		unsigned short pkt_len, int caplen)
 {
-    /* FIXME implement */
+    uint32_t family;
+
+    if (caplen < sizeof(family))
+	return;
+
+    memcpy(&family, packet, sizeof(family));
+
+    if (family == AF_INET)
+	process_packet_ipv4(opts, packet, 4, packet + caplen);
+    else if (family == AF_INET6)
+	process_packet_ipv6(opts, packet, 4, packet + caplen);
+}
+
+
+static void
+process_packet_raw(fko_srv_options_t * opts, const unsigned char * packet,
+		unsigned short pkt_len, int caplen)
+{
+    struct iphdr        *iph_p;
+
+    unsigned char const *fr_end;
+
+    /* Gotta have a complete ethernet header.
+    */
+    if (caplen < ETHER_HDR_LEN)
+        return;
+
+    /* Determine packet end.
+    */
+    fr_end = (unsigned char *) packet + caplen;
+
+    /* Tentatively pull an IP header.
+    */
+    iph_p = (struct iphdr*)packet;
+
+    /* If IP header is past calculated packet end, bail.
+    */
+    if ((unsigned char*)(iph_p + 1) > fr_end)
+        return;
+
+    /* Obtain the IP version.
+    */
+    if (iph_p->version == 6)
+	    process_packet_ipv6(opts, packet, 0, fr_end);
+    else
+	    process_packet_ipv4(opts, packet, 0, fr_end);
 }
 
 
