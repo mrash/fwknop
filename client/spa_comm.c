@@ -427,7 +427,7 @@ send_spa_packet_icmp(const char *spa_data, const int sd_len,
     char pkt_data[2048] = {0};
 
     struct iphdr  *iph    = (struct iphdr *) pkt_data;
-    struct icmphdr *icmph = (struct icmphdr *) (pkt_data + sizeof (struct iphdr));
+    struct icmphdr *icmph = (struct icmphdr *) (pkt_data + sizeof (*iph));
 
     int hdrlen = sizeof(struct iphdr) + sizeof(struct icmphdr);
 
