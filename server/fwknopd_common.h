@@ -600,12 +600,28 @@ typedef struct spa_pkt_info
 {
     unsigned int    packet_data_len;
     unsigned int    packet_proto;
-    unsigned int    packet_src_ip;
-    unsigned int    packet_dst_ip;
+    unsigned int    packet_family;
+    union
+    {
+	    struct
+	    {
+		    unsigned int src_ip;
+		    unsigned int dst_ip;
+	    } inet;
+#if HAVE_NETINET_IP6_H
+	    struct
+	    {
+		    struct in6_addr src_ip;
+		    struct in6_addr dst_ip;
+	    } inet6;
+#endif
+    } packet_addr;
     unsigned short  packet_src_port;
     unsigned short  packet_dst_port;
     unsigned char   packet_data[MAX_SPA_PACKET_LEN+1];
 } spa_pkt_info_t;
+#define packet_src_ip packet_addr.inet.src_ip
+#define packet_dst_ip packet_addr.inet.dst_ip
 
 /* Struct for (processed and verified) SPA data used by the server.
 */

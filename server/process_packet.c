@@ -263,14 +263,13 @@ process_packet_ipv4(fko_srv_options_t * opts, const unsigned char * packet,
     strlcpy((char *)opts->spa_pkt.packet_data, (char *)pkt_data, pkt_data_len+1);
     opts->spa_pkt.packet_data_len = pkt_data_len;
     opts->spa_pkt.packet_proto    = proto;
+    opts->spa_pkt.packet_family   = AF_INET;
     opts->spa_pkt.packet_src_ip   = src_ip;
     opts->spa_pkt.packet_dst_ip   = dst_ip;
     opts->spa_pkt.packet_src_port = src_port;
     opts->spa_pkt.packet_dst_port = dst_port;
 
     incoming_spa(opts);
-
-    return;
 }
 
 
