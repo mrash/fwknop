@@ -254,7 +254,7 @@ get_raw_digest(char **digest, char *pkt_data)
     return res;
 }
 
-/* Popluate a spa_data struct from an initialized (and populated) FKO context.
+/* Populate a spa_data struct from an initialized (and populated) FKO context.
 */
 static int
 get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)
