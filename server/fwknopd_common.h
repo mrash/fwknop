@@ -637,10 +637,10 @@ typedef struct spa_data
     char           *version;
     short           message_type;
     char           *spa_message;
-    char            spa_message_src_ip[MAX_IPV4_STR_LEN];
-    char            pkt_source_ip[MAX_IPV4_STR_LEN];
-    char            pkt_source_xff_ip[MAX_IPV4_STR_LEN];
-    char            pkt_destination_ip[MAX_IPV4_STR_LEN];
+    char            spa_message_src_ip[MAX_IPV46_STR_LEN];
+    char            pkt_source_ip[MAX_IPV46_STR_LEN];
+    char            pkt_source_xff_ip[MAX_IPV46_STR_LEN];
+    char            pkt_destination_ip[MAX_IPV46_STR_LEN];
     char            spa_message_remain[1024]; /* --DSS FIXME: arbitrary bounds */
     char           *nat_access;
     char           *server_auth;

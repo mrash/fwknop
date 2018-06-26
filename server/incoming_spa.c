@@ -937,10 +937,10 @@ incoming_spa(fko_srv_options_t *opts)
     */
     acc_stanza_t        *acc = opts->acc_stanzas;
 
-    inet_ntop(AF_INET, &(spa_pkt->packet_src_ip),
+    inet_ntop(spa_pkt->packet_family, &(spa_pkt->packet_src_ip),
         spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
 
-    inet_ntop(AF_INET, &(spa_pkt->packet_dst_ip),
+    inet_ntop(spa_pkt->packet_family, &(spa_pkt->packet_dst_ip),
         spadat.pkt_destination_ip, sizeof(spadat.pkt_destination_ip));
 
     /* At this point, we want to validate and (if needed) preprocess the
