@@ -373,8 +373,9 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
     */
     if(strcasecmp(ip, "ANY") == 0)
     {
-        new_sle->maddr = 0x0;
-        new_sle->mask = 0x0;
+        new_sle->family = AF_INET;
+        new_sle->acc_int.inet.maddr = 0x0;
+        new_sle->acc_int.inet.mask = 0x0;
     }
     else
     {
@@ -473,17 +474,18 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
 
         /* Store our mask converted from CIDR to a 32-bit value.
         */
+        new_sle->family = AF_INET;
         if(mask == 32)
-            new_sle->mask = 0xFFFFFFFF;
+            new_sle->acc_int.inet.mask = 0xFFFFFFFF;
         else if(need_shift && (mask > 0 && mask < 32))
-            new_sle->mask = (0xFFFFFFFF << (32 - mask));
+            new_sle->acc_int.inet.mask = (0xFFFFFFFF << (32 - mask));
         else
-            new_sle->mask = mask;
+            new_sle->acc_int.inet.mask = mask;
 
         /* Store our masked address for comparisons with future incoming
          * packets.
         */
-        new_sle->maddr = ntohl(in.s_addr) & new_sle->mask;
+        new_sle->acc_int.inet.maddr = ntohl(in.s_addr) & new_sle->acc_int.inet.mask;
     }
 
     /* If this is not the first entry, we walk our pointer to the
@@ -2070,22 +2072,49 @@ int valid_access_stanzas(acc_stanza_t *acc)
 }
 
 int
-compare_addr_list(acc_int_list_t *ip_list, const uint32_t ip)
+compare_addr_list(acc_int_list_t *ip_list, int family, ...)
 {
-    int match = 0;
+    va_list ap;
+    uint32_t ip;
+    struct in6_addr * ip6;
 
+    va_start(ap, family);
+    switch(family)
+    {
+        case AF_INET:
+            ip = va_arg(ap, uint32_t);
+            break;
+        case AF_INET6:
+            ip6 = va_arg(ap, struct in6_addr *);
+            break;
+        default:
+            va_end(ap);
+            return 0;
+    }
+    va_end(ap);
     while(ip_list)
     {
-        if((ip & ip_list->mask) == (ip_list->maddr & ip_list->mask))
+        if(ip_list->family != family)
         {
-            match = 1;
-            break;
+            ip_list = ip_list->next;
+            continue;
+        }
+        switch(family)
+        {
+            case AF_INET:
+                if((ip & ip_list->acc_int.inet.mask) == (ip_list->acc_int.inet.maddr & ip_list->acc_int.inet.mask))
+                    return 1;
+                break;
+            case AF_INET6:
+                if(memcmp(&ip_list->acc_int.inet6.maddr, ip6, sizeof(*ip6)) == 0)
+                    return 1;
+                break;
         }
 
         ip_list = ip_list->next;
     }
 
-    return(match);
+    return 0;
 }
 
 /**
