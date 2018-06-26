@@ -114,7 +114,7 @@ int valid_access_stanzas(acc_stanza_t *acc);
  * \return Returns true on a match
  *
  */
-int compare_addr_list(acc_int_list_t *source_list, const uint32_t ip);
+int compare_addr_list(acc_int_list_t *source_list, int family, ...);
 
 /**
  * \brief Check for a proto-port string
