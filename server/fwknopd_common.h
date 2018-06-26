@@ -363,8 +363,20 @@ enum {
 */
 typedef struct acc_int_list
 {
-    unsigned int        maddr;
-    unsigned int        mask;
+    int family;
+    union
+    {
+        struct
+	{
+	    unsigned int        maddr;
+	    unsigned int        mask;
+	} inet;
+        struct
+	{
+	    struct in6_addr     maddr;
+	    unsigned int        prefix;
+	} inet6;
+    } acc_int;
     struct acc_int_list *next;
 } acc_int_list_t;
 
