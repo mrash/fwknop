@@ -149,7 +149,7 @@ is_valid_ipv4_addr(const char * const ip_str, const int len)
 
         if(*ndx == '.')
             dot_ctr++;
-        else if(isdigit(*ndx) == 0)
+        else if(isdigit((int)(unsigned char)*ndx) == 0)
         {
             res = 0;
             break;
@@ -196,17 +196,17 @@ is_valid_hostname(const char * const hostname_str, const int len)
 
         if (label_size == 0) //More restrictions on first character of a label
         {
-            if (!isalnum(*ndx))
+            if (!isalnum((int)(unsigned char)*ndx))
                 return 0;
         }
-        else if (!(isalnum(*ndx) | (*ndx == '.') | (*ndx == '-')))
+        else if (!(isalnum((int)(unsigned char)*ndx) | (*ndx == '.') | (*ndx == '-')))
             return 0;
 
         if (*ndx == '.')
         {
             if (label_size > 63)
                 return 0;
-            if (!isalnum(*(ndx-1)))  //checks that previous character was not a . or -
+            if (!isalnum((int)(unsigned char)*(ndx-1)))  //checks that previous character was not a . or -
                 return 0;
 
             label_size = 0;
@@ -776,7 +776,7 @@ strtoargv(const char * const args_str, char **argv_new, int *argc_new)
 
     for (i=0; i < (int)strlen(args_str); i++)
     {
-        if (!isspace(args_str[i]))
+        if (!isspace((int)(unsigned char)args_str[i]))
         {
             arg_tmp[current_arg_ctr] = args_str[i];
             current_arg_ctr++;

@@ -552,7 +552,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
     /* Make sure there are no non-ascii printable chars
     */
     for (i=0; i < (int)strnlen(ctx->encoded_msg, MAX_SPA_ENCODED_MSG_SIZE); i++)
-        if(isprint(ctx->encoded_msg[i]) == 0)
+        if(isprint((int)(unsigned char)ctx->encoded_msg[i]) == 0)
             return(FKO_ERROR_INVALID_DATA_DECODE_NON_ASCII);
 
     /* Make sure there are enough fields in the SPA packet

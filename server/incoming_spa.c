@@ -112,7 +112,7 @@ preprocess_spa_data(const fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt, spa_
             xff += 17;
 
             for (i = 0; *xff != '\0'; i++)
-                if (isspace(*xff))
+                if (isspace((int)(unsigned char)*xff))
                    *xff = '\0';
                 else
                    xff++;
@@ -135,7 +135,7 @@ preprocess_spa_data(const fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt, spa_
 
         for(i=0; i<pkt_data_len; i++)
         {
-            if(isspace(*ndx)) /* The first space marks the end of the req */
+            if(isspace((int)(unsigned char)*ndx)) /* The first space marks the end of the req */
             {
                 *ndx = '\0';
                 break;

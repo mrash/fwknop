@@ -175,7 +175,7 @@ validate_username(const char *username)
     */
     for (i=0; i < (int)strnlen(username, MAX_SPA_USERNAME_SIZE); i++)
     {
-        if((isalnum(username[i]) == 0)
+        if((isalnum((int)(unsigned char)username[i]) == 0)
                 && ((username[i] < 0x20 || username[i] > 0x7e)
                 /* Not allowed chars: " / \ [ ] : ; | = , + * ? < >
                 */
