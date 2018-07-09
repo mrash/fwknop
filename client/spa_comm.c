@@ -82,7 +82,7 @@ chksum(unsigned short *buf, int nbytes)
 /* Send the SPA data via UDP packet.
 */
 static int
-send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
+send_spa_packet_tcp_or_udp(const char *spa_data, const size_t sd_len,
     const fko_cli_options_t *options)
 {
     int     sock=-1, sock_success=0, res=0, error;
@@ -201,7 +201,7 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
 /* Send the SPA data via raw TCP packet.
 */
 static int
-send_spa_packet_tcp_raw(const char *spa_data, const int sd_len,
+send_spa_packet_tcp_raw(const char *spa_data, const size_t sd_len,
     const struct sockaddr_in *saddr, const struct sockaddr_in *daddr,
     const fko_cli_options_t *options)
 {
@@ -300,7 +300,7 @@ send_spa_packet_tcp_raw(const char *spa_data, const int sd_len,
     else if(res != sd_len + hdrlen) /* account for the header ?*/
     {
         log_msg(LOG_VERBOSITY_WARNING,
-            "[#] Warning: bytes sent (%i) not spa data length (%i).",
+            "[#] Warning: bytes sent (%i) not spa data length (%zi).",
             res, sd_len
         );
     }
@@ -315,7 +315,7 @@ send_spa_packet_tcp_raw(const char *spa_data, const int sd_len,
 /* Send the SPA data via raw UDP packet.
 */
 static int
-send_spa_packet_udp_raw(const char *spa_data, const int sd_len,
+send_spa_packet_udp_raw(const char *spa_data, const size_t sd_len,
     const struct sockaddr_in *saddr, const struct sockaddr_in *daddr,
     const fko_cli_options_t *options)
 {
@@ -400,7 +400,7 @@ send_spa_packet_udp_raw(const char *spa_data, const int sd_len,
     else if(res != sd_len + hdrlen) /* account for the header ?*/
     {
         log_msg(LOG_VERBOSITY_WARNING,
-            "[#] Warning: bytes sent (%i) not spa data length (%i).",
+            "[#] Warning: bytes sent (%i) not spa data length (%zi).",
             res, sd_len
         );
     }
@@ -415,7 +415,7 @@ send_spa_packet_udp_raw(const char *spa_data, const int sd_len,
 /* Send the SPA data via ICMP packet.
 */
 static int
-send_spa_packet_icmp(const char *spa_data, const int sd_len,
+send_spa_packet_icmp(const char *spa_data, const size_t sd_len,
     const struct sockaddr_in *saddr, const struct sockaddr_in *daddr,
     const fko_cli_options_t *options)
 {
@@ -519,12 +519,13 @@ send_spa_packet_icmp(const char *spa_data, const int sd_len,
 /* Send the SPA data packet via an HTTP request
 */
 static int
-send_spa_packet_http(const char *spa_data, const int sd_len,
+send_spa_packet_http(const char *spa_data, const size_t sd_len,
     fko_cli_options_t *options)
 {
-    char http_buf[HTTP_MAX_REQUEST_LEN] = {0}, *spa_data_copy = NULL;
-    char *ndx = options->http_proxy;
-    int  i, proxy_port = 0, is_err;
+    char   http_buf[HTTP_MAX_REQUEST_LEN] = {0}, *spa_data_copy = NULL;
+    char  *ndx = options->http_proxy;
+    int    proxy_port = 0, is_err;
+    size_t i;
 
     spa_data_copy = malloc(sd_len+1);
     if (spa_data_copy == NULL)
@@ -622,11 +623,12 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
 int
 send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
 {
-    int                 res, sd_len;
+    int                 res;
     char               *spa_data;
     struct sockaddr_in  saddr, daddr;
     char                ip_str[INET_ADDRSTRLEN] = {0};  /* String used to contain the ip address of an hostname */
     struct addrinfo     hints;                          /* Structure used to set hints to resolve hostname */
+    size_t              sd_len;
 #ifdef WIN32
     WSADATA wsa_data;
 #endif
