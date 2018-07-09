@@ -53,6 +53,7 @@
 int
 run_tcp_server(fko_srv_options_t *opts)
 {
+    const int           family = AF_INET;
 #if !CODE_COVERAGE
     pid_t               pid, ppid;
 #endif
@@ -94,7 +95,7 @@ run_tcp_server(fko_srv_options_t *opts)
 
     /* Now, let's make a TCP server
     */
-    if ((s_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+    if ((s_sock = socket(family, SOCK_STREAM, IPPROTO_TCP)) < 0)
     {
         log_msg(LOG_ERR, "run_tcp_server: socket() failed: %s",
             strerror(errno));
@@ -136,7 +137,7 @@ run_tcp_server(fko_srv_options_t *opts)
 
     /* Construct local address structure */
     memset(&saddr, 0, sizeof(saddr));
-    saddr.sin_family      = AF_INET;           /* Internet address family */
+    saddr.sin_family      = family;            /* Internet address family */
     saddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
     saddr.sin_port        = htons(opts->tcpserv_port);  /* Local port */
 
@@ -226,7 +227,7 @@ run_tcp_server(fko_srv_options_t *opts)
         if(opts->verbose)
         {
             memset(sipbuf, 0x0, sizeof(sipbuf));
-            inet_ntop(AF_INET, &(caddr.sin_addr.s_addr), sipbuf, sizeof(sipbuf));
+            inet_ntop(family, &(caddr.sin_addr.s_addr), sipbuf, sizeof(sipbuf));
             log_msg(LOG_INFO, "tcp_server: Got TCP connection from %s.", sipbuf);
         }
 
