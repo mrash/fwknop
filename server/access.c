@@ -371,9 +371,8 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
     */
     if(strcasecmp(ip, "ANY") == 0)
     {
-        new_sle->family = AF_INET;
-        new_sle->acc_int.inet.maddr = 0x0;
-        new_sle->acc_int.inet.mask = 0x0;
+        new_sle->family = AF_UNSPEC;
+        memset(&new_sle->acc_int, 0, sizeof(new_sle->acc_int));
     }
     else
     {
@@ -2067,6 +2066,8 @@ compare_addr_list(acc_int_list_t *ip_list, int family, ...)
     va_end(ap);
     while(ip_list)
     {
+        if(ip_list->family == AF_UNSPEC)
+            return 1;
         if(ip_list->family != family)
         {
             ip_list = ip_list->next;
