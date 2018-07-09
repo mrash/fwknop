@@ -193,8 +193,8 @@ run_udp_server(fko_srv_options_t *opts)
 
         if(opts->verbose)
         {
-            memset(sipbuf, 0x0, MAX_IPV4_STR_LEN);
-            inet_ntop(AF_INET, &(caddr.sin_addr.s_addr), sipbuf, MAX_IPV4_STR_LEN);
+            memset(sipbuf, 0x0, sizeof(sipbuf));
+            inet_ntop(AF_INET, &(caddr.sin_addr.s_addr), sipbuf, sizeof(sipbuf));
             log_msg(LOG_INFO, "udp_server: Got UDP datagram (%d bytes) from: %s",
                     pkt_len, sipbuf);
         }
