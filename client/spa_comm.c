@@ -587,7 +587,7 @@ send_spa_packet_http(const char *spa_data, const int sd_len,
             options->spa_dst_port = proxy_port;
 
         snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
-            "GET http://%s/%s HTTP/1.0\r\nUser-Agent: %s\r\nAccept: */*\r\n"
+            "GET http://%s/%s HTTP/1.1\r\nUser-Agent: %s\r\nAccept: */*\r\n"
             "Host: %s\r\nConnection: close\r\n\r\n",
             options->spa_server_str,
             spa_data_copy,
