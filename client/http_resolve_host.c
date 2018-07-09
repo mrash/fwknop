@@ -83,7 +83,7 @@ try_url(struct url *url, fko_cli_options_t *options)
      * to contacting whatismyip.org, but using a different URL).
     */
     snprintf(http_buf, HTTP_MAX_REQUEST_LEN,
-        "GET %s HTTP/1.0\r\nUser-Agent: %s\r\nAccept: */*\r\n"
+        "GET %s HTTP/1.1\r\nUser-Agent: %s\r\nAccept: */*\r\n"
         "Host: %s\r\nConnection: close\r\n\r\n",
         url->path,
         options->http_user_agent,
