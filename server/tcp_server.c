@@ -94,7 +94,7 @@ run_tcp_server(fko_srv_options_t *opts)
 
     /* Now, let's make a TCP server
     */
-    if ((s_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+    if ((s_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
     {
         log_msg(LOG_ERR, "run_tcp_server: socket() failed: %s",
             strerror(errno));
