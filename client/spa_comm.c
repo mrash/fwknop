@@ -230,7 +230,7 @@ send_spa_packet_tcp_raw(const char *spa_data, const int sd_len,
         return res;
     }
 
-    sock = socket (PF_INET, SOCK_RAW, IPPROTO_RAW);
+    sock = socket (AF_INET, SOCK_RAW, IPPROTO_RAW);
     if (sock < 0)
     {
         log_msg(LOG_VERBOSITY_ERROR, "send_spa_packet_tcp_raw: create socket: ", strerror(errno));
@@ -343,7 +343,7 @@ send_spa_packet_udp_raw(const char *spa_data, const int sd_len,
         return res;
     }
 
-    sock = socket (PF_INET, SOCK_RAW, IPPROTO_RAW);
+    sock = socket (AF_INET, SOCK_RAW, IPPROTO_RAW);
     if (sock < 0)
     {
         log_msg(LOG_VERBOSITY_ERROR, "send_spa_packet_udp_raw: create socket: ", strerror(errno));
@@ -441,7 +441,7 @@ send_spa_packet_icmp(const char *spa_data, const int sd_len,
         return res;
     }
 
-    sock = socket (PF_INET, SOCK_RAW, IPPROTO_RAW);
+    sock = socket (AF_INET, SOCK_RAW, IPPROTO_RAW);
 
     if (sock < 0)
     {
