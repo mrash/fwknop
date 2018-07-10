@@ -2070,9 +2070,40 @@ int valid_access_stanzas(acc_stanza_t *acc)
     return 1;
 }
 
+static int
+compare_addr_list_ipv4(acc_int_list_t *ip_list, uint32_t ip)
+{
+    for(; ip_list; ip_list = ip_list->next)
+    {
+        if(ip_list->family == AF_UNSPEC)
+            return 1;
+        if(ip_list->family != AF_INET6)
+            continue;
+        if((ip & ip_list->acc_int.inet.mask) == (ip_list->acc_int.inet.maddr & ip_list->acc_int.inet.mask))
+            return 1;
+    }
+    return 0;
+}
+
+static int
+compare_addr_list_ipv6(acc_int_list_t *ip_list, struct in6_addr *ip6)
+{
+    for(; ip_list; ip_list = ip_list->next)
+    {
+        if(ip_list->family == AF_UNSPEC)
+            return 1;
+        if(ip_list->family != AF_INET6)
+            continue;
+        if(memcmp(&ip_list->acc_int.inet6.maddr, ip6, sizeof(*ip6)) == 0)
+            return 1;
+    }
+    return 0;
+}
+
 int
 compare_addr_list(acc_int_list_t *ip_list, int family, ...)
 {
+    int res;
     va_list ap;
     uint32_t ip;
     struct in6_addr * ip6;
@@ -2082,40 +2113,18 @@ compare_addr_list(acc_int_list_t *ip_list, int family, ...)
     {
         case AF_INET:
             ip = va_arg(ap, uint32_t);
+            res = compare_addr_list_ipv4(ip_list, ip);
             break;
         case AF_INET6:
             ip6 = va_arg(ap, struct in6_addr *);
+            res = compare_addr_list_ipv6(ip_list, ip6);
             break;
         default:
-            va_end(ap);
-            return 0;
+            res = 0;
+            break;
     }
     va_end(ap);
-    while(ip_list)
-    {
-        if(ip_list->family == AF_UNSPEC)
-            return 1;
-        if(ip_list->family != family)
-        {
-            ip_list = ip_list->next;
-            continue;
-        }
-        switch(family)
-        {
-            case AF_INET:
-                if((ip & ip_list->acc_int.inet.mask) == (ip_list->acc_int.inet.maddr & ip_list->acc_int.inet.mask))
-                    return 1;
-                break;
-            case AF_INET6:
-                if(memcmp(&ip_list->acc_int.inet6.maddr, ip6, sizeof(*ip6)) == 0)
-                    return 1;
-                break;
-        }
-
-        ip_list = ip_list->next;
-    }
-
-    return 0;
+    return res;
 }
 
 /**
