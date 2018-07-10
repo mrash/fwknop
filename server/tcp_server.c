@@ -60,8 +60,9 @@ run_tcp_server(fko_srv_options_t *opts, int family)
     int                 reuse_addr = 1, rv=1;
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
+    struct sockaddr_in6 saddr6, caddr6;
     struct timeval      tv;
-    char                sipbuf[MAX_IPV4_STR_LEN] = {0};
+    char                sipbuf[MAX_IPV46_STR_LEN] = {0};
 
     log_msg(LOG_INFO, "Kicking off TCP server to listen on port %i.",
             opts->tcpserv_port);
@@ -135,13 +136,29 @@ run_tcp_server(fko_srv_options_t *opts, int family)
 #endif
 
     /* Construct local address structure */
-    memset(&saddr, 0, sizeof(saddr));
-    saddr.sin_family      = family;            /* Internet address family */
-    saddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
-    saddr.sin_port        = htons(opts->tcpserv_port);  /* Local port */
+    if(family == AF_INET)
+    {
+        memset(&saddr, 0, sizeof(saddr));
+        saddr.sin_family      = family;            /* Internet address family */
+        saddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
+        saddr.sin_port        = htons(opts->tcpserv_port);  /* Local port */
+    } else if(family == AF_INET6) {
+        memset(&saddr6, 0, sizeof(saddr6));
+        saddr6.sin6_family    = family;            /* Internet address family */
+        saddr6.sin6_addr      = in6addr_any;       /* Any incoming interface */
+        saddr6.sin6_port      = htons(opts->tcpserv_port);  /* Local port */
+    }
+    else
+    {
+        log_msg(LOG_ERR, "run_tcp_server: unsupported protocol family (%d)",
+            family);
+        close(s_sock);
+        return -1;
+    }
 
     /* Bind to the local address */
-    if (bind(s_sock, (struct sockaddr *) &saddr, sizeof(saddr)) < 0)
+    if ((family == AF_INET && bind(s_sock, (struct sockaddr *) &saddr, sizeof(saddr)) < 0)
+            || (family == AF_INET6 && bind(s_sock, (struct sockaddr *) &saddr6, sizeof(saddr6)) < 0))
     {
         log_msg(LOG_ERR, "run_tcp_server: bind() failed: %s",
             strerror(errno));
@@ -172,7 +189,7 @@ run_tcp_server(fko_srv_options_t *opts, int family)
     */
     while(1)
     {
-        clen = sizeof(caddr);
+        clen = (family == AF_INET) ? sizeof(caddr) : sizeof(caddr6);
 
         /* Initialize and setup the socket for select.
         */
@@ -225,8 +242,11 @@ run_tcp_server(fko_srv_options_t *opts, int family)
 
         if(opts->verbose)
         {
-            memset(sipbuf, 0x0, sizeof(sipbuf));
-            inet_ntop(family, &(caddr.sin_addr.s_addr), sipbuf, sizeof(sipbuf));
+            memset(sipbuf, 0, sizeof(sipbuf));
+            if(family == AF_INET)
+                inet_ntop(family, &caddr.sin_addr.s_addr, sipbuf, sizeof(sipbuf));
+            else if(family == AF_INET6)
+                inet_ntop(family, &caddr6.sin6_addr, sipbuf, sizeof(sipbuf));
             log_msg(LOG_INFO, "tcp_server: Got TCP connection from %s.", sipbuf);
         }
 
