@@ -50,9 +50,8 @@
 #include <sys/select.h>
 
 int
-run_udp_server(fko_srv_options_t *opts)
+run_udp_server(fko_srv_options_t *opts, int family)
 {
-    const int           family = AF_INET;
     int                 s_sock, sfd_flags, selval, pkt_len;
     int                 rv=1, chk_rm_all=0;
     fd_set              sfd_set;
