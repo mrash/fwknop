@@ -56,8 +56,9 @@ run_udp_server(fko_srv_options_t *opts, int family)
     int                 rv=1, chk_rm_all=0;
     fd_set              sfd_set;
     struct sockaddr_in  saddr, caddr;
+    struct sockaddr_in6 saddr6, caddr6;
     struct timeval      tv;
-    char                sipbuf[MAX_IPV4_STR_LEN] = {0};
+    char                sipbuf[MAX_IPV46_STR_LEN] = {0};
     char                dgram_msg[MAX_SPA_PACKET_LEN+1] = {0};
     socklen_t           clen;
 
@@ -95,13 +96,29 @@ run_udp_server(fko_srv_options_t *opts, int family)
     }
 
     /* Construct local address structure */
-    memset(&saddr, 0x0, sizeof(saddr));
-    saddr.sin_family      = family;            /* Internet address family */
-    saddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
-    saddr.sin_port        = htons(opts->udpserv_port); /* Local port */
+    if(family == AF_INET)
+    {
+        memset(&saddr, 0, sizeof(saddr));
+        saddr.sin_family      = family;            /* Internet address family */
+        saddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
+        saddr.sin_port        = htons(opts->udpserv_port); /* Local port */
+    } else if(family == AF_INET6) {
+        memset(&saddr6, 0, sizeof(saddr6));
+        saddr6.sin6_family    = family;            /* Internet address family */
+        saddr6.sin6_addr      = in6addr_any;       /* Any incoming interface */
+        saddr6.sin6_port      = htons(opts->udpserv_port); /* Local port */
+    }
+    else
+    {
+        log_msg(LOG_ERR, "run_udp_server: unsupported protocol family (%d)",
+            family);
+        close(s_sock);
+        return -1;
+    }
 
     /* Bind to the local address */
-    if (bind(s_sock, (struct sockaddr *) &saddr, sizeof(saddr)) < 0)
+    if ((family == AF_INET && bind(s_sock, (struct sockaddr *) &saddr, sizeof(saddr)) < 0)
+            || (family == AF_INET6 && bind(s_sock, (struct sockaddr *) &saddr6, sizeof(saddr6)) < 0))
     {
         log_msg(LOG_ERR, "run_udp_server: bind() failed: %s",
             strerror(errno));
@@ -184,17 +201,27 @@ run_udp_server(fko_srv_options_t *opts, int family)
 
         /* If we make it here then there is a datagram to process
         */
-        clen = sizeof(caddr);
-
-        pkt_len = recvfrom(s_sock, dgram_msg, MAX_SPA_PACKET_LEN,
-                0, (struct sockaddr *)&caddr, &clen);
+        if(family == AF_INET) {
+            clen = sizeof(caddr);
+            pkt_len = recvfrom(s_sock, dgram_msg, MAX_SPA_PACKET_LEN,
+                    0, (struct sockaddr *)&caddr, &clen);
+        }
+        else if(family == AF_INET6)
+        {
+            clen = sizeof(caddr6);
+            pkt_len = recvfrom(s_sock, dgram_msg, MAX_SPA_PACKET_LEN,
+                    0, (struct sockaddr *)&caddr6, &clen);
+        }
 
         dgram_msg[pkt_len] = 0x0;
 
         if(opts->verbose)
         {
-            memset(sipbuf, 0x0, sizeof(sipbuf));
-            inet_ntop(family, &(caddr.sin_addr.s_addr), sipbuf, sizeof(sipbuf));
+            memset(sipbuf, 0, sizeof(sipbuf));
+            if(family == AF_INET)
+                inet_ntop(family, &caddr.sin_addr.s_addr, sipbuf, sizeof(sipbuf));
+            else if(family == AF_INET6)
+                inet_ntop(family, &caddr6.sin6_addr, sipbuf, sizeof(sipbuf));
             log_msg(LOG_INFO, "udp_server: Got UDP datagram (%d bytes) from: %s",
                     pkt_len, sipbuf);
         }
@@ -208,15 +235,26 @@ run_udp_server(fko_srv_options_t *opts, int family)
             strlcpy((char *)opts->spa_pkt.packet_data, dgram_msg, pkt_len+1);
             opts->spa_pkt.packet_data_len = pkt_len;
             opts->spa_pkt.packet_proto    = IPPROTO_UDP;
-            opts->spa_pkt.packet_src_ip   = caddr.sin_addr.s_addr;
-            opts->spa_pkt.packet_dst_ip   = saddr.sin_addr.s_addr;
-            opts->spa_pkt.packet_src_port = ntohs(caddr.sin_port);
-            opts->spa_pkt.packet_dst_port = ntohs(saddr.sin_port);
+            opts->spa_pkt.packet_family   = family;
+            if(family == AF_INET)
+            {
+                opts->spa_pkt.packet_src_ip   = caddr.sin_addr.s_addr;
+                opts->spa_pkt.packet_dst_ip   = saddr.sin_addr.s_addr;
+                opts->spa_pkt.packet_src_port = ntohs(caddr.sin_port);
+                opts->spa_pkt.packet_dst_port = ntohs(saddr.sin_port);
+            }
+            else if(family == AF_INET6)
+            {
+                opts->spa_pkt.packet_addr.inet6.src_ip = caddr6.sin6_addr;
+                opts->spa_pkt.packet_addr.inet6.dst_ip = saddr6.sin6_addr;
+                opts->spa_pkt.packet_src_port = ntohs(caddr6.sin6_port);
+                opts->spa_pkt.packet_dst_port = ntohs(saddr6.sin6_port);
+            }
 
             incoming_spa(opts);
         }
 
-        memset(dgram_msg, 0x0, sizeof(dgram_msg));
+        memset(dgram_msg, 0, sizeof(dgram_msg));
 
         opts->packet_ctr += 1;
         if(opts->foreground == 1 && opts->verbose > 2)
