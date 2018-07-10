@@ -209,6 +209,7 @@ run_udp_server(fko_srv_options_t *opts)
             strlcpy((char *)opts->spa_pkt.packet_data, dgram_msg, pkt_len+1);
             opts->spa_pkt.packet_data_len = pkt_len;
             opts->spa_pkt.packet_proto    = IPPROTO_UDP;
+            opts->spa_pkt.packet_family   = family;
             opts->spa_pkt.packet_src_ip   = caddr.sin_addr.s_addr;
             opts->spa_pkt.packet_dst_ip   = saddr.sin_addr.s_addr;
             opts->spa_pkt.packet_src_port = ntohs(caddr.sin_port);
