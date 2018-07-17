@@ -89,12 +89,12 @@ static int resolve_ip(const char * resp, fko_cli_options_t *options, const char 
 static int
 try_url(struct url *url, fko_cli_options_t *options)
 {
-    int     sock=-1, sock_success=0, res, error, http_buf_len;
+    int     sock=-1, sock_success=0, i, res, error, http_buf_len;
     int     bytes_read = 0, position = 0;
     struct  addrinfo *result=NULL, *rp, hints;
     char    http_buf[HTTP_MAX_REQUEST_LEN]       = {0};
     char    http_response[HTTP_MAX_RESPONSE_LEN] = {0};
-    char   *ndx;
+    char   *ndx, c;
 
 #ifdef WIN32
     WSADATA wsa_data;
@@ -223,6 +223,19 @@ try_url(struct url *url, fko_cli_options_t *options)
         return(-1);
     }
     ndx += 4;
+
+    /* Walk along the content to try to find the end of the IP address.
+      * Note: We are expecting the content to be just an IP address
+      *       (possibly followed by whitespace or other not-digit value).
+      */
+    for(i=0; i<MAX_IPV46_STR_LEN; i++) {
+         c = *(ndx+i);
+         if(! isdigit((int)(unsigned char)c) && ! ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) && c != '.' && c != ':')
+             break;
+     }
+    /* Terminate at the first non-digit and non-dot.
+     */
+     *(ndx+i) = '\0';
 
     return resolve_ip(ndx,options,url->host,url->path);
 }
