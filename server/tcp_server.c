@@ -51,7 +51,7 @@
  * the child process or -1 if there is a fork error.
 */
 int
-run_tcp_server(fko_srv_options_t *opts, int family)
+run_tcp_server(fko_srv_options_t *opts, const int family)
 {
 #if !CODE_COVERAGE
     pid_t               pid, ppid;
