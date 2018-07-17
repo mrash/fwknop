@@ -32,7 +32,7 @@
 
 /* Function prototypes
 */
-int run_udp_server(fko_srv_options_t *opts, int family);
+int run_udp_server(fko_srv_options_t *opts, const int family);
 
 #endif /* UDP_SERVER_H */
 
