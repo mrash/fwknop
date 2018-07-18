@@ -951,11 +951,25 @@ incoming_spa(fko_srv_options_t *opts)
     */
     acc_stanza_t        *acc = opts->acc_stanzas;
 
-    inet_ntop(spa_pkt->packet_family, &(spa_pkt->packet_src_ip),
-        spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
+    switch(spa_pkt->packet_family)
+    {
+        case AF_INET:
+            inet_ntop(AF_INET, &(spa_pkt->packet_addr.inet.src_ip),
+                spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
 
-    inet_ntop(spa_pkt->packet_family, &(spa_pkt->packet_dst_ip),
-        spadat.pkt_destination_ip, sizeof(spadat.pkt_destination_ip));
+            inet_ntop(AF_INET, &(spa_pkt->packet_addr.inet.dst_ip),
+                spadat.pkt_destination_ip, sizeof(spadat.pkt_destination_ip));
+            break;
+        case AF_INET6:
+            inet_ntop(AF_INET6, &(spa_pkt->packet_addr.inet6.src_ip),
+                spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
+
+            inet_ntop(AF_INET6, &(spa_pkt->packet_addr.inet6.dst_ip),
+                spadat.pkt_destination_ip, sizeof(spadat.pkt_destination_ip));
+            break;
+        default:
+            return;
+    }
 
     /* At this point, we want to validate and (if needed) preprocess the
      * SPA data and/or to be reasonably sure we have a SPA packet (i.e
