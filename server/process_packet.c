@@ -308,7 +308,7 @@ process_packet_ipv6(fko_srv_options_t * opts, const unsigned char * packet,
      * frame (such as a 4-byte Ethernet Frame Check Sequence) to not
      * interfere with SPA operations.
     */
-    pkt_end = ((unsigned char*)iph_p)+ntohs(iph_p->ip6_plen);
+    pkt_end = ((unsigned char*)(iph_p + 1))+ntohs(iph_p->ip6_plen);
     if(pkt_end > fr_end)
         return;
 
