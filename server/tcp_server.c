@@ -56,11 +56,13 @@ run_tcp_server(fko_srv_options_t *opts, const int family)
 #if !CODE_COVERAGE
     pid_t               pid, ppid;
 #endif
-    int                 s_sock, c_sock, sfd_flags, clen, selval;
+    int                 s_sock, c_sock, sfd_flags, selval;
+    socklen_t           slen, clen;
     int                 reuse_addr = 1, rv=1;
     fd_set              sfd_set;
-    struct sockaddr_in  saddr, caddr;
+    struct sockaddr_in  saddr4, caddr4;
     struct sockaddr_in6 saddr6, caddr6;
+    struct sockaddr    *saddr, *caddr;
     struct timeval      tv;
     char                sipbuf[MAX_IPV46_STR_LEN] = {0};
 
@@ -138,15 +140,21 @@ run_tcp_server(fko_srv_options_t *opts, const int family)
     /* Construct local address structure */
     if(family == AF_INET)
     {
-        memset(&saddr, 0, sizeof(saddr));
-        saddr.sin_family      = family;            /* Internet address family */
-        saddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
-        saddr.sin_port        = htons(opts->tcpserv_port);  /* Local port */
+        memset(&saddr4, 0, sizeof(saddr4));
+        saddr4.sin_family      = family;            /* Internet address family */
+        saddr4.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
+        saddr4.sin_port        = htons(opts->tcpserv_port);  /* Local port */
+        saddr = (struct sockaddr *)&saddr4;
+        slen = sizeof(saddr4);
+        caddr = (struct sockaddr *)&caddr4;
     } else if(family == AF_INET6) {
         memset(&saddr6, 0, sizeof(saddr6));
         saddr6.sin6_family    = family;            /* Internet address family */
         saddr6.sin6_addr      = in6addr_any;       /* Any incoming interface */
         saddr6.sin6_port      = htons(opts->tcpserv_port);  /* Local port */
+        saddr = (struct sockaddr *)&saddr6;
+        slen = sizeof(saddr6);
+        caddr = (struct sockaddr *)&caddr6;
     }
     else
     {
@@ -157,8 +165,7 @@ run_tcp_server(fko_srv_options_t *opts, const int family)
     }
 
     /* Bind to the local address */
-    if ((family == AF_INET && bind(s_sock, (struct sockaddr *) &saddr, sizeof(saddr)) < 0)
-            || (family == AF_INET6 && bind(s_sock, (struct sockaddr *) &saddr6, sizeof(saddr6)) < 0))
+    if (bind(s_sock, saddr, slen) < 0)
     {
         log_msg(LOG_ERR, "run_tcp_server: bind() failed: %s",
             strerror(errno));
@@ -189,8 +196,6 @@ run_tcp_server(fko_srv_options_t *opts, const int family)
     */
     while(1)
     {
-        clen = (family == AF_INET) ? sizeof(caddr) : sizeof(caddr6);
-
         /* Initialize and setup the socket for select.
         */
         FD_SET(s_sock, &sfd_set);
@@ -232,7 +237,8 @@ run_tcp_server(fko_srv_options_t *opts, const int family)
 
         /* Wait for a client to connect
         */
-        if((c_sock = accept(s_sock, (struct sockaddr *) &caddr, (socklen_t *)&clen)) < 0)
+        clen = (family == AF_INET) ? sizeof(caddr) : sizeof(caddr6);
+        if((c_sock = accept(s_sock, caddr, &clen)) < 0)
         {
             log_msg(LOG_ERR, "run_tcp_server: accept() failed: %s",
                 strerror(errno));
@@ -244,7 +250,7 @@ run_tcp_server(fko_srv_options_t *opts, const int family)
         {
             memset(sipbuf, 0, sizeof(sipbuf));
             if(family == AF_INET)
-                inet_ntop(family, &caddr.sin_addr.s_addr, sipbuf, sizeof(sipbuf));
+                inet_ntop(family, &caddr4.sin_addr.s_addr, sipbuf, sizeof(sipbuf));
             else if(family == AF_INET6)
                 inet_ntop(family, &caddr6.sin6_addr, sipbuf, sizeof(sipbuf));
             log_msg(LOG_INFO, "tcp_server: Got TCP connection from %s.", sipbuf);
