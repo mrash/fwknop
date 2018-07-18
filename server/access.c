@@ -349,13 +349,15 @@ static int
 add_int_ent(acc_int_list_t **ilist, const char *ip)
 {
     char                *ndx;
-    char                ip_str[MAX_IPV4_STR_LEN] = {0};
-    char                ip_mask_str[MAX_IPV4_STR_LEN] = {0};
+    char                ip_str[MAX_IPV46_STR_LEN] = {0};
+    char                ip_mask_str[MAX_IPV46_STR_LEN] = {0};
     uint32_t            mask;
     int                 is_err, mask_len = 0, need_shift = 1;
 
     struct in_addr      in;
     struct in_addr      mask_in;
+    struct addrinfo    *ai, hints;
+    struct sockaddr_in *sin;
 
     acc_int_list_t      *last_sle, *new_sle, *tmp_sle;
 
@@ -381,7 +383,7 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
         */
         if((ndx = strchr(ip, '/')) != NULL)
         {
-            if(((ndx-ip)) >= MAX_IPV4_STR_LEN)
+            if(((ndx-ip)) >= MAX_IPV46_STR_LEN)
             {
                 log_msg(LOG_ERR, "[*] Error parsing string to IP");
                 free(new_sle);
@@ -424,7 +426,7 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
                 {
                     /* CIDR mask
                     */
-                    mask = strtol_wrapper(ndx+1, 1, 32, NO_EXIT_UPON_ERR, &is_err);
+                    mask = strtol_wrapper(ndx+1, 1, 128, NO_EXIT_UPON_ERR, &is_err);
                     if(is_err != FKO_SUCCESS)
                     {
                         log_msg(LOG_ERR, "[*] Invalid IP mask str '%s'.", ndx+1);
@@ -447,7 +449,7 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
         else
         {
             mask = 32;
-            if(strnlen(ip, MAX_IPV4_STR_LEN+1) >= MAX_IPV4_STR_LEN)
+            if(strnlen(ip, MAX_IPV46_STR_LEN+1) >= MAX_IPV46_STR_LEN)
             {
                 log_msg(LOG_ERR, "[*] Error parsing string to IP");
                 free(new_sle);
@@ -457,21 +459,38 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
             strlcpy(ip_str, ip, sizeof(ip_str));
         }
 
-        if(inet_aton(ip_str, &in) == 0)
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_flags = AI_NUMERICHOST | AI_CANONNAME;
+        if(getaddrinfo(ip_str, NULL, &hints, &ai) != 0)
         {
             log_msg(LOG_ERR,
                 "[*] Fatal error parsing IP to int for: %s", ip_str
             );
-
             free(new_sle);
             new_sle = NULL;
-
             return 0;
         }
+        switch(ai->ai_family)
+        {
+            case AF_INET:
+                sin = (struct sockaddr_in *)ai->ai_addr;
+                in = sin->sin_addr;
+                break;
+            default:
+                log_msg(LOG_ERR,
+                    "[*] Unsupported family parsing IP to int for: %s", ip_str
+                );
+                free(new_sle);
+                new_sle = NULL;
+                freeaddrinfo(ai);
+                return 0;
+        }
+        new_sle->family = ai->ai_family;
+        freeaddrinfo(ai);
 
         /* Store our mask converted from CIDR to a 32-bit value.
         */
-        new_sle->family = AF_INET;
         if(mask == 32)
             new_sle->acc_int.inet.mask = 0xFFFFFFFF;
         else if(need_shift && (mask > 0 && mask < 32))
