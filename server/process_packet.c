@@ -212,7 +212,7 @@ process_packet_ipv4(fko_srv_options_t * opts, const unsigned char * packet,
 
         pkt_data = ((unsigned char*)(tcph_p+1))+((tcph_p->doff)<<2)-sizeof(struct tcphdr);
 
-        pkt_data_len = (pkt_end-(unsigned char*)iph_p)-(pkt_data-(unsigned char*)iph_p);
+        pkt_data_len = pkt_end - pkt_data;
     }
     else if (proto == IPPROTO_UDP)
     {
@@ -224,7 +224,7 @@ process_packet_ipv4(fko_srv_options_t * opts, const unsigned char * packet,
         dst_port = ntohs(udph_p->dest);
 
         pkt_data = ((unsigned char*)(udph_p + 1));
-        pkt_data_len = (pkt_end-(unsigned char*)iph_p)-(pkt_data-(unsigned char*)iph_p);
+        pkt_data_len = pkt_end - pkt_data;
     }
     else if (proto == IPPROTO_ICMP)
     {
@@ -233,7 +233,7 @@ process_packet_ipv4(fko_srv_options_t * opts, const unsigned char * packet,
         icmph_p = (struct icmphdr*)((unsigned char*)iph_p + (ip_hdr_words << 2));
 
         pkt_data = ((unsigned char*)(icmph_p + 1));
-        pkt_data_len = (pkt_end-(unsigned char*)iph_p)-(pkt_data-(unsigned char*)iph_p);
+        pkt_data_len = pkt_end - pkt_data;
     }
 
     else
@@ -331,7 +331,7 @@ process_packet_ipv6(fko_srv_options_t * opts, const unsigned char * packet,
 
         pkt_data = ((unsigned char*)(tcph_p+1))+((tcph_p->doff)<<2)-sizeof(struct tcphdr);
 
-        pkt_data_len = (pkt_end-(unsigned char*)iph_p)-(pkt_data-(unsigned char*)iph_p);
+        pkt_data_len = pkt_end - pkt_data;
     }
     else if (proto == IPPROTO_UDP)
     {
@@ -343,7 +343,7 @@ process_packet_ipv6(fko_srv_options_t * opts, const unsigned char * packet,
         dst_port = ntohs(udph_p->dest);
 
         pkt_data = ((unsigned char*)(udph_p + 1));
-        pkt_data_len = (pkt_end-(unsigned char*)iph_p)-(pkt_data-(unsigned char*)iph_p);
+        pkt_data_len = pkt_end - pkt_data;
     }
 
     else
