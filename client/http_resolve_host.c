@@ -328,8 +328,8 @@ resolve_ip_https(fko_cli_options_t *options)
     struct  url url; /* for validation only */
     char    wget_ssl_cmd[MAX_URL_PATH_LEN] = {0};  /* for verbose logging only */
 
-#if HAVE_EXECVPE
-    char   *wget_argv[MAX_CMDLINE_ARGS]; /* for execvpe() */
+#if HAVE_EXECVP
+    char   *wget_argv[MAX_CMDLINE_ARGS]; /* for execvp() */
     int     wget_argc=0;
     int     pipe_fd[2];
     pid_t   pid=0;
@@ -339,7 +339,7 @@ resolve_ip_https(fko_cli_options_t *options)
     FILE *wget;
 #endif
 
-#if HAVE_EXECVPE
+#if HAVE_EXECVP
     memset(wget_argv, 0x0, sizeof(wget_argv));
 #endif
     memset(&url, 0x0, sizeof(url));
@@ -410,7 +410,7 @@ resolve_ip_https(fko_cli_options_t *options)
     return(1);
 #endif
 
-#if HAVE_EXECVPE
+#if HAVE_EXECVP
     if(strtoargv(wget_ssl_cmd, wget_argv, &wget_argc) != 1)
     {
         log_msg(LOG_VERBOSITY_ERROR, "Error converting wget cmd str to argv");
@@ -434,14 +434,14 @@ resolve_ip_https(fko_cli_options_t *options)
         close(pipe_fd[0]);
         dup2(pipe_fd[1], STDOUT_FILENO);
         dup2(pipe_fd[1], STDERR_FILENO);
-        es = execvpe(wget_argv[0], wget_argv, (char * const *)NULL); /* don't use env */
+        es = execvp(wget_argv[0], wget_argv);
 
         if(es == -1)
             log_msg(LOG_VERBOSITY_ERROR,
-                    "[*] resolve_ip_https(): execvpe() failed: %s",
+                    "[*] resolve_ip_https(): execvp() failed: %s",
                     strerror(errno));
 
-        /* We only make it here if there was a problem with execvpe(),
+        /* We only make it here if there was a problem with execvp(),
          * so exit() here either way
         */
         exit(es);

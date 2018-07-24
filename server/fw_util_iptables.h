@@ -32,8 +32,8 @@
 
 #define SNAT_TARGET_BUFSIZE         64
 
-#if HAVE_EXECVPE
-  #define SH_REDIR "" /* the shell is not used when execvpe() is available */
+#if HAVE_EXECVP
+  #define SH_REDIR "" /* the shell is not used when execvp() is available */
 #else
   #define SH_REDIR " 2>&1"
 #endif

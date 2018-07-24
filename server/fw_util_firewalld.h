@@ -35,8 +35,8 @@
 #define FIREWD_CMD_FAIL_STR   "COMMAND_FAILED" /* returned by firewall-cmd */
 #define FIREWD_CMD_PREFIX     "--direct --passthrough ipv4"
 
-#if HAVE_EXECVPE
-  #define SH_REDIR "" /* the shell is not used when execvpe() is available */
+#if HAVE_EXECVP
+  #define SH_REDIR "" /* the shell is not used when execvp() is available */
 #else
   #define SH_REDIR " 2>&1"
 #endif

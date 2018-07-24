@@ -2103,14 +2103,14 @@ sub configure_args_restore_orig() {
     return $rv;
 }
 
-sub configure_args_disable_execvpe() {
+sub configure_args_disable_execvp() {
     my $rv = 1;
 
     my $curr_pwd = cwd() or die $!;
 
     chdir '..' or die $!;
 
-    unless (&config_recompile('./extras/apparmor/configure_args.sh --disable-execvpe')) {
+    unless (&config_recompile('./extras/apparmor/configure_args.sh --disable-execvp')) {
         &write_test_file("[-] configure/recompile failure.\n",
             "test/$curr_test_file");
         chdir $curr_pwd or die $!;

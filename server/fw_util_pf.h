@@ -33,8 +33,8 @@
 #define MAX_PF_ANCHOR_SEARCH_LEN    (MAX_PF_ANCHOR_LEN+11)   /* room for 'anchor "' string */
 #define MAX_PF_NEW_RULE_LEN         140
 
-#if HAVE_EXECVPE
-  #define SH_REDIR "" /* the shell is not used when execvpe() is available */
+#if HAVE_EXECVP
+  #define SH_REDIR "" /* the shell is not used when execvp() is available */
 #else
   #define SH_REDIR " 2>&1"
 #endif
@@ -43,7 +43,7 @@
 */
 #define PF_ADD_RULE_ARGS              "pass in quick proto %u from %s to %s port %u keep state label " EXPIRE_COMMENT_PREFIX "%u"
 #define PF_WRITE_ANCHOR_RULES_ARGS    "-a %s -f -"
-#if HAVE_EXECVPE
+#if HAVE_EXECVP
   #define PF_LIST_ANCHOR_RULES_ARGS   "-a %s -s rules"
 #else
   #define PF_LIST_ANCHOR_RULES_ARGS   "-a %s -s rules 2> /dev/null"

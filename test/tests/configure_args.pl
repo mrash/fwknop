@@ -46,12 +46,12 @@
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
     },
 
-    ### disable execvpe() usage
+    ### disable execvp() usage
     {
         'category' => 'configure args',
         'subcategory' => 'compile',
-        'detail'   => '--disable-execvpe check',
-        'function' => \&configure_args_disable_execvpe,
+        'detail'   => '--disable-execvp check',
+        'function' => \&configure_args_disable_execvp,
     },
     {
         'category' => 'configure args',
@@ -64,7 +64,7 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'server_positive_output_matches' => [qr/without execvpe/],
+        'server_positive_output_matches' => [qr/without execvp/],
     },
     {
         'category' => 'configure args',
@@ -77,7 +77,7 @@
         'fw_rule_created' => $NEW_RULE_REQUIRED,
         'fw_rule_removed' => $NEW_RULE_REMOVED,
         'key_file' => $cf{'rc_hmac_b64_key'},
-        'server_positive_output_matches' => [qr/without execvpe/],
+        'server_positive_output_matches' => [qr/without execvp/],
         'client_cycles_per_server_instance' => 3,
     },
 
@@ -92,7 +92,7 @@
         'fwknopd_cmdline'  => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_cmd_access'} " .
             "-d $default_digest_file -p $default_pid_file $intf_str",
         'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
-        'server_positive_output_matches' => [qr/without execvpe/],
+        'server_positive_output_matches' => [qr/without execvp/],
     },
 
     ### restore original ./configure args to be prepared to run
