@@ -349,15 +349,16 @@ static int
 add_int_ent(acc_int_list_t **ilist, const char *ip)
 {
     char                *ndx;
-    char                ip_str[MAX_IPV46_STR_LEN] = {0};
-    char                ip_mask_str[MAX_IPV46_STR_LEN] = {0};
-    uint32_t            mask;
-    int                 is_err, mask_len = 0, need_shift = 1;
+    char                 ip_str[MAX_IPV46_STR_LEN] = {0};
+    char                 ip_mask_str[MAX_IPV46_STR_LEN] = {0};
+    uint32_t             mask;
+    int                  is_err, mask_len = 0, need_shift = 1;
 
-    struct in_addr      in;
-    struct in_addr      mask_in;
-    struct addrinfo    *ai, hints;
-    struct sockaddr_in *sin;
+    struct in_addr       in;
+    struct in_addr       mask_in;
+    struct addrinfo     *ai, hints;
+    struct sockaddr_in  *sin;
+    struct sockaddr_in6 *sin6;
 
     acc_int_list_t      *last_sle, *new_sle, *tmp_sle;
 
@@ -393,7 +394,7 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
 
             mask_len = strlen(ip) - (ndx-ip+1);
 
-            if(mask_len > 2)
+            if(mask_len > 3)
             {
                 if(mask_len >= MIN_IPV4_STR_LEN && mask_len < MAX_IPV4_STR_LEN)
                 {
@@ -420,28 +421,24 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
                     return 0;
                 }
             }
-            else
-            {
-                if(mask_len > 0)
+            else if(mask_len > 0) {
+                /* CIDR mask
+                 */
+                mask = strtol_wrapper(ndx+1, 1, 128, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
                 {
-                    /* CIDR mask
-                    */
-                    mask = strtol_wrapper(ndx+1, 1, 128, NO_EXIT_UPON_ERR, &is_err);
-                    if(is_err != FKO_SUCCESS)
-                    {
-                        log_msg(LOG_ERR, "[*] Invalid IP mask str '%s'.", ndx+1);
-                        free(new_sle);
-                        new_sle = NULL;
-                        return 0;
-                    }
-                }
-                else
-                {
-                    log_msg(LOG_ERR, "[*] Missing mask value.");
+                    log_msg(LOG_ERR, "[*] Invalid IP mask str '%s'.", ndx+1);
                     free(new_sle);
                     new_sle = NULL;
                     return 0;
                 }
+            }
+            else
+            {
+                log_msg(LOG_ERR, "[*] Missing mask value.");
+                free(new_sle);
+                new_sle = NULL;
+                return 0;
             }
 
             strlcpy(ip_str, ip, (ndx-ip)+1);
@@ -476,6 +473,41 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
             case AF_INET:
                 sin = (struct sockaddr_in *)ai->ai_addr;
                 in = sin->sin_addr;
+
+                /* Store our mask converted from CIDR to a 32-bit value.
+                */
+                if(mask > 32)
+                {
+                    log_msg(LOG_ERR, "[*] Invalid IP mask '%u'.", mask);
+                    freeaddrinfo(ai);
+                    free(new_sle);
+                    new_sle = NULL;
+                    return 0;
+                }
+                else if(mask == 32)
+                    new_sle->acc_int.inet.mask = 0xFFFFFFFF;
+                else if(need_shift && (mask > 0 && mask < 32))
+                    new_sle->acc_int.inet.mask = (0xFFFFFFFF << (32 - mask));
+                else
+                    new_sle->acc_int.inet.mask = mask;
+
+                /* Store our masked address for comparisons with future incoming
+                 * packets.
+                 */
+                new_sle->acc_int.inet.maddr = ntohl(in.s_addr) & new_sle->acc_int.inet.mask;
+                break;
+	    case AF_INET6:
+                sin6 = (struct sockaddr_in6 *)ai->ai_addr;
+                new_sle->acc_int.inet6.maddr = sin6->sin6_addr;
+                if(mask > 128)
+                {
+                    log_msg(LOG_ERR, "[*] Invalid IPv6 prefix '%u'.", mask);
+                    freeaddrinfo(ai);
+                    free(new_sle);
+                    new_sle = NULL;
+                    return 0;
+                }
+                new_sle->acc_int.inet6.prefix = mask;
                 break;
             default:
                 log_msg(LOG_ERR,
@@ -488,20 +520,6 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
         }
         new_sle->family = ai->ai_family;
         freeaddrinfo(ai);
-
-        /* Store our mask converted from CIDR to a 32-bit value.
-        */
-        if(mask == 32)
-            new_sle->acc_int.inet.mask = 0xFFFFFFFF;
-        else if(need_shift && (mask > 0 && mask < 32))
-            new_sle->acc_int.inet.mask = (0xFFFFFFFF << (32 - mask));
-        else
-            new_sle->acc_int.inet.mask = mask;
-
-        /* Store our masked address for comparisons with future incoming
-         * packets.
-        */
-        new_sle->acc_int.inet.maddr = ntohl(in.s_addr) & new_sle->acc_int.inet.mask;
     }
 
     /* If this is not the first entry, we walk our pointer to the
