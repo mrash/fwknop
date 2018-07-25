@@ -170,7 +170,7 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
 
     if (! sock_success) {
         log_msg(LOG_VERBOSITY_ERROR,
-                "send_spa_packet_tcp_or_udp: Could not create socket: ",
+                "send_spa_packet_tcp_or_udp: Could not create socket: %s",
                 strerror(errno));
         return -1;
     }
