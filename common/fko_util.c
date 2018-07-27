@@ -1145,15 +1145,15 @@ DECLARE_UTEST(test_hostname_validator, "test the is_valid_hostname function")
     strcpy(test_hostname, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.b");
     CU_ASSERT(is_valid_hostname(test_hostname, strlen(test_hostname)) == 0);
 }
-DECLARE_UTEST(test_ipv4_validator, "test the is_valid_ipv4_addr function")
+DECLARE_UTEST(test_ipv4_validator, "test the is_valid_ip_addr function")
 {
     char test_str[32];
     strcpy(test_str, "1.2.3.4");
-    CU_ASSERT(is_valid_ipv4_addr(test_str, strlen(test_str)));
+    CU_ASSERT(is_valid_ip_addr(test_str, strlen(test_str), AF_INET));
     strcpy(test_str, "127.0.0.2");
-    CU_ASSERT(is_valid_ipv4_addr(test_str, 9));
+    CU_ASSERT(is_valid_ip_addr(test_str, 9, AF_INET));
     strcpy(test_str, "1.2.3.400");
-    CU_ASSERT(is_valid_ipv4_addr(test_str, strlen(test_str)) == 0);
+    CU_ASSERT(is_valid_ip_addr(test_str, strlen(test_str), AF_INET) == 0);
 }
 
 DECLARE_UTEST(test_count_characters, "test the count_characters function")

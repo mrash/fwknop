@@ -297,7 +297,7 @@ add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc,
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
-    if(! is_valid_ipv4_addr(ip_str, strlen(ip_str)))
+    if(! is_valid_ip_addr(ip_str, strlen(ip_str), AF_INET))
     {
         log_msg(LOG_ERR,
             "[*] Fatal: invalid FORCE_NAT IP '%s'", ip_str);
@@ -327,7 +327,7 @@ add_acc_force_snat(fko_srv_options_t *opts, acc_stanza_t *curr_acc,
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
-    if(! is_valid_ipv4_addr(ip_str, strlen(ip_str)))
+    if(! is_valid_ip_addr(ip_str, strlen(ip_str), AF_INET))
     {
         log_msg(LOG_ERR,
             "[*] Fatal: invalid FORCE_SNAT IP '%s'", ip_str);

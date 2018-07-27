@@ -554,7 +554,7 @@ validate_options(fko_srv_options_t *opts)
         */
         if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
         {
-            if(! is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP])))
+            if(! is_valid_ip_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP]), AF_INET))
             {
                 log_msg(LOG_ERR,
                     "Invalid IPv4 addr for SNAT_TRANSLATE_IP"
@@ -697,7 +697,7 @@ validate_options(fko_srv_options_t *opts)
         */
         if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
         {
-            if(! is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP])))
+            if(! is_valid_ip_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP]), AF_INET))
             {
                 log_msg(LOG_ERR,
                     "Invalid IPv4 addr for SNAT_TRANSLATE_IP"
