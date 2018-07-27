@@ -1381,6 +1381,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'i':
                 set_config_entry(opts, CONF_PCAP_INTF, optarg);
                 break;
+	    case '6':
+		opts->ipv6 = 1;
+		break;
             case FIREWD_DISABLE_CHECK_SUPPORT:
                 opts->firewd_disable_check_support = 1;
                 break;
@@ -1507,6 +1510,7 @@ usage(void)
       "                           a background daemon).\n"
       " -i, --interface         - Specify interface to listen for incoming SPA\n"
       "                           packets.\n"
+      " -6, --ipv6              - Start the server in IPv6 mode (TCP/UDP).\n"
       " -C, --packet-limit      - Limit the number of candidate SPA packets to\n"
       "                           process and exit when this limit is reached.\n"
       " -d, --digest-file       - Specify an alternate digest.cache file.\n"

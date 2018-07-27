@@ -182,9 +182,9 @@ enum {
 /* Our getopt_long options string.
 */
 #if USE_LIBNETFILTER_QUEUE
-  #define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:Kl:nO:p:P:Rr:StUvV"
+  #define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:6Kl:nO:p:P:Rr:StUvV"
 #else
-  #define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:Kl:O:p:P:Rr:StUvV"
+  #define GETOPTS_OPTION_STRING "Aa:c:C:d:Dfhi:6Kl:O:p:P:Rr:StUvV"
 #endif
 
 /* Our program command-line options...
@@ -207,6 +207,7 @@ static struct option cmd_opts[] =
     {"fault-injection-tag",     1, NULL, FAULT_INJECTION_TAG},
     {"help",                    0, NULL, 'h'},
     {"interface",               1, NULL, 'i'},
+    {"ipv6",                    0, NULL, '6'},
     {"key-gen",                 0, NULL, 'k'},
     {"key-gen-file",            1, NULL, KEY_GEN_FILE },
     {"key-len",                 1, NULL, KEY_LEN },
