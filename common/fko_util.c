@@ -602,7 +602,7 @@ char
 {
     char* ns = NULL;
     if(s) {
-        ns = calloc(1, len + 1);
+        ns = malloc(len + 1);
         if(ns) {
             ns[len] = 0;
             // strncpy to be pedantic about modification in multithreaded
@@ -724,7 +724,7 @@ add_argv(char **argv_new, int *argc_new, const char *new_arg)
     int buf_size = 0;
 
     buf_size = strlen(new_arg) + 1;
-    argv_new[*argc_new] = calloc(1, buf_size);
+    argv_new[*argc_new] = malloc(buf_size);
 
     if(argv_new[*argc_new] == NULL)
         return 0;
