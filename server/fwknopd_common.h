@@ -685,6 +685,7 @@ typedef struct fko_srv_options
     unsigned char   enable_nfq_capture; /* Enable Netfilter Queue capture mode */
     unsigned char   enable_fw;          /* Command modes by themselves don't
                                            need firewall support. */
+    unsigned char   ipv6;		/* Enable IPv6 mode (TCP/UDP) */
 
     unsigned char   firewd_disable_check_support; /* Don't use firewall-cmd ... -C */
     unsigned char   ipt_disable_check_support;    /* Don't use iptables -C */

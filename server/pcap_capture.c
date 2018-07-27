@@ -211,7 +211,7 @@ pcap_capture(fko_srv_options_t *opts)
 
                     /* Attempt to restart tcp server ? */
                     usleep(1000000);
-                    run_tcp_server(opts, AF_INET);
+                    run_tcp_server(opts, opts->ipv6 ? AF_INET6 : AF_INET);
                 }
             }
 
