@@ -46,6 +46,10 @@ COMMAND-LINE OPTIONS
     option is not usually needed because the ``PCAP_INTF'' keyword in the
     'fwknopd.conf' file defines the sniffing interface.
 
+*-6, --ipv6*::
+    Bind the UDP and TCP sockets on IPv6 addresses. This does not affect PCAP
+    mode.
+
 *-f, --foreground*::
     Run *fwknopd* in the foreground instead of becoming a daemon. When run
     in the foreground, message that would go to the log would instead be
