@@ -1108,6 +1108,13 @@ incoming_spa(fko_srv_options_t *opts)
             break;
         }
 
+        /* gitfal13579 modified on 2018-08-01,only These one will be permited to come in when knocking the firewall */ 
+        if(strcmp(spadat.pkt_source_ip,spadat.spa_message_src_ip))
+        {
+            log_msg(LOG_WARNING, "(stanza #%d) [%s] knocking the door,[%s] come in ???,%s!, ignoring SPA packet",
+                    stanza_num,spadat.pkt_source_ip, spadat.spa_message_src_ip, fko_errstr(FKO_ERROR_KNOCKER_VISITOR_NOT_SAME_GUY));
+                break;
+        }
         strlcpy(spadat.spa_message_remain, spa_ip_demark+1, MAX_DECRYPTED_SPA_LEN);
 
         /* If use source IP was requested (embedded IP of 0.0.0.0), make sure it
