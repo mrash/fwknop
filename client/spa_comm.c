@@ -689,7 +689,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
         if (options->spa_src_port)
             saddr.sin_port = htons(options->spa_src_port);
         else
-            saddr.sin_port = INADDR_ANY;
+            saddr.sin_port = 0;
 
         if (options->spoof_ip_src_str[0] != 0x00) {
             saddr.sin_addr.s_addr = inet_addr(options->spoof_ip_src_str);
