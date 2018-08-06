@@ -250,6 +250,7 @@ send_spa_packet_tcp_raw(const char *spa_data, const int sd_len,
     /* Total size is header plus payload */
     iph->tot_len    = hdrlen + sd_len;
     /* The value here does not matter */
+    srandom(time(NULL) ^ getuid() ^ (getgid() << 16) ^ getpid());
     iph->id         = random() & 0xffff;
     iph->frag_off   = 0;
     iph->ttl        = RAW_SPA_TTL;
@@ -363,6 +364,7 @@ send_spa_packet_udp_raw(const char *spa_data, const int sd_len,
     /* Total size is header plus payload */
     iph->tot_len    = hdrlen + sd_len;
     /* The value here does not matter */
+    srandom(time(NULL) ^ getuid() ^ (getgid() << 16) ^ getpid());
     iph->id         = random() & 0xffff;
     iph->frag_off   = 0;
     iph->ttl        = RAW_SPA_TTL;
@@ -462,6 +464,7 @@ send_spa_packet_icmp(const char *spa_data, const int sd_len,
     /* Total size is header plus payload */
     iph->tot_len    = hdrlen + sd_len;
     /* The value here does not matter */
+    srandom(time(NULL) ^ getuid() ^ (getgid() << 16) ^ getpid());
     iph->id         = random() & 0xffff;
     iph->frag_off   = 0;
     iph->ttl        = RAW_SPA_TTL;
