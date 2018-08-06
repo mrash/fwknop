@@ -24,8 +24,9 @@ firewall to drop all attempts to connect to services such as 'SSH' in order
 to make the exploitation of vulnerabilities (both 0-day and unpatched code)
 more difficult. Any service that is concealed by SPA naturally cannot be
 scanned for with 'Nmap'. The fwknop project natively supports four different
-firewalls: 'iptables' and 'firewalld' on Linux systems, 'pf' on OpenBSD, and
-'ipfw' on FreeBSD and Mac OS X.
+firewalls: 'iptables', 'firewalld', 'PF', and 'ipfw' across Linux, OpenBSD,
+FreeBSD, and Mac OS X. There is also support for custom scripts so that fwknop
+can be made to support other infrastructure such as 'ipset' or 'nftables'.
 
 SPA is essentially next generation Port Knocking (PK), but solves many of the
 limitations exhibited by PK while retaining its core benefits. PK limitations
@@ -110,7 +111,7 @@ Also, *fwknop* can send the SPA packet over a random port via the
 
 The *fwknop* client is quite portable, and is known to run on various Linux
 distributions (all major distros and embedded ones such as OpenWRT as well),
-FreeBSD, OpenBSD, and Cygwin on Windows. There is also a library *libfko*
+FreeBSD, OpenBSD, Mac OS X, and Cygwin on Windows. There is also a library *libfko*
 that both *fwknop* and *fwknopd* use for SPA packet encryption/decryption
 and HMAC authentication operations. This library can be used to allow
 third party applications to use SPA subject to the terms of the GNU

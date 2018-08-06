@@ -10,8 +10,9 @@ to drop all attempts to connect to services such as SSH in order to make the
 exploitation of vulnerabilities (both 0-day and unpatched code) more difficult.
 Because there are no open ports, any service that is concealed by SPA naturally
 cannot be scanned for with Nmap. The fwknop project supports four different
-firewalls: firewalld and iptables on Linux systems, pf on OpenBSD, and ipfw on
-FreeBSD and Mac OS X.
+firewalls: iptables, firewalld, PF, and ipfw across Linux, OpenBSD, FreeBSD,
+and Mac OS X. There is also support for custom scripts so that fwknop can be
+made to support other infrastructure such as ipset or nftables.
 
 SPA is essentially next generation Port Knocking (PK), but solves many of the
 limitations exhibited by PK while retaining its core benefits. PK limitations
