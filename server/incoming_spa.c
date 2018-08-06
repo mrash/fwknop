@@ -944,6 +944,10 @@ incoming_spa(fko_srv_options_t *opts)
     */
     acc_stanza_t        *acc = opts->acc_stanzas;
 
+    /* Verify the network family if relevant */
+    if(opts->family != AF_UNSPEC && opts->family != spa_pkt->packet_family)
+	return;
+
     switch(spa_pkt->packet_family)
     {
         case AF_INET:
