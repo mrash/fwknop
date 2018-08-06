@@ -1373,7 +1373,7 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
                 set_config_entry(opts, CONF_PCAP_INTF, optarg);
                 break;
 	    case '6':
-		opts->ipv6 = 1;
+		opts->family = AF_INET6;
 		break;
             case FIREWD_DISABLE_CHECK_SUPPORT:
                 opts->firewd_disable_check_support = 1;
