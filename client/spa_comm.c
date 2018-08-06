@@ -696,7 +696,7 @@ send_spa_packet(fko_ctx_t ctx, fko_cli_options_t *options)
         } else
             saddr.sin_addr.s_addr = INADDR_ANY;  /* default */
 
-        if (saddr.sin_addr.s_addr == -1)
+        if (saddr.sin_addr.s_addr == INADDR_NONE)
         {
             log_msg(LOG_VERBOSITY_ERROR, "Could not set source IP.");
             return -1;
