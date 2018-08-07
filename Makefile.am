@@ -101,6 +101,13 @@ EXTRA_DIST = \
     iphone/Classes/bridge_fwknop.c \
     iphone/Classes/logutils.h \
     m4/gpgme.m4 \
+    erlang/LICENSE \
+    erlang/README.md \
+    erlang/rebar.config \
+    erlang/src/fwknop.app.src \
+    erlang/src/fwknop.erl \
+    erlang/src/fwknop_tests.erl \
+    erlang/src/server.erl \
     perl/FKO/README \
     perl/FKO/inc/Devel/CheckLib.pm \
     perl/FKO/MANIFEST \
