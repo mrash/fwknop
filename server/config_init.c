@@ -1491,7 +1491,7 @@ usage(void)
     fprintf(stdout,
       "Usage: fwknopd [options]\n\n"
       " -a, --access-file       - Specify an alternate access.conf file.\n"
-      "     --access-folder     - Specify an access.conf folder.  All .conf\n"
+      "     --access-folder     - Specify an access.conf folder. All .conf\n"
       "                           files in this folder will be processed.\n"
       " -c, --config-file       - Specify an alternate configuration file.\n"
       " -f, --foreground        - Run fwknopd in the foreground (do not become\n"
@@ -1510,7 +1510,7 @@ usage(void)
       "                           back to UDP server mode if not used).\n"
 #endif
       " -O, --override-config   - Specify a file with configuration entries that will\n"
-      "                           override those in fwknopd.conf\n"
+      "                           override those in fwknopd.conf.\n"
       " -p, --pid-file          - Specify an alternate fwknopd.pid file.\n"
       " -P, --pcap-filter       - Specify a Berkeley packet filter statement to\n"
       "                           override the PCAP_FILTER variable in fwknopd.conf.\n"
@@ -1535,7 +1535,7 @@ usage(void)
       " --dump-serv-err-codes   - List all server error codes (only needed by the\n"
       "                           test suite).\n"
       " --exit-parse-config     - Parse config files and exit.\n"
-      " --exit-parse-digest-cache - Parse and validate digest cache  and exit.\n"
+      " --exit-parse-digest-cache - Parse and validate digest cache and exit.\n"
       " --fault-injection-tag   - Enable a fault injection tag (only needed by the\n"
       "                           test suite).\n"
       " --pcap-file             - Read potential SPA packets from an existing pcap\n"
