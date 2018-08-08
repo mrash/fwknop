@@ -1550,7 +1550,6 @@ static void snat_rule(const fko_srv_options_t * const opts,
                 snat_chain, exp_ts, now, "SNAT",
                 spadat->spa_message_remain, ipv6);
     }
-    return;
 }
 
 /****************************************************************************/
