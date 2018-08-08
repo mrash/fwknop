@@ -143,6 +143,7 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "GPG_EXE",
     "SUDO_EXE",
     "FIREWALL_EXE",
+    "FIREWALL_EXE_IPV6",
     "VERBOSE",
 #if AFL_FUZZING
     "AFL_PKT_FILE",

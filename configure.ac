@@ -685,6 +685,24 @@ dnl
     ]
   )
 
+dnl Check for ip6tables
+dnl
+  AC_ARG_WITH([ip6tables],
+    [AS_HELP_STRING([--with-ip6tables=/path/to/ip6tables],
+      [Specify path to the ip6tables executable @<:@default=check path@:>@])],
+    [
+      AS_IF([ test "x$withval" = xno ], [],
+        AS_IF([ test "x$withval" = x -o "x$withval" = xyes ],
+          [AC_MSG_ERROR([--with-ip6tables requires an argument specifying a path to ip6tables])],
+          [ FORCE_IP6TABLES_EXE=$withval ]
+        )
+      )
+    ],
+    [
+      AC_PATH_PROG(IP6TABLES_EXE, [ip6tables], [], [$APP_PATH])
+    ]
+  )
+
 dnl Check for ipfw
 dnl
   AC_ARG_WITH([ipfw],
@@ -814,6 +832,9 @@ dnl
 
   AC_DEFINE_UNQUOTED([FIREWALL_EXE], ["$FIREWALL_EXE"],
     [Path to firewall command executable (it should match the firewall type).])
+
+  AC_DEFINE_UNQUOTED([FIREWALL_EXE_IPV6], ["$FIREWALL_EXE_IPV6"],
+    [Path to firewall command executable for IPv6 (it should match the firewall type).])
 
   ],
   [test "$want_server" = no], [
