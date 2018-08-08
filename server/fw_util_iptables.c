@@ -701,7 +701,7 @@ delete_all_chains(const fko_srv_options_t * const opts, int ipv6)
             zero_cmd_buffers();
 
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_JUMP_RULE_ARGS,
-                fwc.fw_command,
+                ipv6 ? fwc.fw_command6 : fwc.fw_command,
                 fwc.chain[i].table,
                 fwc.chain[i].from_chain,
                 fwc.chain[i].to_chain
@@ -727,7 +727,7 @@ delete_all_chains(const fko_srv_options_t * const opts, int ipv6)
         /* Now flush and remove the chain.
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_FLUSH_CHAIN_ARGS,
-            fwc.fw_command,
+            ipv6 ? fwc.fw_command6 : fwc.fw_command,
             fwc.chain[i].table,
             fwc.chain[i].to_chain
         );
@@ -747,7 +747,7 @@ delete_all_chains(const fko_srv_options_t * const opts, int ipv6)
         zero_cmd_buffers();
 
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_CHAIN_ARGS,
-            fwc.fw_command,
+            ipv6 ? fwc.fw_command6 : fwc.fw_command,
             fwc.chain[i].table,
             fwc.chain[i].to_chain
         );
@@ -773,7 +773,7 @@ delete_all_chains(const fko_srv_options_t * const opts, int ipv6)
         /* Delete the rule to direct traffic to the NFQ chain.
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
-            fwc.fw_command,
+            ipv6 ? fwc.fw_command6 : fwc.fw_command,
             opts->config[CONF_NFQ_TABLE],
             "INPUT",
             1
@@ -794,7 +794,7 @@ delete_all_chains(const fko_srv_options_t * const opts, int ipv6)
         /* Flush the NFQ chain
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_FLUSH_CHAIN_ARGS,
-            fwc.fw_command,
+            ipv6 ? fwc.fw_command6 : fwc.fw_command,
             opts->config[CONF_NFQ_TABLE],
             opts->config[CONF_NFQ_CHAIN]
         );
@@ -814,7 +814,7 @@ delete_all_chains(const fko_srv_options_t * const opts, int ipv6)
         /* Delete the NF_QUEUE chains and rules
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_CHAIN_ARGS,
-            fwc.fw_command,
+            ipv6 ? fwc.fw_command6 : fwc.fw_command,
             opts->config[CONF_NFQ_TABLE],
             opts->config[CONF_NFQ_CHAIN]
         );
@@ -932,7 +932,7 @@ create_fw_chains(const fko_srv_options_t * const opts, int ipv6)
         /* Create the rule to direct traffic to the NFQ chain.
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_JUMP_RULE_ARGS,
-            fwc.fw_command,
+            ipv6 ? fwc.fw_command6 : fwc.fw_command,
             opts->config[CONF_NFQ_TABLE],
             "INPUT",
             1,
@@ -961,7 +961,7 @@ create_fw_chains(const fko_srv_options_t * const opts, int ipv6)
         if(strlen(opts->config[CONF_NFQ_INTERFACE]) > 0)
         {
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_NFQ_ADD_ARGS_WITH_IF,
-                fwc.fw_command,
+                ipv6 ? fwc.fw_command6 : fwc.fw_command,
                 opts->config[CONF_NFQ_TABLE],
                 opts->config[CONF_NFQ_CHAIN],
                 opts->config[CONF_NFQ_INTERFACE],
@@ -1745,7 +1745,7 @@ process_spa_request(const fko_srv_options_t * const opts,
 static void
 rm_expired_rules(const fko_srv_options_t * const opts,
         const char * const ipt_output_buf,
-        char *ndx, struct fw_chain *ch, int cpos, time_t now)
+        char *ndx, struct fw_chain *ch, int cpos, time_t now, int ipv6)
 {
     char        exp_str[12]     = {0};
     char        rule_num_str[6] = {0};
@@ -1843,7 +1843,7 @@ rm_expired_rules(const fko_srv_options_t * const opts,
             zero_cmd_buffers();
 
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
-                opts->fw_config->fw_command,
+                ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
                 ch[cpos].table,
                 ch[cpos].to_chain,
                 rule_num - rn_offset /* account for position of previously
@@ -1893,16 +1893,14 @@ rm_expired_rules(const fko_srv_options_t * const opts,
         ch[cpos].next_expire = 0;
     else if(min_exp)
         ch[cpos].next_expire = min_exp;
-
-    return;
 }
 
 /* Iterate over the configure firewall access chains and purge expired
  * firewall rules.
 */
-void
-check_firewall_rules(const fko_srv_options_t * const opts,
-        const int chk_rm_all)
+static void
+check_firewall_rules_do(const fko_srv_options_t * const opts,
+        const int chk_rm_all, int ipv6)
 {
     char            *ndx;
     char            ipt_output_buf[STANDARD_CMD_OUT_BUFSIZE] = {0};
@@ -1938,7 +1936,7 @@ check_firewall_rules(const fko_srv_options_t * const opts,
          * mechanism.
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
-            opts->fw_config->fw_command,
+            ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
             ch[i].table,
             ch[i].to_chain
         );
@@ -1976,10 +1974,16 @@ check_firewall_rules(const fko_srv_options_t * const opts,
             continue;
         }
 
-        rm_expired_rules(opts, ipt_output_buf, ndx, ch, i, now);
+        rm_expired_rules(opts, ipt_output_buf, ndx, ch, i, now, ipv6);
     }
+}
 
-    return;
+void
+check_firewall_rules(const fko_srv_options_t * const opts,
+        const int chk_rm_all)
+{
+        check_firewall_rules_do(opts, chk_rm_all, 0);
+        check_firewall_rules_do(opts, chk_rm_all, 1);
 }
 
 int
