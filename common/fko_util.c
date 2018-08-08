@@ -125,7 +125,7 @@ is_valid_encoded_msg_len(const int len)
     return(1);
 }
 
-/* Validate an IPv4 address
+/* Validate an IP address
 */
 int
 is_valid_ip_addr(const char * const ip_str, const int len, const int family)
