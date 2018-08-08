@@ -698,7 +698,8 @@ set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options, char *access_buf)
 
             /* This adds in the protocol + '/' char
             */
-            strlcat(access_buf, options->access_str, MAX_LINE_LEN);
+            strlcat(access_buf, options->access_str,
+                    strlen(access_buf) + (ndx - options->access_str) + 2);
 
             if (strchr(ndx+1, '/') != NULL)
             {
@@ -710,7 +711,8 @@ set_access_buf(fko_ctx_t ctx, fko_cli_options_t *options, char *access_buf)
             /* Now add the NAT port
             */
             snprintf(tmp_nat_port, MAX_PORT_STR_LEN+1, "%d", nat_port);
-            strlcat(access_buf, tmp_nat_port, MAX_LINE_LEN);
+            strlcat(access_buf, tmp_nat_port,
+                    strlen(access_buf)+MAX_PORT_STR_LEN+1);
         }
         else
         {
