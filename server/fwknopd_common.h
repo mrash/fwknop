@@ -522,7 +522,6 @@ typedef struct cmd_cycle_list
   struct fw_config {
       struct fw_chain chain[NUM_FWKNOP_ACCESS_TYPES];
       char            fw_command[MAX_PATH_LEN];
-      char            fw_command6[MAX_PATH_LEN];
 
       /* Flag for setting destination field in rule
       */
@@ -570,6 +569,7 @@ typedef struct cmd_cycle_list
   struct fw_config {
       struct fw_chain chain[NUM_FWKNOP_ACCESS_TYPES];
       char            fw_command[MAX_PATH_LEN];
+      char            fw_command6[MAX_PATH_LEN];
 
       /* Flag for setting destination field in rule
       */
