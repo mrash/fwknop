@@ -1031,6 +1031,7 @@ fw_config_init(fko_srv_options_t * const opts)
     /* Set our firewall exe command path (iptables in most cases).
     */
     strlcpy(fwc.fw_command, opts->config[CONF_FIREWALL_EXE], sizeof(fwc.fw_command));
+    strlcpy(fwc.fw_command6, opts->config[CONF_FIREWALL_EXE_IPV6], sizeof(fwc.fw_command6));
 
 #if HAVE_LIBFIU
     fiu_return_on("fw_config_init", 0);
