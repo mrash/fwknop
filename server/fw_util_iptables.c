@@ -1038,7 +1038,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
                 && *ndx != ' '
                 && *ndx != ','
                 && *ndx != '_'
-                && isalnum(*ndx) == 0)
+                && isalnum((int)(unsigned char)*ndx) == 0)
         {
             log_msg(LOG_ERR, "[*] Custom chain config parse error: "
                 "invalid character '%c' for chain type %i, "
@@ -1998,7 +1998,7 @@ validate_ipt_chain_conf(const char * const chain_str)
                 && *ndx != ' '
                 && *ndx != ','
                 && *ndx != '_'
-                && isalnum(*ndx) == 0)
+                && isalnum((int)(unsigned char)*ndx) == 0)
         {
             rv = 0;
             break;
