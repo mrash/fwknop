@@ -49,9 +49,9 @@
 #define IPT_DNAT_ALL_RULE_ARGS  "-t %s -s %s -d %s -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s --to-destination %s" SH_REDIR
 #define IPT_SNAT_RULE_ARGS      "-t %s -p %i -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s %s" SH_REDIR
 #define IPT_SNAT_ALL_RULE_ARGS  "-t %s -s %s -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s %s" SH_REDIR
-#define IPT_TMP_COMMENT_ARGS    "-t %s -I %s %i -s " DUMMY_IP " -m comment --comment " TMP_COMMENT " -j %s" SH_REDIR
-#define IPT_TMP_CHK_RULE_ARGS   "-t %s -I %s %i -s " DUMMY_IP " -p udp -j %s" SH_REDIR
-#define IPT_TMP_VERIFY_CHK_ARGS "-t %s -C %s -s " DUMMY_IP " -p udp -j %s" SH_REDIR
+#define IPT_TMP_COMMENT_ARGS    "-t %s -I %s %i -s %s -m comment --comment " TMP_COMMENT " -j %s" SH_REDIR
+#define IPT_TMP_CHK_RULE_ARGS   "-t %s -I %s %i -s %s -p udp -j %s" SH_REDIR
+#define IPT_TMP_VERIFY_CHK_ARGS "-t %s -C %s -s %s -p udp -j %s" SH_REDIR
 #define IPT_DEL_RULE_ARGS       "-t %s -D %s %i" SH_REDIR
 #define IPT_NEW_CHAIN_ARGS      "-t %s -N %s" SH_REDIR
 #define IPT_FLUSH_CHAIN_ARGS    "-t %s -F %s" SH_REDIR
