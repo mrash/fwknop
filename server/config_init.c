@@ -1040,6 +1040,16 @@ validate_options(fko_srv_options_t *opts)
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
+#if FIREWALL_IPTABLES
+    if(opts->config[CONF_FIREWALL_EXE_IPV6] == NULL)
+    {
+        log_msg(LOG_ERR,
+            "[*] No firewall command executable is set for IPv6. Please check FIREWALL_EXE_IPV6 in fwknopd.conf."
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+#endif
+
     return;
 }
 
@@ -1056,6 +1066,9 @@ set_preconfig_entries(fko_srv_options_t *opts)
     */
 #ifdef FIREWALL_EXE
     set_config_entry(opts, CONF_FIREWALL_EXE, FIREWALL_EXE);
+#endif
+#ifdef FIREWALL_EXE_IPV6
+    set_config_entry(opts, CONF_FIREWALL_EXE_IPV6, FIREWALL_EXE_IPV6);
 #endif
 
 }
