@@ -1560,7 +1560,7 @@ int
 process_spa_request(const fko_srv_options_t * const opts,
         const acc_stanza_t * const acc, spa_data_t * const spadat)
 {
-    char            nat_ip[MAX_IPV4_STR_LEN] = {0};
+    char            nat_ip[MAX_IPV46_STR_LEN] = {0};
     char            nat_dst[MAX_HOSTNAME_LEN] = {0};
 
     unsigned int    nat_port = 0;
@@ -1661,7 +1661,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                 }
                 else
                 {
-                    strlcpy(nat_ip, nat_dst, MAX_IPV4_STR_LEN);
+                    strlcpy(nat_ip, nat_dst, MAX_IPV46_STR_LEN);
                 }
 
                 nat_port = strtol_wrapper(ndx+1, 0, MAX_PORT,
