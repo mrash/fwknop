@@ -187,7 +187,7 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
 
 static int
 rule_exists_chk_support(const fko_srv_options_t * const opts,
-        const char * const chain, const char * const rule)
+        const char * const chain, const char * const rule, int ipv6)
 {
     int     rule_exists = 0;
     int     res = 0;
@@ -195,7 +195,7 @@ rule_exists_chk_support(const fko_srv_options_t * const opts,
     zero_cmd_buffers();
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_CHK_RULE_ARGS,
-            opts->fw_config->fw_command,
+            ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
             chain, rule);
 
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE,
@@ -239,7 +239,7 @@ rule_exists(const fko_srv_options_t * const opts,
     int rule_exists = 0;
 
     if(have_ipt_chk_support == 1)
-        rule_exists = rule_exists_chk_support(opts, fwc->to_chain, rule);
+        rule_exists = rule_exists_chk_support(opts, fwc->to_chain, rule, ipv6);
     else
         rule_exists = rule_exists_no_chk_support(opts, fwc, proto, srcip,
                 (opts->fw_config->use_destination ? dstip : NULL), port,
@@ -400,14 +400,14 @@ comment_match_exists(const fko_srv_options_t * const opts, int ipv6)
 }
 
 static int
-add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
+add_jump_rule(const fko_srv_options_t * const opts, const int chain_num, int ipv6)
 {
     int res = 0, rv = 0;
 
     zero_cmd_buffers();
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_JUMP_RULE_ARGS,
-        fwc.fw_command,
+        ipv6 ? fwc.fw_command6 : fwc.fw_command,
         fwc.chain[chain_num].table,
         fwc.chain[chain_num].from_chain,
         fwc.chain[chain_num].jump_rule_pos,
@@ -435,14 +435,14 @@ add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
 }
 
 static int
-chain_exists(const fko_srv_options_t * const opts, const int chain_num)
+chain_exists(const fko_srv_options_t * const opts, const int chain_num, int ipv6)
 {
     int res = 0;
 
     zero_cmd_buffers();
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_CHAIN_EXISTS_ARGS,
-        fwc.fw_command,
+        ipv6 ? fwc.fw_command6 : fwc.fw_command,
         fwc.chain[chain_num].table,
         fwc.chain[chain_num].to_chain
     );
@@ -466,7 +466,7 @@ chain_exists(const fko_srv_options_t * const opts, const int chain_num)
 }
 
 static int
-jump_rule_exists_chk_support(const fko_srv_options_t * const opts, const int chain_num)
+jump_rule_exists_chk_support(const fko_srv_options_t * const opts, const int chain_num, int ipv6)
 {
     int    exists = 0;
     char   rule_buf[CMD_BUFSIZE] = {0};
@@ -476,7 +476,7 @@ jump_rule_exists_chk_support(const fko_srv_options_t * const opts, const int cha
         fwc.chain[chain_num].to_chain
     );
 
-    if(rule_exists_chk_support(opts, fwc.chain[chain_num].from_chain, rule_buf) == 1)
+    if(rule_exists_chk_support(opts, fwc.chain[chain_num].from_chain, rule_buf, ipv6) == 1)
     {
         log_msg(LOG_DEBUG, "jump_rule_exists_chk_support() jump rule found");
         exists = 1;
@@ -518,12 +518,12 @@ jump_rule_exists_no_chk_support(const fko_srv_options_t * const opts,
 }
 
 static int
-jump_rule_exists(const fko_srv_options_t * const opts, const int chain_num)
+jump_rule_exists(const fko_srv_options_t * const opts, const int chain_num, int ipv6)
 {
     int    exists = 0;
 
     if(have_ipt_chk_support == 1)
-        exists = jump_rule_exists_chk_support(opts, chain_num);
+        exists = jump_rule_exists_chk_support(opts, chain_num, ipv6);
     else
         exists = jump_rule_exists_no_chk_support(opts, chain_num);
 
@@ -696,7 +696,7 @@ delete_all_chains(const fko_srv_options_t * const opts, int ipv6)
          * is there.
         */
         cmd_ctr = 0;
-        while(cmd_ctr < CMD_LOOP_TRIES && (jump_rule_exists(opts, i) == 1))
+        while(cmd_ctr < CMD_LOOP_TRIES && (jump_rule_exists(opts, i, ipv6) == 1))
         {
             zero_cmd_buffers();
 
@@ -834,7 +834,7 @@ delete_all_chains(const fko_srv_options_t * const opts, int ipv6)
 }
 
 static int
-create_chain(const fko_srv_options_t * const opts, const int chain_num)
+create_chain(const fko_srv_options_t * const opts, const int chain_num, int ipv6)
 {
     int res = 0, rv = 0;
 
@@ -843,7 +843,7 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
     /* Create the custom chain.
     */
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_NEW_CHAIN_ARGS,
-        fwc.fw_command,
+        ipv6 ? fwc.fw_command6 : fwc.fw_command,
         fwc.chain[chain_num].table,
         fwc.chain[chain_num].to_chain
     );
@@ -866,18 +866,18 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
 }
 
 static int
-mk_chain(const fko_srv_options_t * const opts, const int chain_num)
+mk_chain(const fko_srv_options_t * const opts, const int chain_num, int ipv6)
 {
     int err = 0;
 
     /* Make sure the required chain and jump rule exist
     */
-    if(! chain_exists(opts, chain_num))
-        if(! create_chain(opts, chain_num))
+    if(! chain_exists(opts, chain_num, ipv6))
+        if(! create_chain(opts, chain_num, ipv6))
             err++;
 
-    if (! jump_rule_exists(opts, chain_num))
-        if(! add_jump_rule(opts, chain_num))
+    if (! jump_rule_exists(opts, chain_num, ipv6))
+        if(! add_jump_rule(opts, chain_num, ipv6))
             err++;
 
     return err;
@@ -898,7 +898,7 @@ create_fw_chains(const fko_srv_options_t * const opts, int ipv6)
         if(fwc.chain[i].target[0] == '\0')
             continue;
 
-        got_err += mk_chain(opts, i);
+        got_err += mk_chain(opts, i, ipv6);
     }
 
 #if USE_LIBNETFILTER_QUEUE
@@ -1301,7 +1301,7 @@ ipt_rule(const fko_srv_options_t * const opts,
 
     /* Check to make sure that the chain and jump rule exist
     */
-    mk_chain(opts, chain->type);
+    mk_chain(opts, chain->type, ipv6);
 
     if(rule_exists(opts, chain, rule_buf, proto, srcip,
                 dstip, port, nat_ip, nat_port, exp_ts, ipv6) == 0)
