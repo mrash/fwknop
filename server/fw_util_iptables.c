@@ -567,6 +567,36 @@ fw_dump_rules(const fko_srv_options_t * const opts)
                 got_err++;
             }
         }
+
+	/* the same with IPv6 */
+        for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
+        {
+            if(fwc.chain[i].target[0] == '\0')
+                continue;
+
+            zero_cmd_buffers();
+
+            /* Create the list command
+            */
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_ALL_RULES_ARGS,
+                opts->fw_config->fw_command6,
+                ch[i].table
+            );
+
+            res = run_extcmd(cmd_buf, NULL, 0, NO_STDERR,
+                        NO_TIMEOUT, &pid_status, opts);
+
+            log_msg(LOG_DEBUG, "fw_dump_rules() CMD: '%s' (res: %d)",
+                cmd_buf, res);
+
+            /* Expect full success on this */
+            if(! EXTCMD_IS_SUCCESS(res))
+            {
+                log_msg(LOG_ERR, "fw_dump_rules() Error %i from cmd:'%s': %s",
+                        res, cmd_buf, err_buf);
+                got_err++;
+            }
+        }
     }
     else
     {
@@ -584,6 +614,40 @@ fw_dump_rules(const fko_srv_options_t * const opts)
             */
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
                 opts->fw_config->fw_command,
+                ch[i].table,
+                ch[i].to_chain
+            );
+
+            fprintf(stdout, "\n");
+            fflush(stdout);
+
+            res = run_extcmd(cmd_buf, NULL, 0, NO_STDERR,
+                        NO_TIMEOUT, &pid_status, opts);
+
+            log_msg(LOG_DEBUG, "fw_dump_rules() CMD: '%s' (res: %d)",
+                cmd_buf, res);
+
+            /* Expect full success on this */
+            if(! EXTCMD_IS_SUCCESS(res))
+            {
+                log_msg(LOG_ERR, "fw_dump_rules() Error %i from cmd:'%s': %s",
+                        res, cmd_buf, err_buf);
+                got_err++;
+            }
+        }
+
+	/* the same with IPv6 */
+        for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
+        {
+            if(fwc.chain[i].target[0] == '\0')
+                continue;
+
+            zero_cmd_buffers();
+
+            /* Create the list command
+            */
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
+                opts->fw_config->fw_command6,
                 ch[i].table,
                 ch[i].to_chain
             );
