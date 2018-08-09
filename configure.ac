@@ -389,17 +389,17 @@ AC_FUNC_STAT
 
 AC_CHECK_FUNCS([bzero gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strndup strrchr strspn strnlen stat lstat chmod chown strlcat strlcpy])
 
-dnl Decide whether or not to check for the execvpe() function
+dnl Decide whether or not to check for the execvp() function
 dnl
-use_execvpe=yes
-AC_ARG_ENABLE([execvpe],
-  [AS_HELP_STRING([--disable-execvpe],
-    [Do not check for the execvpe() function for command execution @<:@default is on@:>@])],
-  [use_execvpe=$enableval],
+use_execvp=yes
+AC_ARG_ENABLE([execvp],
+  [AS_HELP_STRING([--disable-execvp],
+    [Do not check for the execvp() function for command execution @<:@default is on@:>@])],
+  [use_execvp=$enableval],
   [])
 
-if test "x$use_execvpe" = "xyes"; then
-    AC_CHECK_FUNCS([execvpe])
+if test "x$use_execvp" = "xyes"; then
+    AC_CHECK_FUNCS([execvp])
 fi
 
 AC_SEARCH_LIBS([socket], [socket])

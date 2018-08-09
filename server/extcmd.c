@@ -128,10 +128,10 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
     int     line_ctr = 0, found_str = 0, do_break = 0;
     int     es = 0;
 
-    char   *argv_new[MAX_CMDLINE_ARGS]; /* for validation and/or execvpe() */
+    char   *argv_new[MAX_CMDLINE_ARGS]; /* for validation and/or execvp() */
     int     argc_new=0;
 
-#if HAVE_EXECVPE
+#if HAVE_EXECVP
     int     pipe_fd[2];
 #endif
 
@@ -143,7 +143,7 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
 
     *pid_status = 0;
 
-    /* Even without execvpe() we examine the command for basic validity
+    /* Even without execvp() we examine the command for basic validity
      * in term of number of args
     */
     memset(argv_new, 0x0, sizeof(argv_new));
@@ -155,16 +155,16 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
         return EXTCMD_ARGV_ERROR;
     }
 
-#if !HAVE_EXECVPE
-    /* if we are not using execvpe() then free up argv_new unconditionally
+#if !HAVE_EXECVP
+    /* if we are not using execvp() then free up argv_new unconditionally
      * since was used only for validation
     */
     free_argv(argv_new, &argc_new);
 #endif
 
-#if HAVE_EXECVPE
+#if HAVE_EXECVP
     if(opts->verbose > 1)
-        log_msg(LOG_INFO, "run_extcmd() (with execvpe()): running CMD: %s", cmd);
+        log_msg(LOG_INFO, "run_extcmd() (with execvp()): running CMD: %s", cmd);
 
     if(so_buf != NULL || substr_search != NULL)
     {
@@ -204,12 +204,12 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
 
         /* don't use env
         */
-        es = execvpe(argv_new[0], argv_new, (char * const *)NULL);
+        es = execvp(argv_new[0], argv_new);
 
         if(es == -1)
-            log_msg(LOG_ERR, "run_extcmd(): execvpe() failed: %s", strerror(errno));
+            log_msg(LOG_ERR, "run_extcmd(): execvp() failed: %s", strerror(errno));
 
-        /* We only make it here if there was a problem with execvpe(),
+        /* We only make it here if there was a problem with execvp(),
          * so exit() here either way to not leave another fwknopd process
          * running after fork().
         */
@@ -265,7 +265,7 @@ _run_extcmd(uid_t uid, gid_t gid, const char *cmd, char *so_buf,
 #else
 
     if(opts->verbose > 1)
-        log_msg(LOG_INFO, "run_extcmd() (without execvpe()): running CMD: %s", cmd);
+        log_msg(LOG_INFO, "run_extcmd() (without execvp()): running CMD: %s", cmd);
 
     if(so_buf == NULL && substr_search == NULL)
     {
@@ -586,10 +586,10 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
         const fko_srv_options_t * const opts)
 {
     int     retval = EXTCMD_SUCCESS_ALL_OUTPUT;
-    char   *argv_new[MAX_CMDLINE_ARGS]; /* for validation and/or execvpe() */
+    char   *argv_new[MAX_CMDLINE_ARGS]; /* for validation and/or execvp() */
     int     argc_new=0;
 
-#if HAVE_EXECVPE
+#if HAVE_EXECVP
     int     pipe_fd[2];
     pid_t   pid=0;
 #else
@@ -602,7 +602,7 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
 
     *pid_status = 0;
 
-    /* Even without execvpe() we examine the command for basic validity
+    /* Even without execvp() we examine the command for basic validity
      * in term of number of args
     */
     memset(argv_new, 0x0, sizeof(argv_new));
@@ -614,16 +614,16 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
         return EXTCMD_ARGV_ERROR;
     }
 
-#if !HAVE_EXECVPE
-    /* if we are not using execvpe() then free up argv_new unconditionally
+#if !HAVE_EXECVP
+    /* if we are not using execvp() then free up argv_new unconditionally
      * since was used only for validation
     */
     free_argv(argv_new, &argc_new);
 #endif
 
-#if HAVE_EXECVPE
+#if HAVE_EXECVP
     if(opts->verbose > 1)
-        log_msg(LOG_INFO, "run_extcmd_write() (with execvpe()): running CMD: %s | %s",
+        log_msg(LOG_INFO, "run_extcmd_write() (with execvp()): running CMD: %s | %s",
                 cmd_write, cmd);
 
     if(pipe(pipe_fd) < 0)
@@ -644,7 +644,7 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
 
         /* don't use env
         */
-        execvpe(argv_new[0], argv_new, (char * const *)NULL);
+        execvp(argv_new[0], argv_new);
     }
     else if(pid == -1)
     {
@@ -664,7 +664,7 @@ int _run_extcmd_write(const char *cmd, const char *cmd_write, int *pid_status,
 
 #else
     if(opts->verbose > 1)
-        log_msg(LOG_INFO, "run_extcmd_write() (without execvpe()): running CMD: %s | %s",
+        log_msg(LOG_INFO, "run_extcmd_write() (without execvp()): running CMD: %s | %s",
                 cmd_write, cmd);
 
     if ((fd = popen(cmd, "w")) == NULL)
