@@ -4,11 +4,10 @@
  * \brief Main CUnit test function for libfko
  */
 
+#include "fko.h"
+#include "fko_util.h"
 #include "CUnit/Basic.h"
 
-#include "fko.h"
-
-#include "fko_util.h"
 /**
  * Register test suites from FKO files.
  *
