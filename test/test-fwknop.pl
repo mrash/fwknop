@@ -7764,8 +7764,6 @@ sub init() {
         $asan_mode = 1;
         $asan_instrumentation_check = 1;
     } else {
-        &write_test_file("[-] Can't find --enable-asan-support in $config_log\n",
-            $curr_test_file);
         push @tests_to_exclude, qr/ASAN/;
     }
 
