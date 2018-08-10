@@ -3,8 +3,8 @@
     ### if fwknop has been compiled with it.
     {
         'category' => 'ASAN',
-        'subcategory' => 'Address Sanitizer',
+        'subcategory' => 'Address Sanitizer instrumentation check',
         'detail'   => 'crash verification',
-        'function' => \&asan_verification,
+        'function' => \&is_asan_instrumentation_working,
     },
 );

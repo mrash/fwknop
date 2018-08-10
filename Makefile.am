@@ -401,6 +401,7 @@ EXTRA_DIST = \
     test/misc/pf.sh \
     test/asan/use-after-free.c \
     test/asan/Makefile \
+    test/asan/Makefile-m32 \
     test/afl/compile/afl-compile-code-coverage.sh \
     test/afl/compile/afl-compile.sh \
     test/afl/compile/fcns \

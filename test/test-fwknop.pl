@@ -1632,39 +1632,51 @@ sub build_results_hash() {
     return;
 }
 
-sub asan_verification() {
+sub is_asan_instrumentation_working() {
     my $test_hr = shift;
 
     my $rv = 1;
-
     chdir $asan_dir or die $!;
 
-    unless (&run_cmd('make clean', "../$cmd_out_tmp",
-            "../$curr_test_file")) {
-        chdir '..' or die $!;
-        return 0;
-    }
-
-    if ($sudo_path) {
-        unless (&run_cmd("$sudo_path -u $username make",
-                "../$cmd_out_tmp", "../$curr_test_file")) {
-            unless (&run_cmd('make', "../$cmd_out_tmp",
-                    "../$curr_test_file")) {
-                $rv = 0;
-            }
-        }
-    } else {
-        unless (&run_cmd('make', "../$cmd_out_tmp",
+    for my $file ('Makefile', 'Makefile-m32') {
+        $rv = 1;
+        unless (&run_cmd("make -f $file clean", "../$cmd_out_tmp",
                 "../$curr_test_file")) {
             $rv = 0;
+            next;
+        }
+
+        if ($sudo_path) {
+            unless (&run_cmd("$sudo_path -u $username make -f $file",
+                    "../$cmd_out_tmp", "../$curr_test_file")) {
+                unless (&run_cmd("make -f $file", "../$cmd_out_tmp",
+                        "../$curr_test_file")) {
+                    $rv = 0;
+                    next;
+                }
+            }
+        } else {
+            unless (&run_cmd("make -f $file", "../$cmd_out_tmp",
+                    "../$curr_test_file")) {
+                $rv = 0;
+                next;
+            }
+        }
+
+        if ($rv) {
+            &run_cmd('./a.out', "../$cmd_out_tmp", "../$curr_test_file");
+            chdir '..' or die $!;
+            if (&is_sanitizer_crash($curr_test_file)) {
+                chdir $asan_dir or die $!;
+                $rv = 1;
+                last;
+            } else {
+                $rv = 0;
+                chdir $asan_dir or die $!;
+                next;
+            }
         }
     }
-
-    if ($rv) {
-        &run_cmd('./a.out', "../$cmd_out_tmp", "../$curr_test_file");
-        $rv = 0 unless &is_sanitizer_crash("../$curr_test_file");
-    }
-
     chdir '..' or die $!;
     return $rv;
 }
