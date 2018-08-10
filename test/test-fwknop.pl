@@ -113,6 +113,7 @@ my $python_path      = '';
 our $cmd_exec_test_file = '/tmp/fwknoptest';
 my $default_key = 'fwknoptest';
 my $asan_dir = 'asan';
+my $asan_instrumentation_check = 0;
 
 my $tests_dir = 'tests';
 
@@ -154,7 +155,7 @@ our @preliminaries                = ();  ### from tests/preliminaries.pl
 our @code_structure_errstr        = ();  ### from tests/code_structure.pl (may include Coccinelle matches eventually)
 our @configure_args               = ();  ### from tests/configure_args.pl
 our @basic_operations             = ();  ### from tests/basic_operations.pl
-our @cunit_tests                 = ();  ### from tests/cunit_tests.pl
+our @cunit_tests                  = ();  ### from tests/cunit_tests.pl
 our @rijndael                     = ();  ### from tests/rijndael.pl
 our @rijndael_cmd_exec            = ();  ### from tests/rijndael_cmd_exec.pl
 our @rijndael_hmac_cmd_exec       = ();  ### from tests/rijndael_hmac_cmd_exec.pl
@@ -302,6 +303,7 @@ our $pinentry_fail = 0;
 our $perl_path = '';
 our $prove_path = '';
 our $ifconfig_path = '';
+my  $readelf_path = '';
 our $platform = '';
 our $help = 0;
 our $YES = 1;
@@ -415,7 +417,6 @@ exit 1 unless GetOptions(
 
 &usage() if $help;
 
-
 our @last_logfile = ();
 
 if ($rerun_failed_mode) {
@@ -498,7 +499,6 @@ if ($rerun_failed_mode) {
     );
 
 }
-
 
 
 &os_fw_detect();
@@ -1237,6 +1237,7 @@ for my $test_hr (@tests) {
     if ($run_flag
             or $test_hr->{'category'} eq 'valgrind output'
             or $test_hr->{'category'} eq 'Look for crashes'
+            or $test_hr->{'category'} eq 'ASAN'
             or $test_hr->{'category'} eq 'profile coverage') {
         &run_test($test_hr);
     }
@@ -1468,11 +1469,7 @@ sub process_include_exclude() {
     if (@tests_to_include) {
         my $found = 0;
         for my $test (@tests_to_include) {
-            if ($msg =~ $test
-                    or ($enable_valgrind and $msg =~ /valgrind\soutput/)
-                    or ($enable_profile_coverage_check and $msg =~ /profile\scoverage/)
-                    or ($msg =~ /segfault.*dump\smessages/)
-            ) {
+            if ($msg =~ $test or &always_run($msg)) {
                 $include_tracking{$test}{$msg} = '';
                 $found = 1;
                 last;
@@ -1492,6 +1489,18 @@ sub process_include_exclude() {
         return 0 if $found;
     }
     return 1;
+}
+
+sub always_run() {
+    my $msg = shift;
+
+    if (($enable_valgrind and $msg =~ /valgrind\soutput/)
+            or ($enable_profile_coverage_check and $msg =~ /profile\scoverage/)
+            or ($asan_instrumentation_check and $msg =~ /Address\sSanitizer\sinstrumentation\scheck/)
+            or ($msg =~ /segfault.*dump\smessages/)) {
+        return 1;
+    }
+    return 0;
 }
 
 sub gdb_test_cmd() {
@@ -7693,6 +7702,7 @@ sub init() {
     $git_path     = &find_command('git') unless $git_path;
     $prove_path   = &find_command('prove') unless $prove_path;
     $touch_path   = &find_command('touch') unless $touch_path;
+    $readelf_path = &find_command('readelf') unless $readelf_path;
 
     if ($sudo_path) {
         $username = (getpwuid((stat($test_suite_path))[4]))[0];
@@ -7750,9 +7760,9 @@ sub init() {
     }
 
     ### see if we're compiled with AddressSanitizer support
-    if (&file_find_regex([qr/enable\-asan\-support/],
-            $MATCH_ALL, $NO_APPEND_RESULTS, $config_log)) {
+    if (&asan_compiled_binary()) {
         $asan_mode = 1;
+        $asan_instrumentation_check = 1;
     } else {
         &write_test_file("[-] Can't find --enable-asan-support in $config_log\n",
             $curr_test_file);
@@ -8316,6 +8326,20 @@ sub is_fw_rule_active() {
     }
 
     return $rv;
+}
+
+sub asan_compiled_binary() {
+
+    my $lib_bin = '../lib/.libs/libfko.so';
+    if (&run_cmd("$readelf_path -a $lib_bin | grep __asan",
+                $cmd_out_tmp, $curr_test_file)) {
+        &write_test_file("[+] $lib_bin is compiled with ASAN support\n",
+            $curr_test_file);
+        return 1;
+    }
+    &write_test_file("[-] $lib_bin is NOT compiled with ASAN support\n",
+        $curr_test_file);
+    return 0;
 }
 
 sub global_fwknopd_pgrep_check() {
