@@ -2045,6 +2045,17 @@
         'positive_output_matches' => [qr/Message.*0.0.0.0/],
         'rc_positive_output_matches' => [qr/ALLOW_IP.*0.0.0.0/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'invalid ALLOW_IP',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default -s",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'ALLOW_IP' => '123.999.999.999'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Parameter\serror/],
+    },
 
     {
         'category' => 'basic operations',
