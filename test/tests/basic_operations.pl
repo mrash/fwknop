@@ -1157,7 +1157,9 @@
         'function' => \&client_rc_file,
         'cmdline'  => $client_rewrite_rc_args,
         'write_rc_file' => [{'name' => 'default',
-                'vars' => {'KEY_FILE' => $local_key_file, 'DIGEST_TYPE' => 'SHA1'}}],
+                'vars' => {'KEY_FILE' => $local_key_file,
+                    'DIGEST_TYPE' => 'SHA1',
+                    'NO_SAVE_ARGS' => 'Y'}}],
         'positive_output_matches' => [qr/Random\sValue/],
     },
     {
