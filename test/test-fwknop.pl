@@ -2443,6 +2443,7 @@ sub write_rc_file() {
             print RC "$var      $hr->{'vars'}->{$var}\n";
         }
     }
+    print RC "#\n"; ### to max code coverage
     close RC;
 
     return;
