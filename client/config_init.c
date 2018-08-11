@@ -1480,6 +1480,7 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
             var->pos, var->name, val);
 
     fprintf(fhandle, RC_PARAM_TEMPLATE, var->name, val);
+    return;
 }
 
 /**
@@ -2319,6 +2320,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 break;
             case SERVER_RESOLVE_IPV4:
                 options->spa_server_resolve_ipv4 = 1;
+                add_var_to_bitmask(FWKNOP_CLI_ARG_SERVER_RESOLVE_IPV4, &var_bitmask);
                 break;
             case 'w':
                 if(options->wget_bin != NULL)

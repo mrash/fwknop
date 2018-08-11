@@ -2066,11 +2066,11 @@
         'function' => \&client_rc_file,
         'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
                 "-D $loopback_ip --rc-file $save_rc_file --save-rc-stanza " .
-                "--force-stanza --test -n default -R --server-resolve-ipv4",
+                "--force-stanza --test -n default -R -vvv --server-resolve-ipv4",
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'HMAC_KEY' => 'hmactest',
                     'HMAC_DIGEST_TYPE' => 'SHA1',
-                    'SERVER_RESOLVE_IPV4' => 'Y'}}],
+                    'SERVER_RESOLVE_IPV4' => 'N'}}],
     },
     {
         'category' => 'basic operations',
