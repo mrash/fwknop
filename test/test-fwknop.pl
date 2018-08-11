@@ -8636,6 +8636,8 @@ sub usage() {
     --enable-configure-args-checks     - Run the autoconf configure script with
                                          various args to check compilation
                                          results.
+    --enable-cunit-tests               - Check output of Cunit tests - requires
+                                         './configure --enable-c-unit-tests'.
     --enable-valgrind                  - Run every test underneath valgrind.
     --disable-valgrind                 - Disable valgrind mode (useful sometimes
                                          when --enable-all is used to have
