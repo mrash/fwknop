@@ -1647,7 +1647,7 @@ sub is_asan_instrumentation_working() {
     my $rv = 1;
     chdir $asan_dir or die $!;
 
-    for my $file ('Makefile', 'Makefile-m32') {
+    for my $file ('Makefile-m32', 'Makefile') {
         $rv = 1;
         unless (&run_cmd("make -f $file clean", "../$cmd_out_tmp",
                 "../$curr_test_file")) {
