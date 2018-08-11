@@ -2333,7 +2333,19 @@
         'exec_err' => $YES,
         'positive_output_matches' => [qr/Invalid time offset/],
     },
-
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'client save rc file',
+        'detail'   => 'time offset invalid (5)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$client_save_rc_args -n default --time-offset-plus 123456789999",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'SHA1',
+                'TIME_OFFSET' => '-123456789999'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/Parameter\serror/],
+        'rc_positive_output_matches' => [qr/TIME_OFFSET.*-123456789999/],
+    },
     {
         'category' => 'basic operations',
         'subcategory' => 'client save rc file',
