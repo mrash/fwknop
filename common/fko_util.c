@@ -1065,7 +1065,7 @@ ip_resolve(const char *dns_str, char *ip_str, int family)
     struct sockaddr_in *in;
     char               *win_ip;
 #else
-    struct sockaddr_in *sai_remote; /* Remote host information as a sockaddr_in structure */
+    char               *sai_remote; /* Remote host information */
 #endif
 
 #if WIN32 
@@ -1108,7 +1108,7 @@ ip_resolve(const char *dns_str, char *ip_str, int family)
 
             if (win_ip != NULL && (strlcpy(ip_str, win_ip, ip_bufsize) > 0))
 #else
-            sai_remote = (struct sockaddr_in *)get_in_addr((struct sockaddr *)(rp->ai_addr));
+            sai_remote = get_in_addr((struct sockaddr *)(rp->ai_addr));
             if (inet_ntop(rp->ai_family, sai_remote, ip_str, ip_bufsize) != NULL)
 #endif
             {
