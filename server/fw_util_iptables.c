@@ -325,8 +325,6 @@ ipt_chk_support(const fko_srv_options_t * const opts, int ipv6)
     );
     run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE,
             WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
-
-    return;
 }
 
 static int
@@ -830,7 +828,6 @@ delete_all_chains(const fko_srv_options_t * const opts, int ipv6)
             log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
     }
 #endif
-    return;
 }
 
 static int
@@ -1322,8 +1319,6 @@ ipt_rule(const fko_srv_options_t * const opts,
                 chain->next_expire = exp_ts;
         }
     }
-
-    return;
 }
 
 static void forward_access_rule(const fko_srv_options_t * const opts,
@@ -1377,7 +1372,6 @@ static void forward_access_rule(const fko_srv_options_t * const opts,
             NULL, fst_proto, nat_port, NULL, NAT_ANY_PORT,
             fwd_chain, exp_ts, now, "FORWARD", spadat->spa_message_remain, ipv6);
     }
-    return;
 }
 
 static void dnat_rule(const fko_srv_options_t * const opts,
@@ -1437,7 +1431,6 @@ static void dnat_rule(const fko_srv_options_t * const opts,
             fst_proto, fst_port, nat_ip, nat_port, dnat_chain, exp_ts, now,
             "DNAT", spadat->spa_message_remain, ipv6);
     }
-    return;
 }
 
 static void snat_rule(const fko_srv_options_t * const opts,
