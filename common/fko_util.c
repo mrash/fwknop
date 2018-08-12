@@ -1080,6 +1080,8 @@ ip_resolve(const char *dns_str, char *ip_str, int family)
             memset(ip_str, 0, ip_bufsize);
 
 #if WIN32 && WINVER <= 0x0600
+            if(rp->ai_family != AF_INET)
+                continue;
 	    /* On older Windows systems (anything before Vista?),
 	     * we use inet_ntoa for now.
 	    */
