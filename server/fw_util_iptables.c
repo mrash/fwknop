@@ -1574,7 +1574,8 @@ process_spa_request(const fko_srv_options_t * const opts,
     time_t          now;
     unsigned int    exp_ts;
 
-    int             ipv6 = 0;
+    /* XXX set adequately per SPA message */
+    int             ipv6 = (opts->family == AF_INET6) ? 1 : 0;
 
     /* Parse and expand our access message.
     */
