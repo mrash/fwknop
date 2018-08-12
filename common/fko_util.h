@@ -75,7 +75,7 @@ int   count_characters(const char *str, const char match, int len);
 int   strtoargv(const char * const args_str, char **argv_new, int *argc_new);
 void  free_argv(char **argv_new, int *argc_new);
 
-int   ipv4_resolve(const char *dns_str, char *ip_str);
+int   ip_resolve(const char *dns_str, char *ip_str, int family);
 #if !HAVE_STRLCAT
 size_t  strlcat(char *dst, const char *src, size_t siz);
 #endif

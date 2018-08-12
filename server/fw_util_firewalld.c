@@ -1494,7 +1494,7 @@ int
 process_spa_request(const fko_srv_options_t * const opts,
         const acc_stanza_t * const acc, spa_data_t * const spadat)
 {
-    char            nat_ip[MAX_IPV4_STR_LEN] = {0};
+    char            nat_ip[MAX_IPV46_STR_LEN] = {0};
     char            nat_dst[MAX_HOSTNAME_LEN] = {0};
     unsigned int    nat_port = 0;
     unsigned int    fst_proto;
@@ -1571,7 +1571,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                             free_acc_port_list(port_list);
                             return res;
                         }
-                        if (ipv4_resolve(nat_dst, nat_ip) == 0)
+                        if (ip_resolve(nat_dst, nat_ip, AF_INET) == 0)
                         {
                             log_msg(LOG_INFO, "Resolved NAT IP in SPA message");
                         }
