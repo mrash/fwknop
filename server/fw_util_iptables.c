@@ -1634,7 +1634,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                             free_acc_port_list(port_list);
                             return res;
                         }
-                        if (ipv4_resolve(nat_dst, nat_ip) == 0)
+                        if (ip_resolve(nat_dst, nat_ip, ipv6 ? AF_INET6 : AF_INET) == 0)
                         {
                             log_msg(LOG_INFO, "Resolved NAT IP in SPA message");
                         }

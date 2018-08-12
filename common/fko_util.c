@@ -1035,10 +1035,10 @@ get_in_addr(struct sockaddr *sa)
  * @return 0 if successful, 1 if an error occurred.
  */
 int
-ipv4_resolve(const char *dns_str, char *ip_str)
+ip_resolve(const char *dns_str, char *ip_str, int family)
 {
     int                 error;      /* Function error return code */
-    size_t ip_bufsize = MAX_IPV4_STR_LEN;
+    size_t ip_bufsize = MAX_IPV46_STR_LEN;
     struct addrinfo     hints;
     struct addrinfo    *result;     /* Result of getaddrinfo() */
     struct addrinfo    *rp;         /* Element of the linked list returned by getaddrinfo() */
@@ -1061,7 +1061,7 @@ ipv4_resolve(const char *dns_str, char *ip_str)
 #endif
 
     memset(&hints, 0 , sizeof(hints));
-    hints.ai_family = AF_INET;
+    hints.ai_family = family;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
