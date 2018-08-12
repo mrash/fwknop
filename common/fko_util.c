@@ -1098,13 +1098,13 @@ ip_resolve(const char *dns_str, char *ip_str, int family)
             memset(ip_str, 0, ip_bufsize);
 
 #if WIN32 && WINVER <= 0x0600
-                        /* On older Windows systems (anything before Vista?),
-                         * we use inet_ntoa for now.
-                        */
-                        in = (struct sockaddr_in*)(rp->ai_addr);
-                        win_ip = inet_ntoa(in->sin_addr);
+	    /* On older Windows systems (anything before Vista?),
+	     * we use inet_ntoa for now.
+	    */
+            in = (struct sockaddr_in*)(rp->ai_addr);
+            win_ip = inet_ntoa(in->sin_addr);
 
-                        if (win_ip != NULL && (strlcpy(ip_str, win_ip, ip_bufsize) > 0))
+            if (win_ip != NULL && (strlcpy(ip_str, win_ip, ip_bufsize) > 0))
 #else
             sai_remote = (struct sockaddr_in *)get_in_addr((struct sockaddr *)(rp->ai_addr));
             if (inet_ntop(rp->ai_family, sai_remote, ip_str, ip_bufsize) != NULL)
