@@ -56,6 +56,15 @@ zero_cmd_buffers(void)
     memset(cmd_out, 0x0, STANDARD_CMD_OUT_BUFSIZE);
 }
 
+static char const *
+any_ip(int ipv6)
+{
+	if(ipv6)
+		return IPT_ANY_IPV6;
+	else
+		return IPT_ANY_IP;
+}
+
 static int pid_status = 0;
 
 static int
@@ -1306,7 +1315,7 @@ ipt_rule(const fko_srv_options_t * const opts,
         if(create_rule(opts, chain->to_chain, rule_buf, ipv6))
         {
             log_msg(LOG_INFO, "Added %s rule to %s for %s -> %s %s, expires at %u",
-                msg, chain->to_chain, srcip, (dstip == NULL) ? IPT_ANY_IP : dstip,
+                msg, chain->to_chain, srcip, (dstip == NULL) ? any_ip(ipv6) : dstip,
                 access_msg, exp_ts
             );
 
@@ -1398,7 +1407,7 @@ static void dnat_rule(const fko_srv_options_t * const opts,
         snprintf(rule_buf, CMD_BUFSIZE-1, IPT_DNAT_ALL_RULE_ARGS,
             dnat_chain->table,
             spadat->use_src_ip,
-            (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+            (fwc.use_destination ? spadat->pkt_destination_ip : any_ip(ipv6)),
             exp_ts,
             dnat_chain->target,
             nat_ip
@@ -1418,7 +1427,7 @@ static void dnat_rule(const fko_srv_options_t * const opts,
             dnat_chain->table,
             fst_proto,
             spadat->use_src_ip,
-            (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+            (fwc.use_destination ? spadat->pkt_destination_ip : any_ip(ipv6)),
             fst_port,
             exp_ts,
             dnat_chain->target,
@@ -1427,7 +1436,7 @@ static void dnat_rule(const fko_srv_options_t * const opts,
         );
 
         ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
-            (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+            (fwc.use_destination ? spadat->pkt_destination_ip : any_ip(ipv6)),
             fst_proto, fst_port, nat_ip, nat_port, dnat_chain, exp_ts, now,
             "DNAT", spadat->spa_message_remain, ipv6);
     }
@@ -1680,7 +1689,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                 || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
         {
             ipt_rule(opts, NULL, IPT_RULE_ARGS, spadat->use_src_ip,
-                (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+                (fwc.use_destination ? spadat->pkt_destination_ip : any_ip(ipv6)),
                 fst_proto, nat_port, nat_ip, nat_port, in_chain, exp_ts,
                 now, "local NAT", spadat->spa_message_remain, ipv6);
         }
@@ -1711,7 +1720,7 @@ process_spa_request(const fko_srv_options_t * const opts,
         while(ple != NULL)
         {
             ipt_rule(opts, NULL, IPT_RULE_ARGS, spadat->use_src_ip,
-                (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+                (fwc.use_destination ? spadat->pkt_destination_ip : any_ip(ipv6)),
                 ple->proto, ple->port, NULL, NAT_ANY_PORT,
                 in_chain, exp_ts, now, "access", spadat->spa_message_remain, ipv6);
 
@@ -1721,7 +1730,7 @@ process_spa_request(const fko_srv_options_t * const opts,
             if(strlen(out_chain->to_chain))
             {
                 ipt_rule(opts, NULL, IPT_OUT_RULE_ARGS, spadat->use_src_ip,
-                    (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+                    (fwc.use_destination ? spadat->pkt_destination_ip : any_ip(ipv6)),
                     ple->proto, ple->port, NULL, NAT_ANY_PORT,
                     out_chain, exp_ts, now, "OUTPUT", spadat->spa_message_remain, ipv6);
             }
