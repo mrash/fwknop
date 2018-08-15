@@ -774,12 +774,6 @@ set_nat_access(fko_ctx_t ctx, fko_cli_options_t *options, const char * const acc
 
     if (nat_access_buf[0] == 0x0 && options->nat_access_str[0] != 0x0)
     {
-        /* Force the ':' (if any) to a ','
-        */
-        ndx = strchr(options->nat_access_str, ':');
-        if (ndx != NULL)
-            *ndx = ',';
-
         ndx = strchr(options->nat_access_str, ',');
         if (ndx != NULL)
         {
