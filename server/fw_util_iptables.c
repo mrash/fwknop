@@ -1423,7 +1423,7 @@ static void dnat_rule(const fko_srv_options_t * const opts,
     {
         memset(rule_buf, 0, CMD_BUFSIZE);
 
-        snprintf(rule_buf, CMD_BUFSIZE-1, IPT_DNAT_RULE_ARGS,
+        snprintf(rule_buf, CMD_BUFSIZE-1, ipv6 ? IPT_DNAT_RULE_ARGS_IPV6 : IPT_DNAT_RULE_ARGS,
             dnat_chain->table,
             fst_proto,
             spadat->use_src_ip,
