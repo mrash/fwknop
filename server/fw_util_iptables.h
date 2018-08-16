@@ -64,7 +64,7 @@
 #define IPT_LIST_RULES_ARGS     "-t %s -L %s --line-numbers -n" SH_REDIR
 #define IPT_LIST_ALL_RULES_ARGS "-t %s -v -n -L --line-numbers" SH_REDIR
 #define IPT_ANY_IP              "0.0.0.0/0"
-#define IPT_ANY_IPV6            "::"
+#define IPT_ANY_IPV6            "::/0"
 
 #if USE_LIBNETFILTER_QUEUE
   #define IPT_NFQ_ADD_ARGS "-t %s -A %s -p udp -m udp --dport %s -j NFQUEUE --queue-num %s"
