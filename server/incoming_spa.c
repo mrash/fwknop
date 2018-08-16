@@ -448,16 +448,32 @@ static int
 src_dst_check(acc_stanza_t *acc, spa_pkt_info_t *spa_pkt,
         spa_data_t *spadat, const int stanza_num)
 {
-    if(! compare_addr_list(acc->source_list, AF_INET, ntohl(spa_pkt->packet_src_ip)) ||
-       (acc->destination_list != NULL
-        && ! compare_addr_list(acc->destination_list, AF_INET, ntohl(spa_pkt->packet_dst_ip))))
+    switch (spa_pkt->packet_family)
     {
-        log_msg(LOG_DEBUG,
-                "(stanza #%d) SPA packet (%s -> %s) filtered by SOURCE and/or DESTINATION criteria",
-                stanza_num, spadat->pkt_source_ip, spadat->pkt_destination_ip);
-        return 0;
+        case AF_INET:
+            if(! compare_addr_list(acc->source_list, AF_INET, ntohl(spa_pkt->packet_src_ip)) ||
+                (acc->destination_list != NULL
+                 && ! compare_addr_list(acc->destination_list, AF_INET, ntohl(spa_pkt->packet_dst_ip))))
+            {
+                log_msg(LOG_DEBUG,
+                        "(stanza #%d) SPA packet (%s -> %s) filtered by SOURCE and/or DESTINATION criteria",
+                        stanza_num, spadat->pkt_source_ip, spadat->pkt_destination_ip);
+                return 0;
+            }
+            return 1;
+        case AF_INET6:
+            if(! compare_addr_list(acc->source_list, AF_INET6, &spa_pkt->packet_addr.inet6.src_ip) ||
+                (acc->destination_list != NULL
+                 && ! compare_addr_list(acc->destination_list, AF_INET6, &spa_pkt->packet_addr.inet6.dst_ip)))
+            {
+                log_msg(LOG_DEBUG,
+                        "(stanza #%d) SPA packet (%s -> %s) filtered by SOURCE and/or DESTINATION criteria",
+                        stanza_num, spadat->pkt_source_ip, spadat->pkt_destination_ip);
+                return 0;
+            }
+            return 1;
     }
-    return 1;
+    return 0;
 }
 
 /* Process command messages
