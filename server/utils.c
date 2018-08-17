@@ -214,7 +214,6 @@ is_digits(const char * const str)
         {
             if(!isdigit((int)(unsigned char)str[i]))
                 return 0;
-            i++;
         }
     }
     return 1;
