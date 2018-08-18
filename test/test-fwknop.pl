@@ -115,7 +115,7 @@ my $default_key = 'fwknoptest';
 my $asan_dir = 'asan';
 my $asan_instrumentation_check = 0;
 
-my $tests_dir = 'tests';
+my $tests_dir = './tests';
 
 our $rerun_failed_mode = 0;
 
@@ -1885,7 +1885,7 @@ sub fko_wrapper_exec() {
             ### generate the fko-wrapper/fuzz_spa_payloads file
             ### if necessary - it is consumed by the wrapper in
             ### -DFUZZING_INTERFACES mode
-            &write_test_file("[-] Generating SPA fuzzing packets " .
+            &write_test_file("[+] Generating SPA fuzzing packets " .
                 "file: $fuzz_spa_payloads_file with ./spa_fuzzing.py...\n",
                 $curr_test_file);
             unless (-e $fuzz_spa_payloads_file) {
@@ -1926,7 +1926,7 @@ sub fko_wrapper_exec() {
             if ($enable_fuzzing_interfaces_tests) {
                 ### make sure the send_spa_payloads file exists
                 unless (-e $send_fuzz_payloads_file) {
-                    &write_test_file("[-] Generating SPA fuzzing packets " .
+                    &write_test_file("[+] Generating SPA fuzzing packets " .
                         "file: $send_fuzz_payloads_file for fwknopd consumption...\n",
                         $curr_test_file);
                     unless (-e $send_fuzz_payloads_file) {
