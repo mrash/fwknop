@@ -161,6 +161,20 @@ spa_encoded_msg_fuzzing(void)
             }
         }
 
+        /* decode again for good measure */
+        res = fko_decode_spa_data(decode_ctx);
+        if (require_success) {
+            if (res != FKO_SUCCESS) {
+                printf("[-] pkt_id: %d, expected decode success but: fko_decode_spa_data(): %s\n",
+                        pkt_id, fko_errstr(res));
+            }
+        } else {
+            if (res == FKO_SUCCESS) {
+                printf("[-] pkt_id: %d, expected decode failure but: fko_decode_spa_data(): %s\n",
+                        pkt_id, fko_errstr(res));
+            }
+        }
+
         if (0) {
                 fko_destroy(decode_ctx);
                 decode_ctx = NULL;
@@ -396,6 +410,13 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
             &fko_get_spa_message_type, FKO_COMMAND_MSG-F_INT,
             FKO_LAST_MSG_TYPE+F_INT, FKO_ACCESS_MSG,
             NO_DIGEST, new_ctx_flag, destroy_ctx_flag);
+
+    /* exercise error path since this offset range will hit negative
+     * values in fko_set_timestamp()
+    */
+    spa_func_int(&ctx, "fko_set_timestamp",
+            &fko_set_timestamp, -(time(NULL)+1000), -(time(NULL)+200), 10,
+            new_ctx_flag, destroy_ctx_flag);
 
     spa_func_int(&ctx, "fko_set_timestamp",
             &fko_set_timestamp, -F_INT, F_INT, 10,
