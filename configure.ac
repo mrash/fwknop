@@ -189,7 +189,7 @@ if test "x$want_asan_support" = "xyes"; then
     FKO_CHECK_COMPILER_ARG([-fsanitize=address -fno-omit-frame-pointer])
 fi
 
-dnl Decide whether or not to enable MemorySanitizer support
+dnl Decide whether or not to enable UndefineSanitizer support
 dnl
 want_ubsan_support=no
 AC_ARG_ENABLE([ubsan-support],
@@ -200,6 +200,19 @@ AC_ARG_ENABLE([ubsan-support],
 
 if test "x$want_ubsan_support" = "xyes"; then
     FKO_CHECK_COMPILER_ARG([-fsanitize=undefined])
+fi
+
+dnl Decide whether or not to enable MemorySanitizer support
+dnl
+want_memsan_support=no
+AC_ARG_ENABLE([memsan-support],
+  [AS_HELP_STRING([--enable-memsan-support],
+    [Build fwknop binaries with MemorySanitizer support @<:@default is to disable@:>@])],
+  [want_memsan_support=$enableval],
+  [])
+
+if test "x$want_memsan_support" = "xyes"; then
+    FKO_CHECK_COMPILER_ARG([-fsanitize=memory -fsanitize-memory-track-origins=2])
 fi
 
 dnl Decide whether or not force 32-bit mode

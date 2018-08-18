@@ -220,7 +220,9 @@ process_packet(PROCESS_PKT_ARGS_TYPE *args, PACKET_HEADER_META,
 
     /* Copy the packet for SPA processing
     */
-    strlcpy((char *)opts->spa_pkt.packet_data, (char *)pkt_data, pkt_data_len+1);
+    memcpy((char *)opts->spa_pkt.packet_data, (char *)pkt_data, pkt_data_len);
+    opts->spa_pkt.packet_data[pkt_data_len] = '\0';
+
     opts->spa_pkt.packet_data_len = pkt_data_len;
     opts->spa_pkt.packet_proto    = proto;
     opts->spa_pkt.packet_src_ip   = src_ip;
