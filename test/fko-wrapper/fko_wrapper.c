@@ -440,6 +440,12 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
         ctx_update(&ctx, new_ctx_flag, destroy_ctx_flag, DO_PRINT);
     }
 
+    for (i=0; i<FCN_CALLS; i++) {
+        printf("fko_set_username(|bogususer): %s\n",
+                fko_errstr(fko_set_username(ctx, "|bogususer")));
+        ctx_update(&ctx, new_ctx_flag, destroy_ctx_flag, DO_PRINT);
+    }
+
     spa_func_getset_short(&ctx, "fko_set_spa_encryption_type",
             &fko_set_spa_encryption_type, "fko_get_spa_encryption_type",
             &fko_get_spa_encryption_type, FKO_ENCRYPTION_INVALID_DATA-F_INT,
