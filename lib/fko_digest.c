@@ -114,6 +114,9 @@ fko_get_raw_spa_digest_type(fko_ctx_t ctx, short *raw_digest_type)
     if(!CTX_INITIALIZED(ctx))
         return(FKO_ERROR_CTX_NOT_INITIALIZED);
 
+    if(raw_digest_type == NULL)
+        return(FKO_ERROR_INVALID_DATA);
+
     *raw_digest_type = ctx->raw_digest_type;
 
     return(FKO_SUCCESS);

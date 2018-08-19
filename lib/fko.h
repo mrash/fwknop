@@ -649,8 +649,8 @@ DLL_API int fko_set_spa_encryption_mode(fko_ctx_t ctx, const int encrypt_mode);
  * \return FKO_SUCCESS if successful, returns an error code otherwise
  */
 DLL_API int fko_set_spa_data(fko_ctx_t ctx, const char * const enc_msg);
-#if AFL_FUZZING
 
+#if AFL_FUZZING
 DLL_API int fko_afl_set_spa_data(fko_ctx_t ctx, const char * const enc_msg,
         const int enc_msg_len);
 #endif
@@ -856,6 +856,7 @@ DLL_API int fko_get_spa_hmac(fko_ctx_t ctx, char **enc_data);
  * \return FKO_SUCCESS if successful, returns an error code otherwise
  */
 DLL_API int fko_get_encoded_data(fko_ctx_t ctx, char **enc_data);
+
 #if FUZZING_INTERFACES
 DLL_API int fko_set_encoded_data(fko_ctx_t ctx, const char * const encoded_msg,
         const int msg_len, const int do_digest, const int digest_type);
