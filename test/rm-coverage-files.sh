@@ -1,7 +1,7 @@
 #!/bin/sh -x
 
 cd ..
-for d in client server lib
+for d in client server lib common
 do
     for s in *.gcda *.gcno *.gcov
     do
