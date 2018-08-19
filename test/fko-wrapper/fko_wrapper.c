@@ -479,8 +479,8 @@ test_loop(int new_ctx_flag, int destroy_ctx_flag)
             DO_DIGEST, new_ctx_flag, destroy_ctx_flag);
 
     spa_func_getset_short(&ctx, "fko_set_raw_spa_digest_type",
-            &fko_set_spa_digest_type, "fko_get_raw_spa_digest_type",
-            &fko_get_spa_digest_type, FKO_DIGEST_INVALID_DATA-F_INT,
+            &fko_set_raw_spa_digest_type, "fko_get_raw_spa_digest_type",
+            &fko_get_raw_spa_digest_type, FKO_DIGEST_INVALID_DATA-F_INT,
             FKO_LAST_DIGEST_TYPE+F_INT, FKO_DEFAULT_DIGEST,
             RAW_DIGEST, new_ctx_flag, destroy_ctx_flag);
 
@@ -782,6 +782,7 @@ display_ctx(fko_ctx_t ctx)
     time_t      timestamp       = 0;
     short       msg_type        = -1;
     short       digest_type     = -1;
+    short       raw_digest_type = -1;
     short       hmac_type       = -1;
     int         encryption_mode = -1;
     int         client_timeout  = -1;
@@ -809,6 +810,8 @@ display_ctx(fko_ctx_t ctx)
     fko_get_spa_client_timeout(ctx, &client_timeout);
     fko_get_spa_digest_type(ctx, NULL);
     fko_get_spa_digest_type(ctx, &digest_type);
+    fko_get_raw_spa_digest_type(ctx, NULL);
+    fko_get_raw_spa_digest_type(ctx, &raw_digest_type);
     fko_get_spa_hmac_type(ctx, NULL);
     fko_get_spa_hmac_type(ctx, &hmac_type);
     fko_get_spa_encryption_mode(ctx, NULL);
