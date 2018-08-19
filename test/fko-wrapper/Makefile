@@ -1,21 +1,30 @@
 
-all : fko_wrapper.c fko_basic.c
-	cc -Wall -g -I../../lib fko_wrapper.c -o fko_wrapper -L../../lib/.libs -lfko
-	cc -Wall -g -I../../lib fko_basic.c -o fko_basic -L../../lib/.libs -lfko
+CC = gcc
+LIBDIR = ../../lib/.libs
+INCDIR = ../../lib
+CLANG = clang
 
-asan : fko_wrapper.c fko_basic.c
-	cc -Wall -fsanitize=address -fno-omit-frame-pointer -g -I../../lib fko_wrapper.c -o fko_wrapper -L../../lib/.libs -lfko
-	cc -Wall -fsanitize=address -fno-omit-frame-pointer -g -I../../lib fko_basic.c -o fko_basic -L../../lib/.libs -lfko
+all: fko_wrapper.c fko_basic.c
+	cc -Wall -g -I$(INCDIR) fko_wrapper.c -o fko_wrapper -L$(LIBDIR) -lfko
+	cc -Wall -g -I$(INCDIR) fko_basic.c -o fko_basic -L$(LIBDIR) -lfko
 
-ubsan : fko_wrapper.c fko_basic.c
-	cc -Wall -fsanitize=undefined -g -I../../lib fko_wrapper.c -o fko_wrapper -L../../lib/.libs -lfko
-	cc -Wall -fsanitize=undefined -fno-omit-frame-pointer -g -I../../lib fko_basic.c -o fko_basic -L../../lib/.libs -lfko
+coverage: fko_wrapper.c fko_basic.c
+	$(CC) -Wall -fprofile-arcs -ftest-coverage -fno-inline -g -I$(INCDIR) fko_wrapper.c -o fko_wrapper -L$(LIBDIR) -lfko
+	$(CC) -Wall -fprofile-arcs -ftest-coverage -fno-inline -g -I$(INCDIR) fko_basic.c -o fko_basic -L$(LIBDIR) -lfko
+
+asan: fko_wrapper.c fko_basic.c
+	$(CC) -Wall -fsanitize=address -fno-omit-frame-pointer -g -I$(INCDIR) fko_wrapper.c -o fko_wrapper -L$(LIBDIR) -lfko
+	$(CC) -Wall -fsanitize=address -fno-omit-frame-pointer -g -I$(INCDIR) fko_basic.c -o fko_basic -L$(LIBDIR) -lfko
+
+ubsan: fko_wrapper.c fko_basic.c
+	$(CC) -Wall -fsanitize=undefined -g -I$(INCDIR) fko_wrapper.c -o fko_wrapper -L$(LIBDIR) -lfko
+	$(CC) -Wall -fsanitize=undefined -fno-omit-frame-pointer -g -I$(INCDIR) fko_basic.c -o fko_basic -L$(LIBDIR) -lfko
 
 fuzzing: fko_wrapper.c
-	cc -Wall -g -DFUZZING_INTERFACES -I../../lib fko_wrapper.c -o fko_wrapper -L../../lib/.libs -lfko
+	$(CC) -Wall -g -DFUZZING_INTERFACES -I$(INCDIR) fko_wrapper.c -o fko_wrapper -L$(LIBDIR) -lfko
 
 faultinjection: fko_fault_injection.c
-	cc -Wall -g -DFIU_ENABLE -I../../lib fko_fault_injection.c -o fko_fault_injection -L../../lib/.libs -lfiu -lfko
+	$(CC) -Wall -g -DFIU_ENABLE -I$(INCDIR) fko_fault_injection.c -o fko_fault_injection -L$(LIBDIR) -lfiu -lfko
 
 clean:
-	rm -f fko_wrapper fko_basic fko_fault_injection
+	rm -f fko_wrapper fko_basic fko_fault_injection *gcno *gcda
