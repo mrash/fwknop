@@ -373,8 +373,8 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
     */
     if(strcasecmp(ip, "ANY") == 0)
     {
-        new_sle->maddr = 0x0;
-        new_sle->mask = 0x0;
+        new_sle->family = AF_UNSPEC;
+        memset(&new_sle->acc_int, 0, sizeof(new_sle->acc_int));
     }
     else
     {
@@ -473,17 +473,18 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
 
         /* Store our mask converted from CIDR to a 32-bit value.
         */
+        new_sle->family = AF_INET;
         if(mask == 32)
-            new_sle->mask = 0xFFFFFFFF;
+            new_sle->acc_int.inet.mask = 0xFFFFFFFF;
         else if(need_shift && (mask > 0 && mask < 32))
-            new_sle->mask = (0xFFFFFFFF << (32 - mask));
+            new_sle->acc_int.inet.mask = (0xFFFFFFFF << (32 - mask));
         else
-            new_sle->mask = mask;
+            new_sle->acc_int.inet.mask = mask;
 
         /* Store our masked address for comparisons with future incoming
          * packets.
         */
-        new_sle->maddr = ntohl(in.s_addr) & new_sle->mask;
+        new_sle->acc_int.inet.maddr = ntohl(in.s_addr) & new_sle->acc_int.inet.mask;
     }
 
     /* If this is not the first entry, we walk our pointer to the
@@ -2069,23 +2070,61 @@ int valid_access_stanzas(acc_stanza_t *acc)
     return 1;
 }
 
-int
-compare_addr_list(acc_int_list_t *ip_list, const uint32_t ip)
+static int
+compare_addr_list_ipv4(acc_int_list_t *ip_list, uint32_t ip)
 {
-    int match = 0;
-
-    while(ip_list)
+    for(; ip_list; ip_list = ip_list->next)
     {
-        if((ip & ip_list->mask) == (ip_list->maddr & ip_list->mask))
-        {
-            match = 1;
-            break;
-        }
-
-        ip_list = ip_list->next;
+        if(ip_list->family == AF_UNSPEC)
+            return 1;
+        if(ip_list->family != AF_INET6)
+            continue;
+        if((ip & ip_list->acc_int.inet.mask) == (ip_list->acc_int.inet.maddr & ip_list->acc_int.inet.mask))
+            return 1;
     }
+    return 0;
+}
 
-    return(match);
+static int
+compare_addr_list_ipv6(acc_int_list_t *ip_list, struct in6_addr *ip6)
+{
+    for(; ip_list; ip_list = ip_list->next)
+    {
+        if(ip_list->family == AF_UNSPEC)
+            return 1;
+        if(ip_list->family != AF_INET6)
+            continue;
+        if(memcmp(&ip_list->acc_int.inet6.maddr, ip6, sizeof(*ip6)) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+int
+compare_addr_list(acc_int_list_t *ip_list, int family, ...)
+{
+    int res;
+    va_list ap;
+    uint32_t ip;
+    struct in6_addr * ip6;
+
+    va_start(ap, family);
+    switch(family)
+    {
+        case AF_INET:
+            ip = va_arg(ap, uint32_t);
+            res = compare_addr_list_ipv4(ip_list, ip);
+            break;
+        case AF_INET6:
+            ip6 = va_arg(ap, struct in6_addr *);
+            res = compare_addr_list_ipv6(ip_list, ip6);
+            break;
+        default:
+            res = 0;
+            break;
+    }
+    va_end(ap);
+    return res;
 }
 
 /**

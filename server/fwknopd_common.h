@@ -358,8 +358,20 @@ enum {
 */
 typedef struct acc_int_list
 {
-    unsigned int        maddr;
-    unsigned int        mask;
+    int family;
+    union
+    {
+        struct
+	{
+	    unsigned int        maddr;
+	    unsigned int        mask;
+	} inet;
+        struct
+	{
+	    struct in6_addr     maddr;
+	    unsigned int        prefix;
+	} inet6;
+    } acc_int;
     struct acc_int_list *next;
 } acc_int_list_t;
 
@@ -600,12 +612,28 @@ typedef struct spa_pkt_info
 {
     unsigned int    packet_data_len;
     unsigned int    packet_proto;
-    unsigned int    packet_src_ip;
-    unsigned int    packet_dst_ip;
+    unsigned int    packet_family;
+    union
+    {
+	    struct
+	    {
+		    unsigned int src_ip;
+		    unsigned int dst_ip;
+	    } inet;
+#if HAVE_NETINET_IP6_H
+	    struct
+	    {
+		    struct in6_addr src_ip;
+		    struct in6_addr dst_ip;
+	    } inet6;
+#endif
+    } packet_addr;
     unsigned short  packet_src_port;
     unsigned short  packet_dst_port;
     unsigned char   packet_data[MAX_SPA_PACKET_LEN+1];
 } spa_pkt_info_t;
+#define packet_src_ip packet_addr.inet.src_ip
+#define packet_dst_ip packet_addr.inet.dst_ip
 
 /* Struct for (processed and verified) SPA data used by the server.
 */
@@ -616,10 +644,10 @@ typedef struct spa_data
     char           *version;
     short           message_type;
     char           *spa_message;
-    char            spa_message_src_ip[MAX_IPV4_STR_LEN];
-    char            pkt_source_ip[MAX_IPV4_STR_LEN];
-    char            pkt_source_xff_ip[MAX_IPV4_STR_LEN];
-    char            pkt_destination_ip[MAX_IPV4_STR_LEN];
+    char            spa_message_src_ip[MAX_IPV46_STR_LEN];
+    char            pkt_source_ip[MAX_IPV46_STR_LEN];
+    char            pkt_source_xff_ip[MAX_IPV46_STR_LEN];
+    char            pkt_destination_ip[MAX_IPV46_STR_LEN];
     char            spa_message_remain[1024]; /* --DSS FIXME: arbitrary bounds */
     char           *nat_access;
     char           *server_auth;
@@ -657,6 +685,7 @@ typedef struct fko_srv_options
     unsigned char   enable_nfq_capture; /* Enable Netfilter Queue capture mode */
     unsigned char   enable_fw;          /* Command modes by themselves don't
                                            need firewall support. */
+    unsigned char   ipv6;		/* Enable IPv6 mode (TCP/UDP) */
 
     unsigned char   firewd_disable_check_support; /* Don't use firewall-cmd ... -C */
     unsigned char   ipt_disable_check_support;    /* Don't use iptables -C */

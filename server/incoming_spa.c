@@ -254,7 +254,7 @@ get_raw_digest(char **digest, char *pkt_data)
     return res;
 }
 
-/* Popluate a spa_data struct from an initialized (and populated) FKO context.
+/* Populate a spa_data struct from an initialized (and populated) FKO context.
 */
 static int
 get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)
@@ -347,14 +347,28 @@ check_stanza_expiration(acc_stanza_t *acc, spa_data_t *spadat,
  * source IP
 */
 static int
-is_src_match(acc_stanza_t *acc, const uint32_t ip)
+is_src_match(acc_stanza_t *acc, const spa_pkt_info_t *spa_pkt)
 {
-    while (acc)
+    switch (spa_pkt->packet_family)
     {
-        if(compare_addr_list(acc->source_list, ip))
-            return 1;
+        case AF_INET:
+            while (acc)
+            {
+                if(compare_addr_list(acc->source_list, AF_INET, ntohl(spa_pkt->packet_addr.inet.src_ip)))
+                    return 1;
 
-        acc = acc->next;
+                acc = acc->next;
+            }
+            break;
+        case AF_INET6:
+            while (acc)
+            {
+                if(compare_addr_list(acc->source_list, AF_INET6, &spa_pkt->packet_addr.inet6.src_ip))
+                    return 1;
+
+                acc = acc->next;
+            }
+            break;
     }
     return 0;
 }
@@ -363,7 +377,7 @@ static int
 src_check(fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt,
         spa_data_t *spadat, char **raw_digest)
 {
-    if (is_src_match(opts->acc_stanzas, ntohl(spa_pkt->packet_src_ip)))
+    if (is_src_match(opts->acc_stanzas, spa_pkt))
     {
         if(strncasecmp(opts->config[CONF_ENABLE_DIGEST_PERSISTENCE], "Y", 1) == 0)
         {
@@ -427,9 +441,9 @@ static int
 src_dst_check(acc_stanza_t *acc, spa_pkt_info_t *spa_pkt,
         spa_data_t *spadat, const int stanza_num)
 {
-    if(! compare_addr_list(acc->source_list, ntohl(spa_pkt->packet_src_ip)) ||
+    if(! compare_addr_list(acc->source_list, AF_INET, ntohl(spa_pkt->packet_src_ip)) ||
        (acc->destination_list != NULL
-        && ! compare_addr_list(acc->destination_list, ntohl(spa_pkt->packet_dst_ip))))
+        && ! compare_addr_list(acc->destination_list, AF_INET, ntohl(spa_pkt->packet_dst_ip))))
     {
         log_msg(LOG_DEBUG,
                 "(stanza #%d) SPA packet (%s -> %s) filtered by SOURCE and/or DESTINATION criteria",
@@ -930,11 +944,25 @@ incoming_spa(fko_srv_options_t *opts)
     */
     acc_stanza_t        *acc = opts->acc_stanzas;
 
-    inet_ntop(AF_INET, &(spa_pkt->packet_src_ip),
-        spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
+    switch(spa_pkt->packet_family)
+    {
+        case AF_INET:
+            inet_ntop(AF_INET, &(spa_pkt->packet_addr.inet.src_ip),
+                spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
 
-    inet_ntop(AF_INET, &(spa_pkt->packet_dst_ip),
-        spadat.pkt_destination_ip, sizeof(spadat.pkt_destination_ip));
+            inet_ntop(AF_INET, &(spa_pkt->packet_addr.inet.dst_ip),
+                spadat.pkt_destination_ip, sizeof(spadat.pkt_destination_ip));
+            break;
+        case AF_INET6:
+            inet_ntop(AF_INET6, &(spa_pkt->packet_addr.inet6.src_ip),
+                spadat.pkt_source_ip, sizeof(spadat.pkt_source_ip));
+
+            inet_ntop(AF_INET6, &(spa_pkt->packet_addr.inet6.dst_ip),
+                spadat.pkt_destination_ip, sizeof(spadat.pkt_destination_ip));
+            break;
+        default:
+            return;
+    }
 
     /* At this point, we want to validate and (if needed) preprocess the
      * SPA data and/or to be reasonably sure we have a SPA packet (i.e
