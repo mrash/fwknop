@@ -677,17 +677,24 @@ static int stop_fwknopd(fko_srv_options_t * const opts)
                 }
                 sleep(1);
             }
-            if(is_err != 0)
+
+            /* if we make it here at all, then we were unsuccessful with the
+             * above attempt to kill the process with SIGTERM
+            */
+            res    = kill(old_pid, SIGKILL);
+            is_err = kill(old_pid, 0);
+            if(res == 0 && is_err != 0)
             {
-                fprintf(stdout, "Killed fwknopd (pid=%i) via SIGTERM\n",
+                fprintf(stdout,
+                        "Killed fwknopd (pid=%i) via SIGKILL\n",
                         old_pid);
                 return EXIT_SUCCESS;
             }
             else
             {
-                res    = kill(old_pid, SIGKILL);
+                sleep(1);
                 is_err = kill(old_pid, 0);
-                if(res == 0 && is_err != 0)
+                if(is_err != 0)
                 {
                     fprintf(stdout,
                             "Killed fwknopd (pid=%i) via SIGKILL\n",
@@ -696,20 +703,8 @@ static int stop_fwknopd(fko_srv_options_t * const opts)
                 }
                 else
                 {
-                    sleep(1);
-                    is_err = kill(old_pid, 0);
-                    if(is_err != 0)
-                    {
-                        fprintf(stdout,
-                                "Killed fwknopd (pid=%i) via SIGKILL\n",
-                                old_pid);
-                        return EXIT_SUCCESS;
-                    }
-                    else
-                    {
-                        perror("Unable to kill fwknop: ");
-                        return EXIT_FAILURE;
-                    }
+                    perror("Unable to kill fwknop: ");
+                    return EXIT_FAILURE;
                 }
             }
         }
