@@ -871,6 +871,7 @@ if [test "$want_server" = "yes" ]; then
   echo "    Server support:
         firewall type:              $FIREWALL_TYPE
         firewall program path:      $FIREWALL_EXE
+        firewall program path:      $FIREWALL_EXE_IPV6 (for IPv6)
 "
 if [test "$want_udp_server" = "yes" ]; then
   echo "    UDP server mode enabled, no libpcap dependency
