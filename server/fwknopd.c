@@ -259,7 +259,7 @@ main(int argc, char **argv)
         if(opts.enable_udp_server ||
                 strncasecmp(opts.config[CONF_ENABLE_UDP_SERVER], "Y", 1) == 0)
         {
-            if(run_udp_server(&opts) < 0)
+            if(run_udp_server(&opts, (opts.family != AF_UNSPEC) ? opts.family : AF_INET) < 0)
             {
                 log_msg(LOG_ERR, "Fatal run_udp_server() error");
                 clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
@@ -280,7 +280,7 @@ main(int argc, char **argv)
         */
         if(strncasecmp(opts.config[CONF_ENABLE_TCP_SERVER], "Y", 1) == 0)
         {
-            if(run_tcp_server(&opts) < 0)
+            if(run_tcp_server(&opts, (opts.family != AF_UNSPEC) ? opts.family : AF_INET) < 0)
             {
                 log_msg(LOG_ERR, "Fatal run_tcp_server() error");
                 clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);

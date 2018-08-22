@@ -51,17 +51,20 @@
  * the child process or -1 if there is a fork error.
 */
 int
-run_tcp_server(fko_srv_options_t *opts)
+run_tcp_server(fko_srv_options_t *opts, const int family)
 {
 #if !CODE_COVERAGE
     pid_t               pid, ppid;
 #endif
-    int                 s_sock, c_sock, sfd_flags, clen, selval;
+    int                 s_sock, c_sock, sfd_flags, selval;
+    socklen_t           slen, clen;
     int                 reuse_addr = 1, rv=1;
     fd_set              sfd_set;
-    struct sockaddr_in  saddr, caddr;
+    struct sockaddr_in  saddr4, caddr4;
+    struct sockaddr_in6 saddr6, caddr6;
+    struct sockaddr    *saddr, *caddr;
     struct timeval      tv;
-    char                sipbuf[MAX_IPV4_STR_LEN] = {0};
+    char                sipbuf[MAX_IPV46_STR_LEN] = {0};
 
     log_msg(LOG_INFO, "Kicking off TCP server to listen on port %i.",
             opts->tcpserv_port);
@@ -94,7 +97,7 @@ run_tcp_server(fko_srv_options_t *opts)
 
     /* Now, let's make a TCP server
     */
-    if ((s_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+    if ((s_sock = socket(family, SOCK_STREAM, IPPROTO_TCP)) < 0)
     {
         log_msg(LOG_ERR, "run_tcp_server: socket() failed: %s",
             strerror(errno));
@@ -135,13 +138,34 @@ run_tcp_server(fko_srv_options_t *opts)
 #endif
 
     /* Construct local address structure */
-    memset(&saddr, 0, sizeof(saddr));
-    saddr.sin_family      = AF_INET;           /* Internet address family */
-    saddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
-    saddr.sin_port        = htons(opts->tcpserv_port);  /* Local port */
+    if(family == AF_INET)
+    {
+        memset(&saddr4, 0, sizeof(saddr4));
+        saddr4.sin_family      = family;            /* Internet address family */
+        saddr4.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
+        saddr4.sin_port        = htons(opts->tcpserv_port);  /* Local port */
+        saddr = (struct sockaddr *)&saddr4;
+        slen = sizeof(saddr4);
+        caddr = (struct sockaddr *)&caddr4;
+    } else if(family == AF_INET6) {
+        memset(&saddr6, 0, sizeof(saddr6));
+        saddr6.sin6_family    = family;            /* Internet address family */
+        saddr6.sin6_addr      = in6addr_any;       /* Any incoming interface */
+        saddr6.sin6_port      = htons(opts->tcpserv_port);  /* Local port */
+        saddr = (struct sockaddr *)&saddr6;
+        slen = sizeof(saddr6);
+        caddr = (struct sockaddr *)&caddr6;
+    }
+    else
+    {
+        log_msg(LOG_ERR, "run_tcp_server: unsupported protocol family (%d)",
+            family);
+        close(s_sock);
+        return -1;
+    }
 
     /* Bind to the local address */
-    if (bind(s_sock, (struct sockaddr *) &saddr, sizeof(saddr)) < 0)
+    if (bind(s_sock, saddr, slen) < 0)
     {
         log_msg(LOG_ERR, "run_tcp_server: bind() failed: %s",
             strerror(errno));
@@ -172,8 +196,6 @@ run_tcp_server(fko_srv_options_t *opts)
     */
     while(1)
     {
-        clen = sizeof(caddr);
-
         /* Initialize and setup the socket for select.
         */
         FD_SET(s_sock, &sfd_set);
@@ -215,7 +237,8 @@ run_tcp_server(fko_srv_options_t *opts)
 
         /* Wait for a client to connect
         */
-        if((c_sock = accept(s_sock, (struct sockaddr *) &caddr, (socklen_t *)&clen)) < 0)
+        clen = (family == AF_INET) ? sizeof(caddr) : sizeof(caddr6);
+        if((c_sock = accept(s_sock, caddr, &clen)) < 0)
         {
             log_msg(LOG_ERR, "run_tcp_server: accept() failed: %s",
                 strerror(errno));
@@ -225,8 +248,11 @@ run_tcp_server(fko_srv_options_t *opts)
 
         if(opts->verbose)
         {
-            memset(sipbuf, 0x0, MAX_IPV4_STR_LEN);
-            inet_ntop(AF_INET, &(caddr.sin_addr.s_addr), sipbuf, MAX_IPV4_STR_LEN);
+            memset(sipbuf, 0, sizeof(sipbuf));
+            if(family == AF_INET)
+                inet_ntop(family, &caddr4.sin_addr.s_addr, sipbuf, sizeof(sipbuf));
+            else if(family == AF_INET6)
+                inet_ntop(family, &caddr6.sin6_addr, sipbuf, sizeof(sipbuf));
             log_msg(LOG_INFO, "tcp_server: Got TCP connection from %s.", sipbuf);
         }
 

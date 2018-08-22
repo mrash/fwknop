@@ -554,7 +554,7 @@ validate_options(fko_srv_options_t *opts)
         */
         if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
         {
-            if(! is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP])))
+            if(! is_valid_ip_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP]), AF_INET))
             {
                 log_msg(LOG_ERR,
                     "Invalid IPv4 addr for SNAT_TRANSLATE_IP"
@@ -697,7 +697,7 @@ validate_options(fko_srv_options_t *opts)
         */
         if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
         {
-            if(! is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP])))
+            if(! is_valid_ip_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP]), AF_INET))
             {
                 log_msg(LOG_ERR,
                     "Invalid IPv4 addr for SNAT_TRANSLATE_IP"
@@ -1031,6 +1031,16 @@ validate_options(fko_srv_options_t *opts)
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
+#if FIREWALL_IPTABLES
+    if(opts->config[CONF_FIREWALL_EXE_IPV6] == NULL)
+    {
+        log_msg(LOG_ERR,
+            "[*] No firewall command executable is set for IPv6. Please check FIREWALL_EXE_IPV6 in fwknopd.conf."
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+#endif
+
     return;
 }
 
@@ -1047,6 +1057,9 @@ set_preconfig_entries(fko_srv_options_t *opts)
     */
 #ifdef FIREWALL_EXE
     set_config_entry(opts, CONF_FIREWALL_EXE, FIREWALL_EXE);
+#endif
+#ifdef FIREWALL_EXE_IPV6
+    set_config_entry(opts, CONF_FIREWALL_EXE_IPV6, FIREWALL_EXE_IPV6);
 #endif
 
 }
@@ -1372,6 +1385,9 @@ config_init(fko_srv_options_t *opts, int argc, char **argv)
             case 'i':
                 set_config_entry(opts, CONF_PCAP_INTF, optarg);
                 break;
+	    case '6':
+		opts->family = AF_INET6;
+		break;
             case FIREWD_DISABLE_CHECK_SUPPORT:
                 opts->firewd_disable_check_support = 1;
                 break;
@@ -1498,6 +1514,7 @@ usage(void)
       "                           a background daemon).\n"
       " -i, --interface         - Specify interface to listen for incoming SPA\n"
       "                           packets.\n"
+      " -6, --ipv6              - Start the server in IPv6 mode (TCP/UDP).\n"
       " -C, --packet-limit      - Limit the number of candidate SPA packets to\n"
       "                           process and exit when this limit is reached.\n"
       " -d, --digest-file       - Specify an alternate digest.cache file.\n"
