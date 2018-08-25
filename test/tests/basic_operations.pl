@@ -1569,7 +1569,7 @@
         'detail'   => 'invalid SPA destination (2)',
         'function' => \&client_rc_file,
         'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
-            "--no-save-args $verbose_str -D badhost -n default " .
+            "--no-save-args $verbose_str -D badhost. -n default " .
             "--rc-file $save_rc_file --save-rc-stanza --force-stanza",
         'save_rc_stanza' => [{'name' => 'default',
                 'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
