@@ -56,17 +56,17 @@ static fko_protocol_t fko_protocol_array[] =
 };
 
 int
-verify_file_perms_ownership(const char *file)
+verify_file_perms_ownership(const char *file, int fd)
 {
     int res = 1;
 
-#if HAVE_STAT
+#if HAVE_FSTAT && HAVE_STAT
     struct stat st;
 
     /* Every file that the fwknop client deals with should be owned
      * by the user and permissions set to 600 (user read/write)
     */
-    if((stat(file, &st)) == 0)
+    if((fd >= 0 && fstat(fd, &st) == 0) || stat(file, &st) == 0)
     {
         /* Make sure it is a regular file
         */

@@ -893,12 +893,15 @@ show_last_command(const char * const args_save_file)
     char args_str[MAX_LINE_LEN] = {0};
     FILE *args_file_ptr = NULL;
 
-    if(verify_file_perms_ownership(args_save_file) != 1)
-        return 0;
-
     if ((args_file_ptr = fopen(args_save_file, "r")) == NULL) {
         log_msg(LOG_VERBOSITY_ERROR, "Could not open args file: %s",
             args_save_file);
+        return 0;
+    }
+
+    if(verify_file_perms_ownership(args_save_file, fileno(args_file_ptr)) != 1)
+    {
+        fclose(args_file_ptr);
         return 0;
     }
 
@@ -928,13 +931,15 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
 
     memset(argv_new, 0x0, sizeof(argv_new));
 
-    if(verify_file_perms_ownership(args_save_file) != 1)
-        return 0;
-
     if ((args_file_ptr = fopen(args_save_file, "r")) == NULL)
     {
         log_msg(LOG_VERBOSITY_ERROR, "Could not open args file: %s",
                 args_save_file);
+        return 0;
+    }
+    if(verify_file_perms_ownership(args_save_file, fileno(args_file_ptr)) != 1)
+    {
+        fclose(args_file_ptr);
         return 0;
     }
     if ((fgets(args_str, MAX_LINE_LEN, args_file_ptr)) != NULL)

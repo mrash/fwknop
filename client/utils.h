@@ -52,7 +52,7 @@
 
 /* Prototypes
 */
-int     verify_file_perms_ownership(const char *file);
+int     verify_file_perms_ownership(const char *file, int fd);
 int     resolve_dst_addr(const char *dns_str, struct addrinfo *hints,
             char *ip_str, size_t ip_bufsize, fko_cli_options_t *opts);
 short   proto_inttostr(int proto, char *proto_str, size_t proto_size);
