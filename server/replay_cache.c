@@ -265,15 +265,18 @@ replay_file_cache_init(fko_srv_options_t *opts)
         }
     }
 
-    if(verify_file_perms_ownership(opts->config[CONF_DIGEST_FILE]) != 1)
-        return(-1);
-
     /* File exists, and we have access - create in-memory digest cache
     */
     if ((digest_file_ptr = fopen(opts->config[CONF_DIGEST_FILE], "r")) == NULL)
     {
         log_msg(LOG_WARNING, "Could not open digest cache: %s: %s",
             opts->config[CONF_DIGEST_FILE], strerror(errno));
+        return(-1);
+    }
+
+    if(verify_file_perms_ownership(opts->config[CONF_DIGEST_FILE], fileno(digest_file_ptr)) != 1)
+    {
+        fclose(digest_file_ptr);
         return(-1);
     }
 

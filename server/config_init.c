@@ -291,20 +291,6 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
     char            tmp1[MAX_LINE_LEN] = {0};
     char            tmp2[MAX_LINE_LEN] = {0};
 
-    struct stat     st;
-
-    /* Make sure the config file exists.
-    */
-    if(stat(config_file, &st) != 0)
-    {
-        log_msg(LOG_ERR, "[*] Config file: '%s' was not found.",
-            config_file);
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-    }
-
-    if(verify_file_perms_ownership(config_file) != 1)
-        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
-
     /* See the comment in the parse_access_file() function regarding security
      * here relative to a TOCTOU bug flagged by Coverity.
     */
@@ -314,6 +300,12 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
             config_file);
         perror(NULL);
 
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    if(verify_file_perms_ownership(config_file, fileno(cfile_ptr)) != 1)
+    {
+        fclose(cfile_ptr);
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 

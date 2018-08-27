@@ -109,15 +109,15 @@ is_valid_file(const char *path)
 }
 
 int
-verify_file_perms_ownership(const char *file)
+verify_file_perms_ownership(const char *file, int fd)
 {
-#if HAVE_STAT
+#if HAVE_FSTAT
     struct stat st;
 
     /* Every file that fwknopd deals with should be owned
      * by the user and permissions set to 600 (user read/write)
     */
-    if((stat(file, &st)) == 0)
+    if(fstat(fd, &st) == 0)
     {
         /* Make sure it is a regular file
         */

@@ -27,8 +27,6 @@
  *
  ******************************************************************************
 */
-#include <sys/stat.h>
-
 #if HAVE_SYS_SOCKET_H
   #include <sys/socket.h>
 #endif
@@ -1494,7 +1492,6 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
 
     struct passwd  *user_pw = NULL;
     struct passwd  *sudo_user_pw = NULL;
-    struct stat     st;
 
     acc_stanza_t   *curr_acc = NULL;
 
@@ -1502,50 +1499,18 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
     */
     (*depth)++;
 
-    /* First see if the access file exists.  If it doesn't, complain
-     * and bail.
-    */
-#if HAVE_LSTAT
-    if(lstat(access_filename, &st) != 0)
-    {
-        log_msg(LOG_ERR, "[*] Access file: '%s' was not found.",
-            access_filename);
-
-        return EXIT_FAILURE;
-    }
-#elif HAVE_STAT
-    if(stat(access_filename, &st) != 0)
-    {
-        log_msg(LOG_ERR, "[*] Access file: '%s' was not found.",
-            access_filename);
-
-        return EXIT_FAILURE;
-    }
-#endif
-
-    if(verify_file_perms_ownership(access_filename) != 1)
-        return EXIT_FAILURE;
-
-    /* A note on security here: Coverity flags the following fopen() as a
-     * Time of check time of use (TOCTOU) bug with a low priority due to the
-     * previous stat() call above.  I.e., the access.conf file on disk could
-     * have been changed between the stat() and the fopen() causing a TOCTOU
-     * bug.  While technically this is true, the return value of fopen() is
-     * also checked below so stat() success does not imply we assume fopen()
-     * success.  Also, we could just remove the stat() and
-     * verify_file_perms_ownership() calls above to "fix" the bug, but this
-     * would actually make things easier for an attacker that has already
-     * compromised the local system since access.conf could be changed to, say,
-     * a symbolic link (for which verify_file_perms_ownership() throws a
-     * warning), and then there is no race at all before the fopen().  I.e.
-     * forcing an attacker to do the race makes things harder for them.
-    */
     if ((file_ptr = fopen(access_filename, "r")) == NULL)
     {
         log_msg(LOG_ERR, "[*] Could not open access file: %s",
             access_filename);
         perror(NULL);
 
+        return EXIT_FAILURE;
+    }
+
+    if(verify_file_perms_ownership(access_filename, fileno(file_ptr)) != 1)
+    {
+        fclose(file_ptr);
         return EXIT_FAILURE;
     }
 

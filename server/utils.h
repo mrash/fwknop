@@ -63,7 +63,7 @@ char* dump_ctx(fko_ctx_t ctx);
 int   is_valid_dir(const char *path);
 int   is_valid_exe(const char *path);
 int   is_valid_file(const char *path);
-int   verify_file_perms_ownership(const char *file);
+int   verify_file_perms_ownership(const char *file, int fd);
 void  truncate_partial_line(char *str);
 int   is_digits(const char * const str);
 
