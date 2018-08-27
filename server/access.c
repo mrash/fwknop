@@ -2343,7 +2343,6 @@ int
 include_keys_file(acc_stanza_t *curr_acc, const char *access_filename, fko_srv_options_t *opts)
 {
     FILE           *file_ptr;
-    struct stat     st;
     unsigned int    num_lines = 0;
 
     char            access_line_buf[MAX_LINE_LEN] = {0};
@@ -2352,13 +2351,6 @@ include_keys_file(acc_stanza_t *curr_acc, const char *access_filename, fko_srv_o
     char           *ndx;
 
     log_msg(LOG_INFO, "Including key file: '%s'", access_filename);
-    if(stat(access_filename, &st) != 0)
-    {
-        log_msg(LOG_ERR, "[*] Access file: '%s' was not found.",
-            access_filename);
-
-        return EXIT_FAILURE;
-    }
 
     if ((file_ptr = fopen(access_filename, "r")) == NULL)
     {
