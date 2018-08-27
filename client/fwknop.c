@@ -899,7 +899,11 @@ show_last_command(const char * const args_save_file)
         return 0;
     }
 
+#if HAVE_FILENO
     if(verify_file_perms_ownership(args_save_file, fileno(args_file_ptr)) != 1)
+#else
+    if(verify_file_perms_ownership(args_save_file, -1) != 1)
+#endif
     {
         fclose(args_file_ptr);
         return 0;
@@ -937,7 +941,11 @@ run_last_args(fko_cli_options_t *options, const char * const args_save_file)
                 args_save_file);
         return 0;
     }
+#if HAVE_FILENO
     if(verify_file_perms_ownership(args_save_file, fileno(args_file_ptr)) != 1)
+#else
+    if(verify_file_perms_ownership(args_save_file, -1) != 1)
+#endif
     {
         fclose(args_file_ptr);
         return 0;

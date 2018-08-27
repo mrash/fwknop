@@ -1508,7 +1508,11 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         return EXIT_FAILURE;
     }
 
+#if HAVE_FILENO
     if(verify_file_perms_ownership(access_filename, fileno(file_ptr)) != 1)
+#else
+    if(verify_file_perms_ownership(access_filename, -1) != 1)
+#endif
     {
         fclose(file_ptr);
         return EXIT_FAILURE;

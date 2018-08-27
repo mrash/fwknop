@@ -274,7 +274,11 @@ replay_file_cache_init(fko_srv_options_t *opts)
         return(-1);
     }
 
+#if HAVE_FILENO
     if(verify_file_perms_ownership(opts->config[CONF_DIGEST_FILE], fileno(digest_file_ptr)) != 1)
+#else
+    if(verify_file_perms_ownership(opts->config[CONF_DIGEST_FILE], -1) != 1)
+#endif
     {
         fclose(digest_file_ptr);
         return(-1);

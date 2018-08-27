@@ -303,7 +303,11 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
+#if HAVE_FILENO
     if(verify_file_perms_ownership(config_file, fileno(cfile_ptr)) != 1)
+#else
+    if(verify_file_perms_ownership(config_file, -1) != 1)
+#endif
     {
         fclose(cfile_ptr);
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
