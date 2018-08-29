@@ -1015,18 +1015,19 @@ get_running_pid(const fko_srv_options_t *opts)
     pid_t   rpid            = 0;
 
 
-    if(verify_file_perms_ownership(opts->config[CONF_FWKNOP_PID_FILE]) != 1)
-    {
-        fprintf(stderr, "verify_file_perms_ownership() error\n");
-        return(rpid);
-    }
-
     op_fd = open(opts->config[CONF_FWKNOP_PID_FILE], O_RDONLY);
 
     if(op_fd == -1)
     {
         if((opts->foreground != 0) && (opts->verbose != 0))
             perror("Error trying to open PID file: ");
+        return(rpid);
+    }
+
+    if(verify_file_perms_ownership(opts->config[CONF_FWKNOP_PID_FILE], op_fd) != 1)
+    {
+        fprintf(stderr, "verify_file_perms_ownership() error\n");
+        close(op_fd);
         return(rpid);
     }
 

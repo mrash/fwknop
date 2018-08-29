@@ -400,7 +400,7 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STAT
 
-AC_CHECK_FUNCS([bzero gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strndup strrchr strspn strnlen stat lstat chmod chown strlcat strlcpy])
+AC_CHECK_FUNCS([bzero fileno gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strndup strrchr strspn strnlen fstat stat lstat chmod chown strlcat strlcpy])
 
 dnl Decide whether or not to check for the execvp() function
 dnl
