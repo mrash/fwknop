@@ -762,19 +762,24 @@ dnl
   AS_IF([test "x$FORCE_FIREWALLD_EXE" != x], [
     FIREWALLD_EXE="$FORCE_FIREWALLD_EXE"
   ],[
-    AS_IF([test "x$FORCE_IPTABLES_EXE" != x], [
-      IPTABLES_EXE="$FORCE_IPTABLES_EXE"
+    AS_IF([test "x$FORCE_IPTABLES_EXE" != x -o "x$FORCE_IP6TABLES_EXE" != x], [
+      AS_IF([test "x$FORCE_IPTABLES_EXE" != x], [
+        IPTABLES_EXE="$FORCE_IPTABLES_EXE"])
+      AS_IF([test "x$FORCE_IP6TABLES_EXE" != x], [
+        IP6TABLES_EXE="$FORCE_IP6TABLES_EXE"])
       FIREWALLD_EXE=""
     ],[
       AS_IF([test "x$FORCE_IPFW_EXE" != x], [
         IPFW_EXE="$FORCE_IPFW_EXE"
         IPTABLES_EXE=""
+        IP6TABLES_EXE=""
         FIREWALLD_EXE=""
       ],[
         AS_IF([test "x$FORCE_PF_EXE" != x], [
           PF_EXE="$FORCE_PF_EXE"
           IPFW_EXE=""
           IPTABLES_EXE=""
+          IP6TABLES_EXE=""
           FIREWALLD_EXE=""
         ],[
           AS_IF([test "x$FORCE_IPF_EXE" != x], [
@@ -782,6 +787,7 @@ dnl
             PF_EXE=""
             IPFW_EXE=""
             IPTABLES_EXE=""
+            IP6TABLES_EXE=""
             FIREWALLD_EXE=""
           ]
         ]
@@ -800,10 +806,11 @@ dnl
       FIREWALL_EXE=$FIREWALLD_EXE
       AC_DEFINE_UNQUOTED([FIREWALL_FIREWALLD], [1], [The firewall type: firewalld.])
   ],[
-    AS_IF([test "x$IPTABLES_EXE" != x], [
+    AS_IF([test "x$IPTABLES_EXE" != x -o "x$IP6TABLES_EXE" != x], [
         FW_DEF="FW_IPTABLES"
         FIREWALL_TYPE="iptables"
         FIREWALL_EXE=$IPTABLES_EXE
+        FIREWALL_EXE_IPV6=$IP6TABLES_EXE
         AC_DEFINE_UNQUOTED([FIREWALL_IPTABLES], [1], [The firewall type: iptables.])
     ],[
       AS_IF([test "x$IPFW_EXE" != x], [
@@ -870,8 +877,11 @@ echo "
 if [test "$want_server" = "yes" ]; then
   echo "    Server support:
         firewall type:              $FIREWALL_TYPE
-        firewall program path:      $FIREWALL_EXE
-"
+        firewall program path:      $FIREWALL_EXE"
+if [test "$FIREWALL_TYPE" = "iptables" ]; then
+  echo "        firewall program path:      $FIREWALL_EXE_IPV6 (for IPv6)"
+    fi
+echo
 if [test "$want_udp_server" = "yes" ]; then
   echo "    UDP server mode enabled, no libpcap dependency
 "
