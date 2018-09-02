@@ -7114,6 +7114,10 @@ sub specs() {
             "$default_server_conf_args --fw-list-all",
             $cmd_out_tmp, $curr_test_file);
 
+     &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd " .
+            "$default_server_conf_args --ipv6 --fw-list-all",
+            $cmd_out_tmp, $curr_test_file);
+
     my $have_gpgme = 0;
 
     for my $cmd (
@@ -8283,13 +8287,18 @@ sub is_fw_rule_active() {
 
     my $conf_args = $default_server_conf_args;
 
+    my $ipv6_arg = '';
+    if (&get_msg($test_hr) =~ /IPv6/) {
+        $ipv6_arg = '--ipv6';
+    }
+
     if ($test_hr->{'server_conf'}) {
         $conf_args = "-c $test_hr->{'server_conf'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file";
     }
 
     if ($test_hr->{'no_ip_check'}) {
-        &run_cmd("$lib_view_str $fwknopdCmd " .
+        &run_cmd("$lib_view_str $fwknopdCmd $ipv6_arg " .
                 qq{$conf_args --fw-list | grep -v "# DISABLED" },
                 $cmd_out_tmp, $curr_test_file);
         unless (&file_find_regex([qr/_exp_/],
@@ -8297,7 +8306,7 @@ sub is_fw_rule_active() {
             $rv = 0;
         }
     } else {
-        &run_cmd("$lib_view_str $fwknopdCmd " .
+        &run_cmd("$lib_view_str $fwknopdCmd $ipv6_arg " .
                 qq{$conf_args --fw-list | grep -v "# DISABLED" },
                 $cmd_out_tmp, $curr_test_file);
         if ($test_hr->{'insert_duplicate_rule_while_running'}) {
@@ -8320,9 +8329,16 @@ sub is_fw_rule_active() {
             close FWPOL;
             $rv = 0 unless $new_fw_rule;
         } else {
-            unless (&file_find_regex([qr/\s$fake_ip\s.*_exp_/],
-                    $MATCH_ALL, $NO_APPEND_RESULTS, $cmd_out_tmp)) {
-                $rv = 0;
+            if ($ipv6_arg) {
+                unless (&file_find_regex([qr/\s$fake_ip6\s.*_exp_/],
+                        $MATCH_ALL, $NO_APPEND_RESULTS, $cmd_out_tmp)) {
+                    $rv = 0;
+                }
+            } else {
+                unless (&file_find_regex([qr/\s$fake_ip\s.*_exp_/],
+                        $MATCH_ALL, $NO_APPEND_RESULTS, $cmd_out_tmp)) {
+                    $rv = 0;
+                }
             }
         }
     }
