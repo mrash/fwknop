@@ -564,6 +564,7 @@ our %cf = (
     'hmac_cmd_open_close_cycle_access8' => "$conf_dir/hmac_cmd_open_close_cycle_access8.conf",
     'hmac_cmd_open_close_multi_cycle_access' => "$conf_dir/hmac_cmd_open_close_multi_cycle_access.conf",
     'spa_destination'              => "$conf_dir/destination_rule_fwknopd.conf",
+    'udp_server_destination_rule'  => "$conf_dir/udp_server_destination_rule_fwknopd.conf",
     "${fw_conf_prefix}_spa_dst_snat" => "$conf_dir/${fw_conf_prefix}_spa_dst_snat_fwknopd.conf",
     'hmac_spa_destination_access'  => "$conf_dir/hmac_spa_destination_access.conf",
     'hmac_spa_destination2_access' => "$conf_dir/hmac_spa_destination2_access.conf",
@@ -2916,10 +2917,11 @@ sub _client_send_spa_packet() {
                 $rv = 0 unless &file_find_regex([qr/Final\sSPA\sData/],
                     $MATCH_ALL, $NO_APPEND_RESULTS, $curr_test_file);
             } else {
-                $rv = 0 unless (&file_find_num_matches(qr/Final\sSPA\sData/,
-                    $NO_APPEND_RESULTS, $server_cmd_tmp) > 0) || (&file_find_num_matches(qr/SPA\sPacket\sfrom\sIP:/,
-                    $NO_APPEND_RESULTS, $server_cmd_tmp) > 0) || (&file_find_num_matches(qr/SPA\sdata:/,
-                    $NO_APPEND_RESULTS, $server_cmd_tmp) > 0);
+                $rv = 0 unless
+                    (&file_find_num_matches(qr/Final\sSPA\sData/, $NO_APPEND_RESULTS, $server_cmd_tmp) > 0) ||
+                    (&file_find_num_matches(qr/SPA\sPacket\sfrom\sIP\:/, $NO_APPEND_RESULTS, $server_cmd_tmp) > 0) ||
+                    (&file_find_num_matches(qr/SPA\sdata\:/, $NO_APPEND_RESULTS, $server_cmd_tmp) > 0) ||
+                    (&file_find_num_matches(qr/udp_server\:\sGot\sUDP\sdatagram/, $NO_APPEND_RESULTS, $server_cmd_tmp) > 0); ### UDP server
             }
 
             last if $server_receive_check == $NO_SERVER_RECEIVE_CHECK;

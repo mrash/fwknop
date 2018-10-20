@@ -1488,6 +1488,36 @@
         'fw_rule_removed' => $NEW_RULE_REMOVED,
     },
 
+    ### test DESTINATION rules in UDP server mode
+    {
+        ### DESTINATION is 1.2.3.4 in $cf{'hmac_spa_destination4_access'}
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => "UDP server DESTINATION (1)",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'udp_server_destination_rule'} " .
+            "-a $cf{'hmac_spa_destination4_access'} --packet-limit 2 " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'server_positive_output_matches' => [qr/filtered by SOURCE and\/or DESTINATION/],
+        'client_pkt_tries' => 1,
+    },
+    {
+        ### DESTINATION             1.2.3.4, 123.0.0.0/24, 127.0.0.1/32
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => "UDP server DESTINATION (2)",
+        'function' => \&spa_cycle,
+        'cmdline'  => $default_client_hmac_args,
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'udp_server_destination_rule'} " .
+            "-a $cf{'hmac_spa_destination3_access'} --packet-limit 2 " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'server_negative_output_matches' => [qr/filtered by SOURCE and\/or DESTINATION/],
+        'client_pkt_tries' => 1,
+    },
+
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client',

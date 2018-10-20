@@ -350,6 +350,7 @@ EXTRA_DIST = \
     test/conf/tcp_pcap_filter_fwknopd.conf \
     test/conf/tcp_server_fwknopd.conf \
     test/conf/udp_server_fwknopd.conf \
+    test/conf/udp_server_destination_rule_fwknopd.conf \
     test/conf/spa_over_http_fwknopd.conf \
     test/conf/spa_over_http.pcap \
     test/conf/spa_x_forwarded_for.pcap \
