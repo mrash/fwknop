@@ -1576,6 +1576,19 @@
         'exec_err' => $YES,
         'positive_output_matches' => [qr/packet\snot\ssent/],
     },
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'IPv6 client',
+        'detail'   => 'invalid SPA destination (1)',
+        'function' => \&client_rc_file,
+        'cmdline'  => "$lib_view_str $valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip " .
+            "--no-save-args $verbose_str -D ::z -n default " .
+            "--rc-file $save_rc_file --save-rc-stanza --force-stanza",
+        'save_rc_stanza' => [{'name' => 'default',
+                'vars' => {'KEY' => 'testtest', 'DIGEST_TYPE' => 'MD5'}}],
+        'exec_err' => $YES,
+        'positive_output_matches' => [qr/packet\snot\ssent/],
+    },
 
     {
         'category' => 'basic operations',
