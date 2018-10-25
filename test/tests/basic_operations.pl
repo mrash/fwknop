@@ -1047,6 +1047,24 @@
         'positive_output_matches' => [qr/skipping stanza/],
         'negative_output_matches' => [qr/Could not find valid SOURCE stanza/],
     },
+
+    {
+        'category' => 'basic operations',
+        'subcategory' => 'server',
+        'detail'   => 'source trailing chars',
+        'function' => \&server_conf_files,
+        'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
+        'exec_err' => $YES,
+        'server_access_file' => [
+            'SOURCE     192.168.10.1      #test',
+            'KEY        testtest'
+        ],
+        'server_conf_file' => [
+            '### comment'
+        ],
+        'positive_output_matches' => [qr/Setting gid/],
+    },
+
     {
         'category' => 'basic operations',
         'subcategory' => 'server',

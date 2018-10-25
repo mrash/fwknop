@@ -562,6 +562,24 @@ strtol_wrapper(const char * const str, const int min,
     return val;
 }
 
+/* Chop whitespace off the end of a string (must be NULL-terminated)
+*/
+void
+chop_whitespace(char *str)
+{
+    int i;
+    for (i=strlen(str)-1; i > 0; i--)
+    {
+        if (! isspace(str[i]))
+        {
+            if (i < strlen(str)-1)
+                str[i+1] = 0x0;
+            break;
+        }
+    }
+    return;
+}
+
 /* zero out a buffer before free()
 */
 int zero_free(char *buf, int len)

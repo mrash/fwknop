@@ -1560,6 +1560,10 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         var[MAX_LINE_LEN-1] = 0x0;
         val[MAX_LINE_LEN-1] = 0x0;
 
+        /* Remove any trailing whitespace from the value
+        */
+        chop_whitespace(val);
+
         if (opts->verbose > 3)
             log_msg(LOG_DEBUG,
                 "ACCESS FILE: %s, LINE: %s\tVar: %s, Val: '%s'",

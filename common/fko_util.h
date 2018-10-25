@@ -53,6 +53,7 @@ short   digest_inttostr(int digest, char* digest_str, size_t digest_size);
 short   hmac_digest_strtoint(const char *dt_str);
 short   hmac_digest_inttostr(int digest, char* digest_str, size_t digest_size);
 int     constant_runtime_cmp(const char *a, const char *b, int len);
+void    chop_whitespace(char *buf);
 int     zero_free(char *buf, int len);
 int     zero_buf(char *buf, int len);
 

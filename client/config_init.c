@@ -576,6 +576,10 @@ is_rc_param(const char *line, rc_file_param_t *param)
     var[MAX_LINE_LEN-1] = 0x0;
     val[MAX_LINE_LEN-1] = 0x0;
 
+    /* Remove any trailing whitespace from the value
+    */
+    chop_whitespace(val);
+
     /* Copy back the val and var in the structure */
     strlcpy(param->name, var, sizeof(param->name));
     strlcpy(param->val, val, sizeof(param->val));

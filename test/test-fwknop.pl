@@ -272,6 +272,7 @@ my $enable_perl_module_checks = 0;
 my $enable_perl_module_fuzzing_spa_pkt_generation = 0;
 my $enable_python_module_checks = 0;
 my $enable_openssl_compatibility_tests = 0;
+my $disable_openssl_compatibility_tests = 0;
 my $enable_cunit_tests = 0;
 my $openssl_success_ctr = 0;
 my $openssl_failure_ctr = 0;
@@ -383,6 +384,7 @@ exit 1 unless GetOptions(
     'enable-distcheck'  => \$enable_make_distcheck,
     'enable-dist-check' => \$enable_make_distcheck,  ### synonym
     'enable-openssl-checks' => \$enable_openssl_compatibility_tests,
+    'disable-openssl-checks' => \$disable_openssl_compatibility_tests,
     'enable-cunit' => \$enable_cunit_tests,
     'gdb-test=s'        => \$gdb_test_file,
     'List-mode'         => \$list_mode,
@@ -743,6 +745,9 @@ $enable_fault_injection = 0 if $disable_fault_injection;
 unless (-d $output_dir) {
     mkdir $output_dir or die "[*] Could not mkdir $output_dir: $!";
 }
+
+### allow OpenSSL tests to be disabled even when --enable-all is set
+$enable_openssl_compatibility_tests = 0 if $disable_openssl_compatibility_tests;
 
 ### create an anonymized tar file of test suite results that can be
 ### emailed around to assist in debugging fwknop communications
@@ -8655,6 +8660,7 @@ sub usage() {
                                          $fuzzing_pkts_file
     --enable-openssl-checks            - Enable tests to verify that Rijndael
                                          cipher usage is compatible with openssl.
+    --disable-openssl-checks           - Disable OpenSSL verification tests.
     --gdb-test <test file>             - Run the same command a previous test suite
                                          execution through gdb by specifying the
                                          output/ test file.

@@ -332,6 +332,9 @@ parse_config_file(fko_srv_options_t *opts, const char *config_file)
             );
             continue;
         }
+        /* Remove any trailing whitespace from the value
+        */
+        chop_whitespace(val);
 
         good_ent = 0;
         for(i=0; i<NUMBER_OF_CONFIG_ENTRIES; i++)
