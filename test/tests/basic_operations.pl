@@ -1051,18 +1051,19 @@
     {
         'category' => 'basic operations',
         'subcategory' => 'server',
-        'detail'   => 'source trailing chars',
+        'detail'   => 'source trailing whitespace',
         'function' => \&server_conf_files,
         'fwknopd_cmdline' => "$server_rewrite_conf_files --exit-parse-config",
         'exec_err' => $YES,
         'server_access_file' => [
-            'SOURCE     192.168.10.1      #test',
+            'SOURCE     192.168.10.1   ',
             'KEY        testtest'
         ],
         'server_conf_file' => [
-            '### comment'
+            '### comment',
+            'PCAP_INTF          eth0    ',
         ],
-        'positive_output_matches' => [qr/Setting gid/],
+        'positive_output_matches' => [qr/not\senabled\sfor\s.*\s\'192.168.10.1\'/],
     },
 
     {
