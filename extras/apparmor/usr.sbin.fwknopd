@@ -23,6 +23,7 @@
   /etc/nsswitch.conf r,
   /etc/passwd r,
   /etc/protocols r,
+  @{PROC}/@{pid}/net/ip_tables_names r,
   /root/.gnupg/* rwkl,
   /run/fwknop/ rw,
   /run/fwknop/* rwk,
@@ -30,6 +31,7 @@
   /sbin/xtables-multi rix,
   /usr/bin/gpg rix,
   /usr/sbin/fwknopd mr,
+  /usr/sbin/xtables-nft-multi rix,
   /var/cache/nscd/passwd r,
 
 }
