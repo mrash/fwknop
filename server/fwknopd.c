@@ -34,7 +34,6 @@
 #include "fw_util.h"
 #include "sig_handler.h"
 #include "replay_cache.h"
-#include "tcp_server.h"
 #include "udp_server.h"
 
 #if USE_LIBNETFILTER_QUEUE
@@ -270,23 +269,6 @@ main(int argc, char **argv)
             }
         }
 
-        /* If the TCP server option was set, fire it up here. Note that in
-         * this mode, fwknopd still acquires SPA packets via libpcap. If you
-         * want to use UDP only without the libpcap dependency, then fwknop
-         * needs to be compiled with --enable-udp-server. Note that the UDP
-         * server can be run even when fwknopd links against libpcap as well,
-         * but there is no reason to link against it if SPA packets are
-         * always going to be acquired via a UDP socket.
-        */
-        if(strncasecmp(opts.config[CONF_ENABLE_TCP_SERVER], "Y", 1) == 0)
-        {
-            if(run_tcp_server(&opts) < 0)
-            {
-                log_msg(LOG_ERR, "Fatal run_tcp_server() error");
-                clean_exit(&opts, FW_CLEANUP, EXIT_FAILURE);
-            }
-        }
-
 #if USE_LIBPCAP
         /* Intiate pcap capture mode...
         */
@@ -310,23 +292,6 @@ main(int argc, char **argv)
     }
 
     log_msg(LOG_INFO, "Shutting Down fwknopd.");
-
-    /* Kill the TCP server (if we have one running).
-    */
-    if(opts.tcp_server_pid > 0)
-    {
-        log_msg(LOG_INFO, "Killing the TCP server (pid=%i)",
-            opts.tcp_server_pid);
-
-        kill(opts.tcp_server_pid, SIGTERM);
-
-        /* --DSS XXX: This seems to be necessary if the tcp server
-         *            was restarted by this program. We need to
-         *            investigate and fix this. For now, this works
-         *            (it is kludgy, but does no harm afaik).
-        */
-        kill(opts.tcp_server_pid, SIGKILL);
-    }
 
     clean_exit(&opts, FW_CLEANUP, EXIT_SUCCESS);
 
@@ -609,8 +574,6 @@ static int handle_signals(fko_srv_options_t *opts)
         {
             log_msg(LOG_WARNING, "Got SIGHUP. Re-reading configs.");
             free_configs(opts);
-            if(opts->tcp_server_pid > 0)
-                kill(opts->tcp_server_pid, SIGTERM);
             usleep(1000000);
             got_sighup = 0;
             rv = 0;  /* this means fwknopd will not exit */

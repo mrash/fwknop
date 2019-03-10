@@ -157,9 +157,6 @@ validate_int_var_ranges(fko_srv_options_t *opts)
     opts->rules_chk_threshold = range_check(opts,
             "RULES_CHECK_THRESHOLD", opts->config[CONF_RULES_CHECK_THRESHOLD],
             0, RCHK_MAX_RULES_CHECK_THRESHOLD);
-    opts->tcpserv_port = range_check(opts,
-            "TCPSERV_PORT", opts->config[CONF_TCPSERV_PORT],
-            1, RCHK_MAX_TCPSERV_PORT);
     opts->udpserv_port = range_check(opts,
             "UDPSERV_PORT", opts->config[CONF_UDPSERV_PORT],
             1, RCHK_MAX_UDPSERV_PORT);
@@ -910,16 +907,6 @@ validate_options(fko_srv_options_t *opts)
     if(opts->config[CONF_ENABLE_SPA_OVER_HTTP] == NULL)
         set_config_entry(opts, CONF_ENABLE_SPA_OVER_HTTP,
             DEF_ENABLE_SPA_OVER_HTTP);
-
-    /* Enable TCP server.
-    */
-    if(opts->config[CONF_ENABLE_TCP_SERVER] == NULL)
-        set_config_entry(opts, CONF_ENABLE_TCP_SERVER, DEF_ENABLE_TCP_SERVER);
-
-    /* TCP Server port.
-    */
-    if(opts->config[CONF_TCPSERV_PORT] == NULL)
-        set_config_entry(opts, CONF_TCPSERV_PORT, DEF_TCPSERV_PORT);
 
 #if USE_LIBNETFILTER_QUEUE
     /* Enable NFQ Capture

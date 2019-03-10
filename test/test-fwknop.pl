@@ -633,7 +633,6 @@ our %cf = (
     'gpg_large_signing_key_access' => "$conf_dir/gpg_large_signing_key_access.conf",
     'gpg_subkey_access'            => "$conf_dir/gpg_subkey_access.conf",
     'gpg_server_large_key_access'  => "$conf_dir/gpg_server_large_key_access.conf",
-    'tcp_server'                   => "$conf_dir/tcp_server_fwknopd.conf",
     'udp_server'                   => "$conf_dir/udp_server_fwknopd.conf",
     'spa_over_http'                => "$conf_dir/spa_over_http_fwknopd.conf",
     'spa_x_forwarded_for'          => "$conf_dir/spa_x_forwarded_for_fwknopd.conf",
@@ -3153,26 +3152,6 @@ sub spa_cycle() {
     my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
             = &client_server_interaction($test_hr, [], $USE_CLIENT);
 
-    $rv = 0 unless &process_output_matches($test_hr);
-
-    return $rv;
-}
-
-sub tcp_spa_cycle() {
-    my $test_hr = shift;
-
-    my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
-            = &client_server_interaction($test_hr, [], $USE_CLIENT);
-    if (!$rv) {
-        $rv = 1;
-        #start netcat listening on tcp/62201
-        system("nc -k -l 62201 > /dev/null 2>&1 &");
-        my ($rv, $server_was_stopped, $fw_rule_created, $fw_rule_removed)
-                = &client_server_interaction($test_hr, [], $USE_CLIENT);
-
-        #stop netcat
-        system("killall nc");
-}
     $rv = 0 unless &process_output_matches($test_hr);
 
     return $rv;

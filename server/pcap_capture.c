@@ -41,7 +41,6 @@
 #include "log_msg.h"
 #include "fwknopd_errors.h"
 #include "sig_handler.h"
-#include "tcp_server.h"
 
 #if HAVE_SYS_WAIT_H
   #include <sys/wait.h>
@@ -63,9 +62,7 @@ pcap_capture(fko_srv_options_t *opts)
     int                 promisc = 0;
     int                 set_direction = 1;
     int                 pcap_file_mode = 0;
-    int                 status;
     int                 chk_rm_all = 0;
-    pid_t               child_pid;
 
 #if FIREWALL_IPFW
     time_t              now;
@@ -189,34 +186,6 @@ pcap_capture(fko_srv_options_t *opts)
     */
     while(1)
     {
-        /* If we got a SIGCHLD and it was the tcp server, then handle it here.
-        */
-        if(got_sigchld)
-        {
-            if(opts->tcp_server_pid > 0)
-            {
-                child_pid = waitpid(0, &status, WNOHANG);
-
-                if(child_pid == opts->tcp_server_pid)
-                {
-                    if(WIFSIGNALED(status))
-                        log_msg(LOG_WARNING, "TCP server got signal: %i",  WTERMSIG(status));
-
-                    log_msg(LOG_WARNING,
-                        "TCP server exited with status of %i. Attempting restart.",
-                        WEXITSTATUS(status)
-                    );
-
-                    opts->tcp_server_pid = 0;
-
-                    /* Attempt to restart tcp server ? */
-                    usleep(1000000);
-                    run_tcp_server(opts);
-                }
-            }
-
-            got_sigchld = 0;
-        }
 
         if(sig_do_stop())
         {

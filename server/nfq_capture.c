@@ -36,7 +36,6 @@
 #include "log_msg.h"
 #include "fwknopd_errors.h"
 #include "sig_handler.h"
-#include "tcp_server.h"
 #include <fcntl.h>
 #if HAVE_SYS_WAIT_H
   #include <sys/wait.h>
@@ -171,37 +170,6 @@ nfq_capture(fko_srv_options_t *opts)
     */
     while(1)
     {
-        /* If we got a SIGCHLD and it was the tcp server, then handle it here.
-        ** XXX: --DSS Do we need this here?  I'm guessing we would not be using
-        **            the TCP server in NF_QUEUE capture mode.
-        */
-        if(got_sigchld)
-        {
-            if(opts->tcp_server_pid > 0)
-            {
-                child_pid = waitpid(0, &status, WNOHANG);
-
-                if(child_pid == opts->tcp_server_pid)
-                {
-                    if(WIFSIGNALED(status))
-                        log_msg(LOG_WARNING, "TCP server got signal: %i",  WTERMSIG(status));
-
-                    log_msg(LOG_WARNING,
-                        "TCP server exited with status of %i. Attempting restart.",
-                        WEXITSTATUS(status)
-                    );
-
-                    opts->tcp_server_pid = 0;
-
-                    /* Attempt to restart tcp server ? */
-                    usleep(1000000);
-                    run_tcp_server(opts);
-                }
-            }
-
-            got_sigchld = 0;
-        }
-
         /* Any signal except USR1, USR2, and SIGCHLD mean break the loop.
         */
         if(got_signal != 0)
