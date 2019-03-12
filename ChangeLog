@@ -1,3 +1,13 @@
+fwknop-2.6.11 (04//2019):
+    - [server] Add ALLOW_ANY_USER_AGENT for ENABLE_SPA_OVER_HTTP mode so that
+      fwknopd will accept any User-Agent string coming from the client. By
+      default this is disabled, so only SPA packets with a User-Agent string
+      that begins with 'Fwknop' will be accepted. Just set this variable to
+      'Y' to override this. Then, on the fwknop client command line, use the
+      --user-agent option to specify any desired User-Agent string. This
+      feature was added to close issue #296 reported by github user
+      @fishcreek.
+
 fwknop-2.6.10 (08/06/2018):
     - [server] Add MAX_FW_TIMEOUT to access.conf stanzas to allow a maximum
       number of seconds for client-specified timeouts in SPA packets. This

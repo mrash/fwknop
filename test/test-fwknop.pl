@@ -45,6 +45,7 @@ our $multi_pkts_pcap_file = "$conf_dir/multi_pkts.pcap";
 our $fcs_pcap_file        = "$conf_dir/fcs_spa.pcap";
 our $spa_over_http_pcap_file = "$conf_dir/spa_over_http.pcap";
 our $spa_x_forwarded_for_pcap_file = "$conf_dir/spa_x_forwarded_for.pcap";
+our $spa_allow_any_user_agent_pcap_file = "$conf_dir/spa_allow_any_user_agent.pcap";
 
 our $lib_dir = '../lib/.libs';
 
@@ -637,6 +638,7 @@ our %cf = (
     'udp_server'                   => "$conf_dir/udp_server_fwknopd.conf",
     'spa_over_http'                => "$conf_dir/spa_over_http_fwknopd.conf",
     'spa_x_forwarded_for'          => "$conf_dir/spa_x_forwarded_for_fwknopd.conf",
+    'spa_allow_any_user_agent'     => "$conf_dir/spa_allow_any_user_agent_fwknopd.conf",
     'tcp_pcap_filter'              => "$conf_dir/tcp_pcap_filter_fwknopd.conf",
     'icmp_pcap_filter'             => "$conf_dir/icmp_pcap_filter_fwknopd.conf",
     'open_ports_access'            => "$conf_dir/open_ports_access.conf",

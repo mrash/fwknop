@@ -390,6 +390,13 @@ the '@sysconfdir@/fwknop/fwknopd.conf' file for additional details.
     over TCP/80 connections and a web server should be running on the same
     server as *fwknopd*.
 
+*ALLOW_ANY_USER_AGENT* '<Y/N>'::
+    When *fwknopd* is configured to acquire SPA data from HTTP requests (i.e.
+    when ``ENABLE_SPA_OVER_HTTP'' is set to ``Y''), control whether to require
+    the User-Agent from the client to start with the string 'Fwknop'. The
+    default is ``N'' to require this, but if set to ``Y'', then *fwknopd* will
+    allow any User-Agent string to be set on incoming SPA packets.
+
 *ENABLE_X_FORWARDED_FOR* '<Y/N>'::
     Allows *fwknopd* to use the X-Forwarded-for header from a captured SPA
     packet over HTTP as the source IP. This can happen when using SPA through
@@ -398,7 +405,7 @@ the '@sysconfdir@/fwknop/fwknopd.conf' file for additional details.
 *ENABLE_TCP_SERVER* '<Y/N>'::
     Enable the fwknopd TCP server. This is a "dummy" TCP server that will
     accept TCP connection requests on the specified TCPSERV_PORT.
-    If set to "Y", fwknopd will fork off a child process to listen for, and
+    If set to ``Y'', fwknopd will fork off a child process to listen for, and
     accept incoming TCP request. This server only accepts the
     request. It does not otherwise communicate. This is only to allow the
     incoming SPA over TCP packet which is detected via PCAP. The connection
@@ -443,8 +450,8 @@ the '@sysconfdir@/fwknop/fwknopd.conf' file for additional details.
     sniffing interface. In the later case, this can be useful to have fwknopd
     sniff SPA packets that are forwarded through a system and destined for a
     different network. If the sniffing interface is the egress interface for
-    such packets, then this variable will need to be set to "Y" in order for
-    fwknopd to see them. The default is "N" so that fwknopd only looks for SPA
+    such packets, then this variable will need to be set to ``Y'' in order for
+    fwknopd to see them. The default is ``N'' so that fwknopd only looks for SPA
     packets that are received on the sniffing interface (note that this is
     independent of promiscuous mode).
 

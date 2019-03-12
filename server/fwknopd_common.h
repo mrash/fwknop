@@ -108,6 +108,7 @@
   #define DEF_SUDO_EXE                   "/usr/bin/sudo"
 #endif
 #define DEF_ENABLE_SPA_OVER_HTTP        "N"
+#define DEF_ALLOW_ANY_USER_AGENT        "N"
 #define DEF_ENABLE_TCP_SERVER           "N"
 #define DEF_TCPSERV_PORT                "62201"
 #if USE_LIBPCAP
@@ -257,6 +258,7 @@ enum {
     CONF_CMD_EXEC_TIMEOUT,
     //CONF_BLACKLIST,
     CONF_ENABLE_SPA_OVER_HTTP,
+    CONF_ALLOW_ANY_USER_AGENT,
     CONF_ENABLE_TCP_SERVER,
     CONF_TCPSERV_PORT,
     CONF_ENABLE_UDP_SERVER,

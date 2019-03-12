@@ -96,13 +96,20 @@ preprocess_spa_data(const fko_srv_options_t *opts, spa_pkt_info_t *spa_pkt, spa_
      * assume it is a SPA over HTTP request.
     */
     if(strncasecmp(opts->config[CONF_ENABLE_SPA_OVER_HTTP], "Y", 1) == 0
-      && strncasecmp(ndx, "GET /", 5) == 0
-      && strstr(ndx, "User-Agent: Fwknop") != NULL)
+      && strncasecmp(ndx, "GET /", 5) == 0)
     {
         /* This looks like an HTTP request, so let's see if we are
          * configured to accept such request and if so, find the SPA
          * data.
         */
+
+        /* First see if we require the User-Agent to start with 'Fwknop'
+        */
+        if(strncasecmp(opts->config[CONF_ALLOW_ANY_USER_AGENT], "N", 1) == 0
+          && strstr(ndx, "User-Agent: Fwknop") == NULL)
+        {
+            return(SPA_MSG_BAD_DATA);
+        }
 
         /* Process X-Forwarded-For header */
 

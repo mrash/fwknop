@@ -911,6 +911,16 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_ENABLE_SPA_OVER_HTTP,
             DEF_ENABLE_SPA_OVER_HTTP);
 
+    /* When CONF_ENABLE_SPA_OVER_HTTP is enabled, control whether to require the
+     * User-Agent string to begin with 'Fwknop'. The default is 'N', but setting
+     * this to 'Y' in the fwknopd.conf file allows any User-Agent to be used.
+     * Then, from the client, a custom User-Agent can be set with the
+     * '--user-agent' command line option.
+    */
+    if(opts->config[CONF_ALLOW_ANY_USER_AGENT] == NULL)
+        set_config_entry(opts, CONF_ALLOW_ANY_USER_AGENT,
+            DEF_ALLOW_ANY_USER_AGENT);
+
     /* Enable TCP server.
     */
     if(opts->config[CONF_ENABLE_TCP_SERVER] == NULL)
