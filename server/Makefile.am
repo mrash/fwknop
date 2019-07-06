@@ -25,7 +25,7 @@ fwknopd_LDADD     = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_
 if WANT_C_UNIT_TESTS
     noinst_PROGRAMS         = fwknopd_utests
     fwknopd_utests_SOURCES  = fwknopd_utests.c $(BASE_SOURCE_FILES)
-    fwknopd_utests_CPPFLAGS = -I $(top_builddir)/lib -I $(top_builddir)/common $(GPGME_CFLAGS) -DSYSCONFDIR=\"$(sysconfdir)\" -DSYSRUNDIR=\"$(localstatedir)\"
+    fwknopd_utests_CPPFLAGS = -I $(top_builddir)/lib -I $(top_builddir)/common $(GPGME_CFLAGS) -DSYSCONFDIR=\"$(sysconfdir)\" -DSYSRUNDIR=\"$(runstatedir)\"
     fwknopd_utests_LDADD    = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.a
     fwknopd_utests_LDFLAGS  = -lcunit $(GPGME_LIBS)
 
@@ -56,7 +56,7 @@ else
 endif
 endif
 
-fwknopd_CPPFLAGS  = -I $(top_srcdir)/lib -I $(top_srcdir)/common -DSYSCONFDIR=\"$(sysconfdir)\" -DSYSRUNDIR=\"$(localstatedir)\"
+fwknopd_CPPFLAGS  = -I $(top_srcdir)/lib -I $(top_srcdir)/common -DSYSCONFDIR=\"$(sysconfdir)\" -DSYSRUNDIR=\"$(runstatedir)\"
 
 fwknopddir        = @sysconfdir@/fwknop
 
