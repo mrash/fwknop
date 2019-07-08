@@ -7,7 +7,7 @@ Type=forking
 PIDFile=/run/fwknop/fwknopd.pid
 ExecStart=/usr/sbin/fwknopd
 ExecReload=/bin/kill -HUP $MAINPID
-Restart=onfailure
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
