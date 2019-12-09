@@ -1,4 +1,8 @@
-fwknop-2.6.11 (04//2019):
+fwknop-2.6.11 (12/09/2019):
+    - [server] (Amin Massad) Fixed two bugs in PF handling code - one for
+      indefinitely repeating error messages "Did not find expire comment in
+      rules list 0" in rule deletion code, and the second where min_exp was
+      not computed correctly for min_exp equal to zero. See github issue #295.
     - [server] Add ALLOW_ANY_USER_AGENT for ENABLE_SPA_OVER_HTTP mode so that
       fwknopd will accept any User-Agent string coming from the client. By
       default this is disabled, so only SPA packets with a User-Agent string

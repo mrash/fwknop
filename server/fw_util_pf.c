@@ -464,9 +464,6 @@ check_firewall_rules(const fko_srv_options_t * const opts,
             while (*newline_tmp_ndx != '\n' && *newline_tmp_ndx != '\0')
                 newline_tmp_ndx++;
 
-            if (*newline_tmp_ndx != '\n')
-                break;
-
             /* copy the whole rule to the next newline (includes the expiration
                time).
             */
@@ -483,7 +480,7 @@ check_firewall_rules(const fko_srv_options_t * const opts,
             /* Track the minimum future rule expire time.
             */
             if(rule_exp > now)
-                min_exp = (min_exp < rule_exp) ? min_exp : rule_exp;
+	         min_exp = (min_exp && (min_exp < rule_exp)) ? min_exp : rule_exp;
         }
 
         /* Push our tracking index forward beyond (just processed) _exp_
