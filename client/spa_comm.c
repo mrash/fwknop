@@ -88,7 +88,8 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
     int     sock=-1, sock_success=0, res=0, error;
     struct  addrinfo *result=NULL, *rp, hints;
     char    port_str[MAX_PORT_STR_LEN+1] = {0};
-
+    struct sockaddr_in saddr;
+    
     if (options->test)
     {
         log_msg(LOG_VERBOSITY_NORMAL,
@@ -150,6 +151,24 @@ send_spa_packet_tcp_or_udp(const char *spa_data, const int sd_len,
                 rp->ai_protocol);
         if (sock < 0)
             continue;
+
+        if(options->spa_src_port != 0)
+        {
+            if(options->spa_src_port < 0 || options->spa_src_port > MAX_PORT)
+            {
+                log_msg(LOG_VERBOSITY_ERROR, "could not set source port: invalid port specified");
+                return -1;
+            }
+            memset(&saddr, 0, sizeof(saddr));
+            saddr.sin_family = AF_INET;
+            saddr.sin_port = htons(options->spa_src_port);
+            saddr.sin_addr.s_addr = INADDR_ANY;
+            if (bind(sock,(const struct sockaddr *)&saddr,sizeof(saddr)))
+            {
+                log_msg(LOG_VERBOSITY_ERROR, "could not set source port: bind failed, do you need to be root?");
+                return -1;
+            }
+        }
 
         if ((error = (connect(sock, rp->ai_addr, rp->ai_addrlen) != -1)))
         {
