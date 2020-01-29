@@ -29,7 +29,7 @@
 #ifndef LOG_MSG_H
 #define LOG_MSG_H
 
-enum
+typedef enum
 {
     LOG_FIRST_VERBOSITY = 0,
     LOG_VERBOSITY_ERROR = 0,    /*!< Constant to define a ERROR message */
