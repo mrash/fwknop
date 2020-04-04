@@ -38,6 +38,7 @@
     #include <netinet/in.h>
   #endif
 #endif
+#include <string.h>
 
 /* How much space we allow for the fko context error message buffer.
 */
@@ -70,7 +71,7 @@
 #else
 #define MAX_IPV4_STR_LEN              16
 #endif
-#define MIN_IPV4_STR_LEN              7
+#define MIN_IPV4_STR_LEN              (strlen("0.0.0.0"))
 
 #define MAX_PROTO_STR_LEN             4  /* tcp, udp, icmp for now */
 #define MAX_PORT_STR_LEN              5
