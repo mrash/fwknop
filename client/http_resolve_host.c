@@ -135,7 +135,7 @@ try_url(struct url *url, fko_cli_options_t *options)
 #endif
 
     memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family   = AF_INET;
+    hints.ai_family   = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
     error = getaddrinfo(url->host, url->port, &hints, &result);
