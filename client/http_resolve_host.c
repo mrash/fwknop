@@ -55,6 +55,37 @@ struct url
     char    path[MAX_URL_PATH_LEN+1];
 };
 
+static int resolve_ip(const char * resp, fko_cli_options_t *options, const char * extraerror1,char *extraerror2) {
+  struct  addrinfo *result=NULL;
+  struct  addrinfo *rp;
+  struct  addrinfo hints;
+  int error;
+
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_INET;
+  hints.ai_flags  = AI_NUMERICHOST | AI_CANONNAME;
+  error = getaddrinfo(resp, NULL, &hints, &result);
+  if (error != 0)
+    {
+        log_msg(LOG_VERBOSITY_ERROR,
+		"[-] Could not resolve IP via: '%s%s'", extraerror1, extraerror2);
+        return(-1);
+    }
+    /* get last IP in case of multi IP host */
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+	/* the canonical value is in the first structure returned */
+	strlcpy(options->allow_ip_str,
+	        rp->ai_canonname, sizeof(options->allow_ip_str));
+	break;
+    }
+    freeaddrinfo(result);
+
+    log_msg(LOG_VERBOSITY_INFO,
+		"\n[+] Resolved external IP (via '%s%s') as: %s",
+	        extraerror1,extraerror2, options->allow_ip_str);
+    return 1;
+}
+
 static int
 try_url(struct url *url, fko_cli_options_t *options)
 {
@@ -90,13 +121,6 @@ try_url(struct url *url, fko_cli_options_t *options)
     );
 
     http_buf_len = strlen(http_buf);
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-
-    hints.ai_family   = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-
 #if AFL_FUZZING
     /* Make sure to not generate any resolution requests when compiled
      * for AFL fuzzing cycles
@@ -110,6 +134,10 @@ try_url(struct url *url, fko_cli_options_t *options)
     return(1);
 #endif
 
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family   = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
     error = getaddrinfo(url->host, url->port, &hints, &result);
     if (error != 0)
     {
@@ -196,37 +224,7 @@ try_url(struct url *url, fko_cli_options_t *options)
     }
     ndx += 4;
 
-    /* Try to parse the content as an IP address.
-     * Note: We are expecting the content to be exactly that
-     *       (possibly followed by whitespace or other not-digit value).
-     */
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_flags  = AI_NUMERICHOST | AI_CANONNAME;
-    error = getaddrinfo(ndx, NULL, &hints, &result);
-    if (error != 0)
-    {
-        log_msg(LOG_VERBOSITY_ERROR,
-            "[-] From http://%s%s\n    Invalid IP (%s) in HTTP response:\n\n%s",
-            url->host, url->path, ndx, http_response);
-        return(-1);
-    }
-    /* get last IP address in case of multi IP host */
-    for (rp = result; rp != NULL; rp = rp->ai_next) {
-	/* the canonical value is in the first structure returned */
-	strlcpy(options->allow_ip_str,
-	        rp->ai_canonname, sizeof(options->allow_ip_str));
-	break;
-    }
-    freeaddrinfo(result);
-
-    log_msg(LOG_VERBOSITY_INFO,
-                "\n[+] Resolved external IP (via http://%s%s) as: %s",
-                url->host,
-                url->path,
-                options->allow_ip_str);
-
-    return(1);
+    return resolve_ip(ndx,options,url->host,url->path);
 }
 
 static int
@@ -314,9 +312,8 @@ parse_url(char *res_url, struct url* url)
 int
 resolve_ip_https(fko_cli_options_t *options)
 {
-    int     got_resp=0, error;
+    int     got_resp=0;
     char    resp[MAX_IPV4_STR_LEN+1] = {0};
-    struct  addrinfo *result=NULL, *rp, hints;
     struct  url url; /* for validation only */
     char    wget_ssl_cmd[MAX_URL_PATH_LEN] = {0};  /* for verbose logging only */
 
@@ -492,29 +489,7 @@ resolve_ip_https(fko_cli_options_t *options)
         return -1;
     }
 
-    memset(&hints, 0, sizeof(struct addrinfo));
-    hints.ai_family = AF_INET;
-    hints.ai_flags  = AI_NUMERICHOST | AI_CANONNAME;
-    error = getaddrinfo(resp, NULL, &hints, &result);
-    if (error != 0)
-    {
-        log_msg(LOG_VERBOSITY_ERROR,
-            "[-] Could not resolve IP via: '%s'", wget_ssl_cmd);
-        return(-1);
-    }
-    /* get last IP in case of multi IP host */
-    for (rp = result; rp != NULL; rp = rp->ai_next) {
-	/* the canonical value is in the first structure returned */
-	strlcpy(options->allow_ip_str,
-	        rp->ai_canonname, sizeof(options->allow_ip_str));
-	break;
-    }
-    freeaddrinfo(result);
-
-    log_msg(LOG_VERBOSITY_INFO,
-		"\n[+] Resolved external IP (via '%s') as: %s",
-		wget_ssl_cmd, options->allow_ip_str);
-    return 1;
+    return resolve_ip(resp,options,wget_ssl_cmd,"");
 }
 
 int
