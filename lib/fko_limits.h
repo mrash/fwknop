@@ -30,6 +30,15 @@
 #ifndef FKO_LIMITS_H
 #define FKO_LIMITS_H 1
 
+#ifdef WIN32
+  #include <winsock2.h>
+  #include <ws2tcpip.h>
+#else
+  #if HAVE_NETINET_IN_H
+    #include <netinet/in.h>
+  #endif
+#endif
+
 /* How much space we allow for the fko context error message buffer.
 */
 #define MAX_FKO_ERR_MSG_SIZE        128
@@ -56,7 +65,11 @@
 #define MIN_SPA_FIELDS                6
 #define MAX_SPA_FIELDS                9
 
-#define MAX_IPV4_STR_LEN             16
+#ifdef INET_ADDRSTRLEN
+#define MAX_IPV4_STR_LEN              INET_ADDRSTRLEN
+#else
+#define MAX_IPV4_STR_LEN              16
+#endif
 #define MIN_IPV4_STR_LEN              7
 
 #define MAX_PROTO_STR_LEN             4  /* tcp, udp, icmp for now */
