@@ -10,9 +10,7 @@ libfko_source_files = \
     sha1.h sha2.c sha2.h sha3.c sha3.h fko_context.h fko_state.h \
     gpgme_funcs.c gpgme_funcs.h fko_dump.c
 
-
 libfko_la_LDFLAGS = -version-info 3:0:1 $(GPGME_LIBS) -export-symbols-regex '^fko_' $(GPGME_LIBS) -no-undefined
-libfko_la_LIBADD = $(top_builddir)/common/libfko_util.la
 if WANT_C_UNIT_TESTS
 noinst_PROGRAMS     = fko_utests
 fko_utests_SOURCES  = fko_utests.c $(libfko_source_files)
@@ -26,9 +24,10 @@ libfko_la_LDFLAGS  += -lwsock32 -lws2_32
 endif
 endif
 
-libfko_la_SOURCES   = $(libfko_source_files)
+libfko_la_SOURCES  = $(libfko_source_files)
+libfko_la_LIBADD = $(top_builddir)/gnulib/libgnu.la $(top_builddir)/common/libfko_util.la
 
-AM_CPPFLAGS         = -I $(top_srcdir)/common  $(GPGME_CFLAGS)
+libfko_la_CPPFLAGS = -I $(top_builddir)/gnulib -I $(top_srcdir)/gnulib -I $(top_srcdir)/common  $(GPGME_CFLAGS)
 
 include_HEADERS     = fko.h
 

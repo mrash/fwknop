@@ -16,7 +16,9 @@ EXTRA_libfko_util_la_SOURCES = ../win32/getlogin.c ../win32/getlogin.h
 libfko_util_la_LDFLAGS += -lwsock32 -lws2_32
 endif
 
-libfko_util_la_CPPFLAGS =  -I $(top_srcdir)/common -I $(top_srcdir)/lib $(GPGME_CFLAGS)
+libfko_util_la_CPPFLAGS =  -I  $(top_builddir)/gnulib -I $(top_srcdir)/gnulib -I $(top_srcdir)/common -I $(top_srcdir)/lib $(GPGME_CFLAGS)
+libfko_util_la_LIBADD = $(top_builddir)/gnulib/libgnu.la
+
 
 EXTRA_DIST = common.h netinet_common.h cunit_common.h cunit_common.c
 

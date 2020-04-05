@@ -21,8 +21,8 @@ if WANT_LIBFIU_SUPPORT
 endif
 endif
 
-fwknop_CPPFLAGS     = -I $(top_srcdir)/lib -I $(top_srcdir)/common
-fwknop_LDADD        = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.la
+fwknop_CPPFLAGS     = -I$(top_builddir)/gnulib -I$(top_srcdir)/gnulib -I $(top_srcdir)/lib -I $(top_srcdir)/common
+fwknop_LDADD        = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.la $(top_builddir)/gnulib/libgnu.la
 
 dist_man_MANS       = fwknop.8
 
