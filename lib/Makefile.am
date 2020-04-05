@@ -25,7 +25,7 @@ endif
 endif
 
 libfko_la_SOURCES  = $(libfko_source_files)
-libfko_la_LIBADD = $(top_builddir)/gnulib/libgnu.la $(top_builddir)/common/libfko_util.la
+libfko_la_LIBADD = $(top_builddir)/common/libfko_util.la
 
 libfko_la_CPPFLAGS = -I $(top_builddir)/gnulib -I $(top_srcdir)/gnulib -I $(top_srcdir)/common  $(GPGME_CFLAGS)
 

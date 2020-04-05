@@ -392,8 +392,7 @@ AC_SYS_LARGEFILE
 # Checks for library functions.
 #
 AC_FUNC_STAT
-
-AC_CHECK_FUNCS([bzero fileno gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strndup strrchr strspn strnlen fstat stat lstat chmod chown strlcat strlcpy getuid])
+AC_CHECK_FUNCS([bzero fileno gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strrchr strspn strnlen fstat stat lstat chmod chown strlcat strlcpy getuid])
 
 dnl Decide whether or not to check for the execvp() function
 dnl

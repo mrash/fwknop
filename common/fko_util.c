@@ -632,26 +632,6 @@ zero_buf(char *buf, int len)
     return res;
 }
 
-#if defined(WIN32) || !defined(HAVE_STRNDUP)
-/* Windows does not have strndup, so we well implement it here.
- * This was the Public Domain C Library (PDCLib).
-*/
-char
-*strndup( const char * s, size_t len )
-{
-    char* ns = NULL;
-    if(s) {
-        ns = calloc(1, len + 1);
-        if(ns) {
-            ns[len] = 0;
-            // strncpy to be pedantic about modification in multithreaded
-            // applications
-            return strncpy(ns, s, len);
-        }
-    }
-    return ns;
-}
-#endif
 
 /* Determine if a buffer contains only characters from the base64
  * encoding set

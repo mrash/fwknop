@@ -84,10 +84,6 @@ size_t  strlcat(char *dst, const char *src, size_t siz);
 size_t  strlcpy(char *dst, const char *src, size_t siz);
 #endif
 
-#if defined(WIN32) || !defined(HAVE_STRNDUP)
-char * strndup( const char * s, size_t len );
-#endif
-
 #include <sys/types.h>
 #ifdef WIN32
   #include <winsock2.h>

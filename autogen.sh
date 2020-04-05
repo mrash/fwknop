@@ -13,7 +13,9 @@ if [ ! -d config ]; then
 	mkdir config
 fi
 
-gnulib-tool --lib=libgnu --libtool --lgpl=3orGPLv2 --source-base=gnulib --import stdint
+gnulib-tool --lib=libgnu --libtool --lgpl=3orGPLv2 --source-base=gnulib --import \
+    stdint \
+    strndup
 
 if which libtoolize &> /dev/null ; then
   libtoolize --automake --copy --force
