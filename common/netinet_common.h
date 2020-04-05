@@ -32,6 +32,8 @@
 #ifndef NETINET_COMMON_H
 #define NETINET_COMMON_H
 
+#include <stdint.h>
+
 #ifdef WIN32
   #include <winsock2.h>
   #include <ws2tcpip.h>
@@ -84,25 +86,25 @@ struct iphdr
 #else
   #error       "Please fix <bits/endian.h>"
 #endif
-    unsigned char tos;
-    unsigned short tot_len;
-    unsigned short id;
-    unsigned short frag_off;
-    unsigned char ttl;
-    unsigned char protocol;
-    unsigned short check;
-    unsigned int saddr;
-    unsigned int daddr;
+    uint8_t tos;
+    uint16_t tot_len;
+    uint16_t id;
+    uint16_t frag_off;
+    uint8_t ttl;
+    uint8_t protocol;
+    uint16_t check;
+    uint32_t saddr;
+    uint32_t daddr;
 };
 
 /* The TCP header
 */
 struct tcphdr
 {
-    unsigned short source;
-    unsigned short dest;
-    unsigned int seq;
-    unsigned int ack_seq;
+    uint16_t source;
+    uint16_t dest;
+    uint16_t seq;
+    uint16_t ack_seq;
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     unsigned short res1:4;
     unsigned short doff:4;
@@ -126,39 +128,39 @@ struct tcphdr
 #else
   #error "Adjust your <bits/endian.h> defines"
 #endif
-    unsigned short window;
-    unsigned short check;
-    unsigned short urg_ptr;
+    uint16_t window;
+    uint16_t check;
+    uint16_t urg_ptr;
 };
 
 /* The UDP header
 */
 struct udphdr {
-    unsigned short source;              /* source port */
-    unsigned short dest;                /* destination port */
-    unsigned short len;                 /* udp length */
-    unsigned short check;               /* udp checksum */
+    uint16_t source;              /* source port */
+    uint16_t dest;                /* destination port */
+    uint16_t len;                 /* udp length */
+    uint16_t check;               /* udp checksum */
 };
 
 /* The ICMP header
 */
 struct icmphdr
 {
-    unsigned char type;                 /* message type */
-    unsigned char code;                 /* type sub-code */
-    unsigned short checksum;
+    uint8_t type;                 /* message type */
+    uint8_t code;                 /* type sub-code */
+    uint16_t checksum;
     union
     {
         struct
         {
-            unsigned short  id;
-            unsigned short  sequence;
+            uint16_t  id;
+            uint16_t  sequence;
         } echo;                         /* echo datagram */
-        unsigned int    gateway;        /* gateway address */
+        uint16_t    gateway;        /* gateway address */
         struct
         {
-            unsigned short  __notused;
-            unsigned short  mtu;
+            uint16_t  __notused;
+            uint16_t  mtu;
         } frag;                         /* path mtu discovery */
     } un;
 };
