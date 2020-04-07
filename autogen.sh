@@ -15,6 +15,7 @@ fi
 
 gnulib-tool --lib=libgnu --libtool --lgpl=3orGPLv2 --source-base=gnulib --import \
     stdint \
+    sys_types largefile \
     strndup
 
 if which libtoolize &> /dev/null ; then

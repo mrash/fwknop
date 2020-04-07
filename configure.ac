@@ -376,10 +376,7 @@ AC_CHECK_HEADERS([arpa/inet.h ctype.h endian.h errno.h locale.h netdb.h net/ethe
 # Type checks.
 #
 AC_C_CONST
-AC_TYPE_OFF_T
-AC_TYPE_PID_T
-AC_TYPE_SIZE_T
-AC_TYPE_SSIZE_T
+
 
 AC_CHECK_SIZEOF(unsigned int)
 
