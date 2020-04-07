@@ -35,6 +35,7 @@
 #include "utils.h"
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #ifdef WIN32
   #define STDIN_FILENO 0

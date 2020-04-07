@@ -26,6 +26,8 @@
  *
  *****************************************************************************
 */
+#include <errno.h>
+
 #include "fwknopd.h"
 #include "access.h"
 #include "config_init.h"

@@ -28,6 +28,8 @@
  *
  *****************************************************************************
 */
+#include <errno.h>
+
 #include "fwknopd_common.h"
 #include "nfq_capture.h"
 #include "process_packet.h"

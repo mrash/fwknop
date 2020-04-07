@@ -27,6 +27,8 @@
  *
  *****************************************************************************
 */
+#include <errno.h>
+
 #include "fwknopd_common.h"
 #include "log_msg.h"
 #include "sig_handler.h"

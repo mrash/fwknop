@@ -27,6 +27,8 @@
  *
  *****************************************************************************
 */
+#include <errno.h>
+
 #include "common.h"
 #include "fwknop_common.h"
 #include "utils.h"

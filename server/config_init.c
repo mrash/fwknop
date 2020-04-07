@@ -27,6 +27,8 @@
  *
  ******************************************************************************
 */
+#include <errno.h>
+
 #include "fwknopd_common.h"
 #include "fwknopd_errors.h"
 #include "config_init.h"
