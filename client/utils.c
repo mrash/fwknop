@@ -55,6 +55,10 @@ static fko_protocol_t fko_protocol_array[] =
     { "http",   FKO_PROTO_HTTP      }
 };
 
+#ifndef S_ISLNK
+#define S_ISLNK(x) 0
+#endif
+
 int
 verify_file_perms_ownership(const char *file, int fd)
 {
@@ -93,7 +97,7 @@ verify_file_perms_ownership(const char *file, int fd)
             res = 0;
             */
         }
-
+# if HAVE_GETUID
         if(st.st_uid != getuid())
         {
             log_msg(LOG_VERBOSITY_ERROR, "[-] file: %s not owned by current effective user id",
@@ -103,6 +107,7 @@ verify_file_perms_ownership(const char *file, int fd)
             res = 0;
             */
         }
+# endif
     }
     else
     {
