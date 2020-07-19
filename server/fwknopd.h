@@ -80,6 +80,6 @@
    *
    * \brief Buffer length for PID
    */
-#define PID_BUFLEN 7
+#define PID_BUFLEN 8
 
 #endif  /* FWKNOPD_H */

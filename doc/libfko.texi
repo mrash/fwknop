@@ -578,7 +578,7 @@ For a context that will be used for receiving and parsing an existing
 @acronym{SPA} message, you will use the @code{fko_new_with_data} function:
 
 @deftypefun int fko_new_with_data @
-  (fko_ctx_t @var{*ctx}, const char @var{*data}, const char @var{*key}, const char @var{key_len}, int @var{encryption_mode}, const char @var{hmac_key}, const int @var{hmac_type})
+  (fko_ctx_t @var{*ctx}, const char @var{*data}, const char @var{*key}, const int @var{key_len}, int @var{encryption_mode}, const char @var{hmac_key}, const int @var{hmac_key_len}, const int @var{hmac_type})
 
 The function @code{fko_new_with_data} sets up and initializes a new
 @code{fko_ctx_t} context, but instead of initializing default values, it
@@ -909,7 +909,7 @@ For example:
 
 @deftypefun int fko_set_spa_message (fko_ctx_t @var{ctx}, const char @var{*msg_string});
 Set the SPA message string to the given value. If this string does not
-conform to the required @code{spa_nat_access} format, the function will
+conform to the required @code{spa_message} format, the function will
 return @code{FKO_ERROR_INVALID_DATA}.
 @end deftypefun
 
@@ -961,19 +961,19 @@ use this function.  However, some may find a reason to do it in this way.
 @noindent
 @emph{GPG-specific functions:}
 
-@deftypefun int fko_set_gpg_recipient (fko_ctx_t @var{ctx}, const char @var{recipient});
+@deftypefun int fko_set_gpg_recipient (fko_ctx_t @var{ctx}, const char @var{*recipient});
 Sets the @acronym{GPG} key for the recipient.  This would be the recipient's
 public key used to encyrpt the @acronym{SPA} data.  You can use the user name
 ("recip@@the.dest.com") or the key ID ("5EXXXXCC").  At present, multiple
 recipients are not supported.
 @end deftypefun
 
-@deftypefun int fko_set_gpg_signer (fko_ctx_t @var{ctx}, const char @var{signer});
+@deftypefun int fko_set_gpg_signer (fko_ctx_t @var{ctx}, const char @var{*signer});
 Sets the @acronym{GPG} key for signing the data.  This would be the sender's
 key used to sign the @acronym{SPA} data. You can use the user name or key ID.
 @end deftypefun
 
-@deftypefun int fko_set_gpg_home_dir (fko_ctx_t @var{ctx}, const char @var{home_dir});
+@deftypefun int fko_set_gpg_home_dir (fko_ctx_t @var{ctx}, const char @var{*home_dir});
 Sets the @acronym{GPG} home directory for the current gpgme context.  This
 allows for using alternate keyrings, gpg configurations, etc.
 @end deftypefun
@@ -991,7 +991,7 @@ signature verification errors are ignored (but still captured) and the
 decoding process will continue.  The default value of this flag is false.
 @end deftypefun
 
-@deftypefun int fko_set_gpg_exe (fko_ctx_t @var{ctx}, const char @var{gpg_exe});
+@deftypefun int fko_set_gpg_exe (fko_ctx_t @var{ctx}, const char @var{*gpg_exe});
 Sets the path to the @acronym{GPG} executable that @emph{gpgme} will use.
 By default, @emph{libfko} forces @emph{gpgme} to use @command{gpg} in case
 @emph{gpgme} was compiled to use @command{gpg2} as its default engine.  You
