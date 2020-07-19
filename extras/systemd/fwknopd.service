@@ -4,7 +4,6 @@ After=network-online.target
 
 [Service]
 Type=forking
-PIDFile=/run/fwknop/fwknopd.pid
 ExecStart=/usr/sbin/fwknopd
 ExecReload=/bin/kill -HUP $MAINPID
 
