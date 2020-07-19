@@ -211,7 +211,7 @@ pcap_capture(fko_srv_options_t *opts)
 
                     /* Attempt to restart tcp server ? */
                     usleep(1000000);
-                    run_tcp_server(opts);
+                    run_tcp_server(opts, (opts->family != AF_UNSPEC) ? opts->family : AF_INET);
                 }
             }
 
