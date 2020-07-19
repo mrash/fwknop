@@ -47,6 +47,9 @@
 /* Define if you have libgpgme */
 #undef HAVE_LIBGPGME
 
+/* Path to gpg executable */
+#define GPG_EXE "gpg.exe"
+
 /* Define to 1 if your system has a GNU libc compatible `malloc' function, and
    to 0 otherwise. */
 #undef HAVE_MALLOC
@@ -123,7 +126,7 @@
 #undef HAVE_SYS_SOCKET_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#undef HAVE_SYS_STAT_H
+#define HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/time.h> header file. */
 #undef HAVE_SYS_TIME_H

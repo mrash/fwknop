@@ -37,6 +37,20 @@
   #include "gpgme_funcs.h"
   #if HAVE_SYS_STAT_H
     #include <sys/stat.h>
+    /* Taken from cURL for win32 build
+    */
+    #if !defined(S_ISREG) && defined(S_IFMT) && defined(S_IFREG)
+        #define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+    #endif
+    #if !defined(S_ISDIR) && defined(S_IFMT) && defined(S_IFDIR)
+        #define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+    #endif
+    #if !defined(S_IFLNK)
+        #define S_IFLNK 0xA000
+    #endif
+    #if !defined(S_ISLNK) && defined(S_IFMT)
+        #define S_ISLNK(m) (((m) & S_IFMT) == S_IFLNK)
+    #endif
   #endif
 #endif
 
