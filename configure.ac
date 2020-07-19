@@ -22,6 +22,19 @@ AC_CONFIG_AUX_DIR(config)
 AC_CANONICAL_TARGET
 
 AM_INIT_AUTOMAKE([subdir-objects])
+AC_PROG_CC
+gl_EARLY
+AM_PROG_CC_C_O
+AC_USE_SYSTEM_EXTENSIONS
+AC_PROG_CPP
+AC_PROG_AWK
+AC_PROG_SED
+AC_PROG_GREP
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+AC_PROG_LIBTOOL
+LT_INIT([win32-dll])
 
 dnl AM_MAINTAINER_MODE
 
@@ -108,17 +121,6 @@ int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
     )])dnl
 
 AC_GNU_SOURCE
-
-AC_PROG_CC
-AM_PROG_CC_C_O
-AC_PROG_CPP
-AC_PROG_AWK
-AC_PROG_SED
-AC_PROG_GREP
-AC_PROG_INSTALL
-AC_PROG_LN_S
-AC_PROG_MAKE_SET
-AC_PROG_LIBTOOL
 
 dnl Detect if we are on and Apple platform
 dnl
@@ -369,26 +371,16 @@ AC_HEADER_STDC
 AC_HEADER_TIME
 AC_HEADER_RESOLV
 
-AC_CHECK_HEADERS([arpa/inet.h ctype.h endian.h errno.h locale.h netdb.h net/ethernet.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/ethernet.h sys/socket.h sys/stat.h sys/time.h sys/wait.h termios.h time.h unistd.h])
+AC_CHECK_HEADERS([arpa/inet.h ctype.h endian.h errno.h locale.h netdb.h net/ethernet.h netinet/in.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/ethernet.h sys/socket.h sys/stat.h sys/time.h sys/wait.h termios.h time.h unistd.h])
 
 # Type checks.
 #
 AC_C_CONST
-AC_TYPE_INT8_T
-AC_TYPE_INT16_T
-AC_TYPE_INT32_T
-AC_TYPE_INT64_T
-AC_TYPE_UINT8_T
-AC_TYPE_UINT16_T
-AC_TYPE_UINT32_T
-AC_TYPE_UINT64_T
-AC_TYPE_OFF_T
-AC_TYPE_PID_T
-AC_TYPE_SIZE_T
-AC_TYPE_SSIZE_T
+
 
 AC_CHECK_SIZEOF(unsigned int)
-dnl AC_CHECK_TYPES([uint8_t, uint32_t])
+
+gl_INIT
 
 AC_C_BIGENDIAN
 
@@ -396,11 +388,8 @@ AC_SYS_LARGEFILE
 
 # Checks for library functions.
 #
-AC_FUNC_MALLOC
-AC_FUNC_REALLOC
 AC_FUNC_STAT
-
-AC_CHECK_FUNCS([bzero fileno gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strndup strrchr strspn strnlen fstat stat lstat chmod chown strlcat strlcpy])
+AC_CHECK_FUNCS([bzero fileno gettimeofday memmove memset socket strchr strcspn strdup strncasecmp strrchr strspn strnlen fstat stat lstat chmod chown strlcat strlcpy getuid])
 
 dnl Decide whether or not to check for the execvp() function
 dnl
@@ -816,6 +805,7 @@ dnl
 )
 
 AC_CONFIG_FILES([Makefile
+                 gnulib/Makefile
                  lib/Makefile
                  client/Makefile
                  server/Makefile

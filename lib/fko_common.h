@@ -40,6 +40,7 @@
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <stdint.h>
 
 #if STDC_HEADERS
   #include <stdlib.h>
@@ -77,16 +78,6 @@
   #define S_IRUSR     _S_IREAD
   #define S_IWUSR     _S_IWRITE
   #define PATH_SEP    '\\'
-
-  /* These are needed for the digest code under windows.
-  */
-  typedef unsigned __int8   uint8_t;
-  typedef unsigned __int32	uint32_t;
-  typedef unsigned __int64	uint64_t;
-#else
-  #if HAVE_STDINT_H
-    #include <stdint.h>
-  #endif
 #endif
 
 /* Work out endianness

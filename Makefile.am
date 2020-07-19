@@ -9,6 +9,7 @@ if WANT_SERVER
 endif
 
 SUBDIRS = \
+    gnulib \
     common \
     lib \
     $(CLIENT_DIR) \
@@ -16,6 +17,7 @@ SUBDIRS = \
     doc
 
 EXTRA_DIST = \
+    gnulib/gnulib-cache.m4 \
     android/COPYING \
     android/Application.mk \
     android/README \

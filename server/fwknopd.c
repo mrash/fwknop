@@ -26,6 +26,8 @@
  *
  *****************************************************************************
 */
+#include <errno.h>
+
 #include "fwknopd.h"
 #include "access.h"
 #include "config_init.h"
@@ -389,7 +391,7 @@ static void afl_enc_pkt_from_file(fko_srv_options_t *opts)
             res = fko_decrypt_spa_data(decrypt_ctx, "fwknoptest",
                     strlen("fwknoptest"));
         if(res == FKO_SUCCESS)
-            res = dump_ctx_to_buffer(decrypt_ctx, dump_buf, sizeof(dump_buf));
+            res = fko_dump_ctx_to_buffer(decrypt_ctx, dump_buf, sizeof(dump_buf));
         if(res == FKO_SUCCESS)
             log_msg(LOG_INFO, "%s", dump_buf);
         else
@@ -444,7 +446,7 @@ static void afl_pkt_from_stdin(fko_srv_options_t *opts)
         if(res == FKO_SUCCESS)
             res = fko_decode_spa_data(decode_ctx);
         if(res == FKO_SUCCESS)
-            res = dump_ctx_to_buffer(decode_ctx, dump_buf, sizeof(dump_buf));
+            res = fko_dump_ctx_to_buffer(decode_ctx, dump_buf, sizeof(dump_buf));
         if(res == FKO_SUCCESS)
             log_msg(LOG_INFO, "%s", dump_buf);
 

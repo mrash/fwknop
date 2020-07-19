@@ -27,10 +27,10 @@
  *
  *****************************************************************************
 */
+#include <errno.h>
 
 #if USE_LIBPCAP
   #include <pcap.h>
-  #include <errno.h>
 #endif
 
 #include "fwknopd_common.h"

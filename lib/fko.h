@@ -1393,6 +1393,9 @@ DLL_API int fko_gpg_signature_id_match(fko_ctx_t ctx, const char * const id,
 DLL_API int fko_gpg_signature_fpr_match(fko_ctx_t ctx, const char * const fpr,
     unsigned char * const result);
 
+
+DLL_API int
+fko_dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len);
 #ifdef __cplusplus
 }
 #endif

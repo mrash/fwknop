@@ -14,16 +14,15 @@ if WANT_C_UNIT_TESTS
   noinst_PROGRAMS        = fwknop_utests
   fwknop_utests_SOURCES  = fwknop_utests.c $(BASE_SOURCE_FILES)
   fwknop_utests_CPPFLAGS = -I $(top_builddir)/lib -I $(top_builddir)/common $(GPGME_CFLAGS)
-  fwknop_utests_LDADD    = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.a
+  fwknop_utests_LDADD    = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.la
   fwknop_utests_LDFLAGS  = -lcunit $(GPGME_LIBS)
 if WANT_LIBFIU_SUPPORT
   fwknop_utests_LDADD   += -lfiu
 endif
 endif
 
-fwknop_CPPFLAGS     = -I $(top_srcdir)/lib -I $(top_srcdir)/common
-
-fwknop_LDADD        = -L$(top_builddir)/common -lfko_util $(top_builddir)/lib/libfko.la
+fwknop_CPPFLAGS     = -I$(top_builddir)/gnulib -I$(top_srcdir)/gnulib -I $(top_srcdir)/lib -I $(top_srcdir)/common
+fwknop_LDADD        = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.la $(top_builddir)/gnulib/libgnu.la
 
 dist_man_MANS       = fwknop.8
 

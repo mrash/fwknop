@@ -28,11 +28,12 @@
  *
  *****************************************************************************
 */
+#include <errno.h>
+
 #include "fwknopd_common.h"
 #include "tcp_server.h"
 #include "log_msg.h"
 #include "utils.h"
-#include <errno.h>
 
 #if HAVE_SYS_SOCKET_H
   #include <sys/socket.h>

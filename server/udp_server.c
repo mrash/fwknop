@@ -27,6 +27,8 @@
  *
  *****************************************************************************
 */
+#include <errno.h>
+
 #include "fwknopd_common.h"
 #include "sig_handler.h"
 #include "incoming_spa.h"
@@ -34,7 +36,7 @@
 #include "fw_util.h"
 #include "cmd_cycle.h"
 #include "utils.h"
-#include <errno.h>
+
 
 #if HAVE_SYS_SOCKET_H
   #include <sys/socket.h>

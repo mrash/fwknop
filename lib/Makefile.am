@@ -8,36 +8,26 @@ libfko_source_files = \
     fko.h fko_limits.h fko_timestamp.c fko_hmac.c hmac.c hmac.h \
     fko_user.c fko_user.h md5.c md5.h rijndael.c rijndael.h sha1.c \
     sha1.h sha2.c sha2.h sha3.c sha3.h fko_context.h fko_state.h \
-    gpgme_funcs.c gpgme_funcs.h
+    gpgme_funcs.c gpgme_funcs.h fko_dump.c
 
+libfko_la_LDFLAGS = -version-info 3:0:1 $(GPGME_LIBS) -export-symbols-regex '^fko_' $(GPGME_LIBS) -no-undefined
 if WANT_C_UNIT_TESTS
 noinst_PROGRAMS     = fko_utests
 fko_utests_SOURCES  = fko_utests.c $(libfko_source_files)
 fko_utests_CPPFLAGS = -I $(top_builddir)/lib -I $(top_builddir)/common $(GPGME_CFLAGS)
-fko_utests_LDADD    = $(top_builddir)/lib/libfko.la $(top_builddir)/common/libfko_util.a
-fko_utests_LDFLAGS  = -lcunit $(GPGME_LIBS)
-libfko_la_LDFLAGS   = -version-info 3:0:0 $(GPGME_LIBS) -export-symbols-regex '^fko_' \
-                      -Wl,--whole-archive,$(top_builddir)/common/libfko_util.a,--no-whole-archive
-else
-if APPLE_PLATFORM
-libfko_la_LDFLAGS   = -version-info 3:0:0 $(GPGME_LIBS) -export-symbols-regex '^fko_' \
-                      -Wl,-force_load,$(top_builddir)/common/libfko_util.a
+fko_utests_LDADD    = $(top_builddir)/lib/libfko.la 
+fko_utests_LIBS     = $(top_builddir)/common/libfko_util.la
+fko_utests_LDFLAGS  = -lcunit
 else
 if USE_MINGW
-libfko_la_LDFLAGS   = -version-info 3:0:0 $(GPGME_LIBS) \
-                      -export-symbols-regex '^fko_' -no-undefined \
-                      -Wl,--whole-archive,$(top_builddir)/common/libfko_util.a,--no-whole-archive,-lwsock32,-lws2_32
-else
-libfko_la_LDFLAGS   = -version-info 3:0:0 $(GPGME_LIBS) \
-                      -export-symbols-regex '^fko_' \
-                      -Wl,--whole-archive,$(top_builddir)/common/libfko_util.a,--no-whole-archive
-endif
+libfko_la_LDFLAGS  += -lwsock32 -lws2_32
 endif
 endif
 
-libfko_la_SOURCES   = $(libfko_source_files)
+libfko_la_SOURCES  = $(libfko_source_files)
+libfko_la_LIBADD = $(top_builddir)/common/libfko_util.la
 
-AM_CPPFLAGS         = $(GPGME_CFLAGS) -I $(top_srcdir)/common
+libfko_la_CPPFLAGS = -I $(top_builddir)/gnulib -I $(top_srcdir)/gnulib -I $(top_srcdir)/common  $(GPGME_CFLAGS)
 
 include_HEADERS     = fko.h
 

@@ -40,6 +40,8 @@
 #include "getpasswd.h"
 #include "utils.h"
 
+#include <errno.h>
+
 #define PW_BUFSIZE              128                 /*!< Maximum number of chars an encryption key or a password can contain */
 
 #define PW_BREAK_CHAR           0x03                /*!< Ascii code for the Ctrl-C char */

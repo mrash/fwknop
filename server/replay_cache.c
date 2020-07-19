@@ -33,6 +33,8 @@
  *
  *****************************************************************************
 */
+#include <errno.h>
+
 #include "replay_cache.h"
 #include "log_msg.h"
 #include "fwknopd_errors.h"

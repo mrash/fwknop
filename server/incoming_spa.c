@@ -1035,7 +1035,7 @@ incoming_spa(fko_srv_options_t *opts)
         log_msg(LOG_DEBUG, "[%s] (stanza #%d) SPA Decode (res=%i):",
             spadat.pkt_source_ip, stanza_num, res);
 
-        res = dump_ctx_to_buffer(ctx, dump_buf, sizeof(dump_buf));
+        res = fko_dump_ctx_to_buffer(ctx, dump_buf, sizeof(dump_buf));
         if (res == FKO_SUCCESS)
             log_msg(LOG_DEBUG, "%s", dump_buf);
         else
