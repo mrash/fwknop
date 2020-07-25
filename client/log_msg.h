@@ -38,7 +38,7 @@ enum
     LOG_VERBOSITY_INFO,         /*!< Constant to define a INFO message */
     LOG_VERBOSITY_DEBUG,        /*!< Constant to define a DEBUG message */
     LOG_LAST_VERBOSITY
-} log_level_t;
+};
 
 #define LOG_DEFAULT_VERBOSITY   LOG_VERBOSITY_NORMAL    /*!< Default verbosity to use */
 
