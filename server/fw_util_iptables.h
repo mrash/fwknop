@@ -46,12 +46,13 @@
 #define IPT_FWD_RULE_ARGS       "-t %s -p %i -s %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
 #define IPT_FWD_ALL_RULE_ARGS   "-t %s -s %s -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s" SH_REDIR
 #define IPT_DNAT_RULE_ARGS      "-t %s -p %i -s %s -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s --to-destination %s:%i" SH_REDIR
+#define IPT_DNAT_RULE_ARGS_IPV6 "-t %s -p %i -s %s -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s --to-destination [%s]:%i" SH_REDIR
 #define IPT_DNAT_ALL_RULE_ARGS  "-t %s -s %s -d %s -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s --to-destination %s" SH_REDIR
 #define IPT_SNAT_RULE_ARGS      "-t %s -p %i -d %s --dport %i -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s %s" SH_REDIR
 #define IPT_SNAT_ALL_RULE_ARGS  "-t %s -s %s -m comment --comment " EXPIRE_COMMENT_PREFIX "%u -j %s %s" SH_REDIR
-#define IPT_TMP_COMMENT_ARGS    "-t %s -I %s %i -s " DUMMY_IP " -m comment --comment " TMP_COMMENT " -j %s" SH_REDIR
-#define IPT_TMP_CHK_RULE_ARGS   "-t %s -I %s %i -s " DUMMY_IP " -p udp -j %s" SH_REDIR
-#define IPT_TMP_VERIFY_CHK_ARGS "-t %s -C %s -s " DUMMY_IP " -p udp -j %s" SH_REDIR
+#define IPT_TMP_COMMENT_ARGS    "-t %s -I %s %i -s %s -m comment --comment " TMP_COMMENT " -j %s" SH_REDIR
+#define IPT_TMP_CHK_RULE_ARGS   "-t %s -I %s %i -s %s -p udp -j %s" SH_REDIR
+#define IPT_TMP_VERIFY_CHK_ARGS "-t %s -C %s -s %s -p udp -j %s" SH_REDIR
 #define IPT_DEL_RULE_ARGS       "-t %s -D %s %i" SH_REDIR
 #define IPT_NEW_CHAIN_ARGS      "-t %s -N %s" SH_REDIR
 #define IPT_FLUSH_CHAIN_ARGS    "-t %s -F %s" SH_REDIR
@@ -63,6 +64,7 @@
 #define IPT_LIST_RULES_ARGS     "-t %s -L %s --line-numbers -n" SH_REDIR
 #define IPT_LIST_ALL_RULES_ARGS "-t %s -v -n -L --line-numbers" SH_REDIR
 #define IPT_ANY_IP              "0.0.0.0/0"
+#define IPT_ANY_IPV6            "::/0"
 
 #if USE_LIBNETFILTER_QUEUE
   #define IPT_NFQ_ADD_ARGS "-t %s -A %s -p udp -m udp --dport %s -j NFQUEUE --queue-num %s"
