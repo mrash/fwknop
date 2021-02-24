@@ -1,0 +1,31 @@
+# docker build -t fwknop -f Dockerfile.client .
+# docker run -v $HOME/.fwknoprc:/root/.fwknoprc --rm fwknop
+FROM alpine AS build
+
+RUN apk add autoconf gcc automake libtool make musl-dev libpcap texinfo
+
+RUN mkdir /src
+
+WORKDIR /src
+
+COPY . .
+
+# https://github.com/mrash/fwknop/issues/305
+# ENV CFLAGS="-fcommon"
+
+RUN autoreconf -fvi
+
+RUN ./configure --disable-server CFLAGS="-fcommon" 
+RUN make
+RUN make install
+
+########################
+
+FROM alpine:latest
+# The wget that is installed does not support --secure-protocol!
+RUN apk add wget
+COPY --from=build /usr/local/bin/fwknop /usr/local/bin/fwknop
+COPY --from=build /usr/local/lib/libfko* /usr/local/lib/
+
+
+ENTRYPOINT [ "/usr/local/bin/fwknop" ] 
