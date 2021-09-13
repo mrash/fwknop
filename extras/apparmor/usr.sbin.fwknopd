@@ -33,10 +33,12 @@
   /run/resolvconf/resolv.conf r,
   /run/xtables.lock rwk,
   /sbin/ipset rix,
+  /sbin/xtables-legacy-multi rix,
   /sbin/xtables-multi rix,
   /usr/bin/gpg rix,
   /usr/sbin/fwknopd mr,
   /usr/sbin/ipset rix,
+  /usr/sbin/xtables-legacy-multi rix,
   /usr/sbin/xtables-nft-multi rix,
   /var/cache/nscd/passwd r,
 
