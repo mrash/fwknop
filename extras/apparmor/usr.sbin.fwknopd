@@ -1,10 +1,13 @@
-# Last Modified: Sun Aug 18 22:54:57 2013
+# Last Modified: Sun Sep 12 19:51:24 2021
+include <tunables/global>
+
 # Assumes fwknopd was built with:
 #    './configure --prefix=/usr --sysconfdir=/etc --localstatedir=/run'
-#include <tunables/global>
+
 
 /usr/sbin/fwknopd {
-  #include <abstractions/base>
+  include <abstractions/base>
+  include <abstractions/gstreamer>
 
   capability ipc_lock,
   capability net_admin,
