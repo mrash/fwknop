@@ -13,14 +13,14 @@ include <tunables/global>
   capability net_admin,
   capability net_raw,
 
-  network inet raw,
   network inet dgram,
+  network inet raw,
   network inet6 dgram,
-  network packet raw,
   network packet dgram,
+  network packet raw,
 
-  /bin/dash rix,
   /bin/bash rix,
+  /bin/dash rix,
   /etc/fwknop/access.conf r,
   /etc/fwknop/fwknopd.conf r,
   /etc/host.conf r,
@@ -29,8 +29,7 @@ include <tunables/global>
   /etc/protocols r,
   /etc/resolv.conf r,
   /etc/services r,
-  @{PROC}/@{pid}/net/ip_tables_names r,
-  /root/.gnupg/* rwkl,
+  /root/.gnupg/* rwlk,
   /run/fwknop/ rw,
   /run/fwknop/* rwk,
   /run/resolvconf/resolv.conf r,
@@ -44,5 +43,6 @@ include <tunables/global>
   /usr/sbin/xtables-legacy-multi rix,
   /usr/sbin/xtables-nft-multi rix,
   /var/cache/nscd/passwd r,
+  @{PROC}/@{pid}/net/ip_tables_names r,
 
 }
