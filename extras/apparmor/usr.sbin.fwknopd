@@ -1,37 +1,48 @@
-# Last Modified: Sun Aug 18 22:54:57 2013
+# Last Modified: Sun Sep 12 19:51:24 2021
+include <tunables/global>
+
 # Assumes fwknopd was built with:
 #    './configure --prefix=/usr --sysconfdir=/etc --localstatedir=/run'
-#include <tunables/global>
+
 
 /usr/sbin/fwknopd {
-  #include <abstractions/base>
+  include <abstractions/base>
+  include <abstractions/gstreamer>
 
   capability ipc_lock,
   capability net_admin,
   capability net_raw,
 
-  network inet raw,
   network inet dgram,
+  network inet raw,
   network inet6 dgram,
-  network packet raw,
   network packet dgram,
+  network packet raw,
 
-  /bin/dash rix,
   /bin/bash rix,
+  /bin/dash rix,
   /etc/fwknop/access.conf r,
   /etc/fwknop/fwknopd.conf r,
+  /etc/host.conf r,
   /etc/nsswitch.conf r,
   /etc/passwd r,
   /etc/protocols r,
-  @{PROC}/@{pid}/net/ip_tables_names r,
-  /root/.gnupg/* rwkl,
+  /etc/resolv.conf r,
+  /etc/services r,
+  /root/.gnupg/* rwlk,
   /run/fwknop/ rw,
   /run/fwknop/* rwk,
+  /run/resolvconf/resolv.conf r,
   /run/xtables.lock rwk,
+  /sbin/ipset rix,
+  /sbin/xtables-legacy-multi rix,
   /sbin/xtables-multi rix,
   /usr/bin/gpg rix,
   /usr/sbin/fwknopd mr,
+  /usr/sbin/ipset rix,
+  /usr/sbin/xtables-legacy-multi rix,
   /usr/sbin/xtables-nft-multi rix,
   /var/cache/nscd/passwd r,
+  @{PROC}/@{pid}/net/ip_tables_names r,
 
 }
