@@ -4,8 +4,6 @@
 @include version.texi
 @settitle Firewall Knock Operator Library - libfko
 @c @setchapternewpage odd
-@ifnothtml
-@end ifnothtml
 @finalout
 @c Unify some of the indices.
 @syncodeindex tp fn
