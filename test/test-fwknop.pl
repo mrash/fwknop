@@ -1106,7 +1106,6 @@ my %test_keys = (
 die "[*] Please stop the running fwknopd instance."
     if &global_fwknopd_pgrep_check();
 
-
 if ($rerun_failed_mode) {
     my $test_num = 0;
     my $test_category = "";
@@ -1180,8 +1179,7 @@ if ($rerun_failed_mode) {
             &logr($line);
         }
     }
-
-exit 0;
+    exit 0;
 }
 
 ### now that we're ready to run, preserve any previous test
@@ -1657,30 +1655,30 @@ sub is_asan_instrumentation_working() {
     for my $file ('Makefile-m32', 'Makefile') {
         $rv = 1;
         unless (&run_cmd("make -f $file clean", "../$cmd_out_tmp",
-                "../$curr_test_file")) {
+                $curr_test_file)) {
             $rv = 0;
             next;
         }
 
         if ($sudo_path) {
             unless (&run_cmd("$sudo_path -u $username make -f $file",
-                    "../$cmd_out_tmp", "../$curr_test_file")) {
+                    "../$cmd_out_tmp", $curr_test_file)) {
                 unless (&run_cmd("make -f $file", "../$cmd_out_tmp",
-                        "../$curr_test_file")) {
+                        $curr_test_file)) {
                     $rv = 0;
                     next;
                 }
             }
         } else {
             unless (&run_cmd("make -f $file", "../$cmd_out_tmp",
-                    "../$curr_test_file")) {
+                    $curr_test_file)) {
                 $rv = 0;
                 next;
             }
         }
 
         if ($rv) {
-            &run_cmd('./a.out', "../$cmd_out_tmp", "../$curr_test_file");
+            &run_cmd('./a.out', "../$cmd_out_tmp", $curr_test_file);
             chdir '..' or die $!;
             if (&is_sanitizer_crash($curr_test_file)) {
                 chdir $asan_dir or die $!;
@@ -1707,7 +1705,7 @@ sub compile_warnings() {
     ### look for compilation warnings - something like:
     ###     warning: ‘test’ is used uninitialized in this function
     if (&file_find_regex([qr/\swarning:\s/i, qr/gcc\:.*\sunused/],
-            $MATCH_ANY, $APPEND_RESULTS, "test/$curr_test_file")) {
+            $MATCH_ANY, $APPEND_RESULTS, $curr_test_file)) {
         chdir $curr_pwd or die $!;
         return 0;
     }
@@ -1916,14 +1914,14 @@ sub fko_wrapper_exec() {
             for (my $i=0; $i < $iterations; $i++) {
                 &run_cmd("$lib_path $fiu_run_path -x " .
                     "-c '$test_hr->{'fiu_injection_style'}' $test_hr->{'wrapper_binary'}",
-                    "../$cmd_out_tmp", "../$curr_test_file");
+                    "../$cmd_out_tmp", $curr_test_file);
             }
         } else {
             &run_cmd("./$test_hr->{'wrapper_script'} $test_hr->{'wrapper_binary'}",
-                "../$cmd_out_tmp", "../$curr_test_file");
+                "../$cmd_out_tmp", $curr_test_file);
 
             if ($test_hr->{'wrapper_script'} =~ /valgrind/) {
-                $rv = 0 unless &valgrind_results("../$curr_test_file");
+                $rv = 0 unless &valgrind_results($curr_test_file);
             }
         }
 
@@ -2083,21 +2081,21 @@ sub config_recompile() {
 
     my $rv = 1;
 
-    &run_cmd('make clean', $cmd_out_tmp, "test/$curr_test_file");
+    &run_cmd('make clean', $cmd_out_tmp, $curr_test_file);
 
     if ($config_cmd) {
-        &run_cmd($config_cmd, $cmd_out_tmp, "test/$curr_test_file");
+        &run_cmd($config_cmd, $cmd_out_tmp, $curr_test_file);
     }
 
     if ($sudo_path) {
         unless (&run_cmd("$sudo_path -u $username make",
-                $cmd_out_tmp, "test/$curr_test_file")) {
+                $cmd_out_tmp, $curr_test_file)) {
             $rv = 0 unless &run_cmd('make', $cmd_out_tmp,
-                    "test/$curr_test_file");
+                    $curr_test_file);
         }
     } else {
         $rv = 0 unless &run_cmd('make', $cmd_out_tmp,
-            "test/$curr_test_file");
+            $curr_test_file);
     }
 
     unless ($rv) {
@@ -2121,7 +2119,7 @@ sub configure_args_restore_orig() {
 
     unless (&config_recompile($orig_config_args)) {
         &write_test_file("[-] configure/recompile failure.\n",
-            "test/$curr_test_file");
+            $curr_test_file);
         chdir $curr_pwd or die $!;
         $rv = 0;
     }
@@ -2140,7 +2138,7 @@ sub configure_args_disable_execvp() {
 
     unless (&config_recompile('./extras/apparmor/configure_args.sh --disable-execvp')) {
         &write_test_file("[-] configure/recompile failure.\n",
-            "test/$curr_test_file");
+            $curr_test_file);
         chdir $curr_pwd or die $!;
         $rv = 0;
     }
@@ -2159,7 +2157,7 @@ sub configure_args_udp_server_no_libpcap() {
 
     unless (&config_recompile('./extras/apparmor/configure_args.sh --enable-udp-server')) {
         &write_test_file("[-] configure/recompile failure.\n",
-            "test/$curr_test_file");
+            $curr_test_file);
         $rv = 0;
     }
 
@@ -8085,8 +8083,7 @@ sub compile_wrapper() {
     chdir $fko_wrapper_dir or die $!;
 
     ### 'make clean' as root
-    unless (&run_cmd('make clean', "../$cmd_out_tmp",
-            "../$curr_test_file")) {
+    unless (&run_cmd('make clean', $cmd_out_tmp, $curr_test_file)) {
         chdir '..' or die $!;
         return 0;
     }
@@ -8096,9 +8093,9 @@ sub compile_wrapper() {
 
     if ($sudo_path) {
         unless (&run_cmd("$sudo_path -u $username $make_str",
-                "../$cmd_out_tmp", "../$curr_test_file")) {
+                "../$cmd_out_tmp", $curr_test_file)) {
             unless (&run_cmd($make_str, "../$cmd_out_tmp",
-                    "../$curr_test_file")) {
+                    $curr_test_file)) {
                 chdir '..' or die $!;
                 return 0;
             }
@@ -8107,7 +8104,7 @@ sub compile_wrapper() {
     } else {
 
         unless (&run_cmd($make_str, "../$cmd_out_tmp",
-                "../$curr_test_file")) {
+                $curr_test_file)) {
             chdir '..' or die $!;
             return 0;
         }
