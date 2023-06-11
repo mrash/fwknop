@@ -569,7 +569,7 @@
         'server_conf_file' => [
             '### comment'
         ],
-        'positive_output_matches' => [qr/was not found/],
+        'positive_output_matches' => [qr/Could not open access file/],
     },
     {
         'category' => 'basic operations',
