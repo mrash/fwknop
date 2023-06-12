@@ -2956,7 +2956,7 @@
             'KEY    testtest'
         ],
         'server_conf_file' => [
-            'FWKNOP_RUN_DIR      ' . cwd() . "/$cf{'def'}"
+            'FWKNOP_RUN_DIR      '  . $cf{'def'}
         ],
         'positive_output_matches' => [qr/NOT a directory/],
     },
