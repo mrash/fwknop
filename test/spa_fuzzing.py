@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Purpose: This script generates SPA packet payloads that are designed to
-#          act as fuzzer against libfko SPA decoding routines.
+#          act as a fuzzer against libfko SPA decoding routines.
 #
 # Fuzzing file format:
 #
