@@ -13,6 +13,11 @@ if [ ! -d config ]; then
 	mkdir config
 fi
 
+gnulib-tool --lib=libgnu --libtool --lgpl=3orGPLv2 --source-base=gnulib --import \
+    stdint \
+    sys_types largefile \
+    strndup
+
 if which libtoolize &> /dev/null ; then
   libtoolize --automake --copy --force
 elif which glibtoolize &> /dev/null ; then
@@ -26,5 +31,4 @@ aclocal -I config -I m4
 autoheader
 automake --add-missing --copy
 autoconf
-
 ###EOF###

@@ -84,12 +84,6 @@ size_t  strlcat(char *dst, const char *src, size_t siz);
 size_t  strlcpy(char *dst, const char *src, size_t siz);
 #endif
 
-#if defined(WIN32) || !defined(HAVE_STRNDUP)
-char * strndup( const char * s, size_t len );
-#endif
-
-int     dump_ctx_to_buffer(fko_ctx_t ctx, char *dump_buf, size_t dump_buf_len);
-
 #include <sys/types.h>
 #ifdef WIN32
   #include <winsock2.h>

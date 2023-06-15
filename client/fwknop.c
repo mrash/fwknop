@@ -407,7 +407,7 @@ main(int argc, char **argv)
     */
     if (options.verbose || options.test)
     {
-        res = dump_ctx_to_buffer(ctx, dump_buf, sizeof(dump_buf));
+        res = fko_dump_ctx_to_buffer(ctx, dump_buf, sizeof(dump_buf));
         if (res == FKO_SUCCESS)
             log_msg(LOG_VERBOSITY_NORMAL, "%s", dump_buf);
         else
@@ -577,7 +577,7 @@ main(int argc, char **argv)
         }
         /* Only dump out the SPA data after the test in verbose mode */
         if (options.verbose) {
-            res = dump_ctx_to_buffer(ctx2, dump_buf, sizeof(dump_buf));
+            res = fko_dump_ctx_to_buffer(ctx2, dump_buf, sizeof(dump_buf));
             if (res == FKO_SUCCESS)
                 log_msg(LOG_VERBOSITY_NORMAL, "\nDump of the Decoded Data\n%s", dump_buf);
             else

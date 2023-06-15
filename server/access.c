@@ -31,6 +31,8 @@
   #include <sys/socket.h>
 #endif
 
+#include <errno.h>
+
 #include "fwknopd_common.h"
 #include <arpa/inet.h>
 #include "pwd.h"
