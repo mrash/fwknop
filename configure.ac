@@ -757,12 +757,11 @@ dnl
             IPFW_EXE=""
             IPTABLES_EXE=""
             FIREWALLD_EXE=""
-          ]
-        ]
-      ]
-    ]
-  ]
-  )))))
+          ])
+        ])
+      ])
+    ])
+  ])
 
 dnl Determine which firewall exe we use (if we have one).
 dnl If firewalld was found or specified, it wins, then we fallback to iptables,
@@ -797,12 +796,11 @@ dnl
                 FIREWALL_TYPE="ipf"
                 FIREWALL_EXE=$IPF_EXE
                 AC_DEFINE_UNQUOTED([FIREWALL_IPF], [1], [The firewall type: ipf.])
-            ], [AC_MSG_ERROR([No firewall program was found or specified.]) ]
-          ]
-      ]
-    ]
-  ]
-  )))))
+            ], [AC_MSG_ERROR([No firewall program was found or specified.]) ])
+          ])
+      ])
+    ])
+  ])
 
   AC_DEFINE_UNQUOTED([FIREWALL_EXE], ["$FIREWALL_EXE"],
     [Path to firewall command executable (it should match the firewall type).])
