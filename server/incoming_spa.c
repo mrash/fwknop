@@ -561,8 +561,18 @@ check_mode_ctx(spa_data_t *spadat, fko_ctx_t *ctx, int attempted_decrypt,
     */
     if(res != FKO_SUCCESS)
     {
-        log_msg(LOG_WARNING, "[%s] (stanza #%d) Error creating fko context: %s",
-            spadat->pkt_source_ip, stanza_num, fko_errstr(res));
+        if(res == FKO_ERROR_INVALID_DATA_HMAC_COMPAREFAIL)
+        {
+            log_msg(LOG_DEBUG, "[%s] (stanza #%d) Error creating fko context: %s",
+                spadat->pkt_source_ip, stanza_num, fko_errstr(res));
+            log_msg(LOG_INFO, "(stanza #%d) Non-corresponding HMAC for this stanza",
+                stanza_num);
+        }
+        else
+        {
+            log_msg(LOG_WARNING, "[%s] (stanza #%d) Error creating fko context: %s",
+                spadat->pkt_source_ip, stanza_num, fko_errstr(res));
+        }
 
         if(IS_GPG_ERROR(res))
             log_msg(LOG_WARNING, "[%s] (stanza #%d) - GPG ERROR: %s",
