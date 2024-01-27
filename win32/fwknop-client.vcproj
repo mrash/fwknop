@@ -425,7 +425,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\lib\fko_util.c"
+				RelativePath="..\common\fko_util.c"
 				>
 			</File>
 			<File
@@ -457,11 +457,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\lib\strlcat.c"
+				RelativePath="..\common\strlcat.c"
 				>
 			</File>
 			<File
-				RelativePath="..\lib\strlcpy.c"
+				RelativePath="..\common\strlcpy.c"
 				>
 			</File>
 			<File
@@ -495,7 +495,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\lib\fko_util.h"
+				RelativePath="..\common\fko_util.h"
 				>
 			</File>
 			<File
