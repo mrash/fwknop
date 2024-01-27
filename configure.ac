@@ -7,14 +7,14 @@ dnl Inspiration from RRDtool configure.ac, the AutoConf Archive
 dnl (http://www.nongnu.org/autoconf-archive/), and other examples.
 
 dnl Minimum Autoconf version required.
-AC_PREREQ(2.62)
+AC_PREREQ([2.62])
 
 dnl Define our name, version and email.
 m4_define(my_package,   [fwknop])
 m4_define(my_version,   [2.6.11])
 m4_define(my_bug_email, [dstuart@dstuart.org])
 
-AC_INIT(my_package, my_version, my_bug_email)
+AC_INIT([my_package],[my_version],[my_bug_email])
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR(config)
@@ -107,7 +107,7 @@ int main(void){char x[[256]]; snprintf(x, sizeof(x), "NNN"); return 0;}
             LDFLAGS="$saved_LDFLAGS"]
     )])dnl
 
-AC_GNU_SOURCE
+AC_USE_SYSTEM_EXTENSIONS
 
 AC_PROG_CC
 AM_PROG_CC_C_O
@@ -118,7 +118,7 @@ AC_PROG_GREP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
-AC_PROG_LIBTOOL
+LT_INIT
 
 dnl Detect if we are on and Apple platform
 dnl
@@ -365,8 +365,7 @@ fi
 
 # Checks for header files.
 #
-AC_HEADER_STDC
-AC_HEADER_TIME
+
 AC_HEADER_RESOLV
 
 AC_CHECK_HEADERS([arpa/inet.h ctype.h endian.h errno.h locale.h netdb.h net/ethernet.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/byteorder.h sys/endian.h sys/ethernet.h sys/socket.h sys/stat.h sys/time.h sys/wait.h termios.h time.h unistd.h])
@@ -757,7 +756,7 @@ dnl
             IPFW_EXE=""
             IPTABLES_EXE=""
             FIREWALLD_EXE=""
-          ]
+          ],[]
         ]
       ]
     ]
