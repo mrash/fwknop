@@ -314,11 +314,11 @@ gpg_encrypt(fko_ctx_t ctx, const char *enc_key)
     /* Make a bucket big enough to hold the enc msg + digest (plaintext)
      * and populate it appropriately.
     */
-    plain = calloc(1, ctx->encoded_msg_len + ctx->digest_len + 2);
+    plain = calloc(1, pt_len);
     if(plain == NULL)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
-    pt_len = snprintf(plain, pt_len+1, "%s:%s", ctx->encoded_msg, ctx->digest);
+    pt_len = snprintf(plain, pt_len, "%s:%s", ctx->encoded_msg, ctx->digest);
 
     if(! is_valid_pt_msg_len(pt_len))
     {
