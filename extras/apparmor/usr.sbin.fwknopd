@@ -23,6 +23,7 @@ include <tunables/global>
   /bin/dash rix,
   /etc/fwknop/access.conf r,
   /etc/fwknop/fwknopd.conf r,
+  /etc/gai.conf r,
   /etc/host.conf r,
   /etc/nsswitch.conf r,
   /etc/passwd r,
