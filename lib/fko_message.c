@@ -36,7 +36,7 @@ have_allow_ip(const char *msg)
 {
     const char         *ndx     = msg;
     char                ip_str[MAX_IPV4_STR_LEN];
-    int                 char_ctr = 0;
+    int                 dot_ctr = 0, char_ctr = 0;
     int                 res     = FKO_SUCCESS;
 
     while(*ndx != ',' && *ndx != '\0')
@@ -48,7 +48,9 @@ have_allow_ip(const char *msg)
             res = FKO_ERROR_INVALID_ALLOW_IP;
             break;
         }
-        if(isdigit((int)(unsigned char)*ndx) == 0)
+        if(*ndx == '.')
+            dot_ctr++;
+        else if(isdigit((int)(unsigned char)*ndx) == 0)
         {
             res = FKO_ERROR_INVALID_ALLOW_IP;
             break;

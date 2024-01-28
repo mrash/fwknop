@@ -218,7 +218,7 @@ get_key_file(char *key, int *key_len, const char *key_file,
     fko_ctx_t ctx, const fko_cli_options_t *options)
 {
     FILE           *pwfile_ptr;
-    unsigned int    i = 0, found_dst;
+    unsigned int    numLines = 0, i = 0, found_dst;
 
     char            conf_line_buf[MAX_LINE_LEN] = {0};
     char            tmp_char_buf[MAX_LINE_LEN]  = {0};
@@ -234,6 +234,7 @@ get_key_file(char *key, int *key_len, const char *key_file,
 
     while ((fgets(conf_line_buf, MAX_LINE_LEN, pwfile_ptr)) != NULL)
     {
+        numLines++;
         conf_line_buf[MAX_LINE_LEN-1] = '\0';
         lptr = conf_line_buf;
 
