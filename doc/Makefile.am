@@ -1,3 +1,5 @@
+AUTOMAKE_OPTIONS    = info-in-builddir
+
 CLEANFILES          = libfko.info
 
 info_TEXINFOS       = libfko.texi
