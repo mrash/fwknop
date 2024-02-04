@@ -11,6 +11,11 @@ fwknop-2.6.11 (12/09/2019):
       --user-agent option to specify any desired User-Agent string. This
       feature was added to close issue #296 reported by github user
       @fishcreek.
+    - [test suite] Add gpg.conf and gpg-agent.conf to set 'pinentry-mode
+      loopback' to restore GPG full cycle tests. This works with GPG 2.2.27 on
+      Ubuntu 22.04 for example.
+    - [test suite] Prefer the 'ip' command over the older 'ifconfig' command
+      for interface operations and loopback detection.
 
 fwknop-2.6.10 (08/06/2018):
     - [server] Add MAX_FW_TIMEOUT to access.conf stanzas to allow a maximum
