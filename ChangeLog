@@ -1,4 +1,4 @@
-fwknop-2.6.11 (12/09/2019):
+fwknop-2.6.11 (02//2024):
     - [server] (Amin Massad) Fixed two bugs in PF handling code - one for
       indefinitely repeating error messages "Did not find expire comment in
       rules list 0" in rule deletion code, and the second where min_exp was
@@ -18,6 +18,7 @@ fwknop-2.6.11 (12/09/2019):
       Ubuntu 22.04 for example.
     - [test suite] Prefer the 'ip' command over the older 'ifconfig' command
       for interface operations and loopback detection.
+    - [test suite] Update the 'spa_fuzzing.py' fuzzer to use Python3.
 
 fwknop-2.6.10 (08/06/2018):
     - [server] Add MAX_FW_TIMEOUT to access.conf stanzas to allow a maximum
