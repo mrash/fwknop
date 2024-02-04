@@ -1985,15 +1985,15 @@ sub test_suite_conf_files() {
 
     open F, "< $make_file" or die $!;
     while (<F>) {
-        if (m|test/$conf_dir/(\S+)|) {
+        if (m|conf/(\S+)|) {
             $makefile_conf_files{$1} = '';
-        } elsif (m|test/$tests_dir/(\S+)|) {
+        } elsif (m|test/tests/(\S+)|) {
             $makefile_test_scripts{$1} = '';
         }
     }
     close F;
 
-    for my $f (glob("$conf_dir/*")) {
+    for my $f (glob("conf/*")) {
         next if -d $f;
         next unless $f =~ /\.conf/ or $f =~ /fwknop/;
         if ($f =~ m|$conf_dir/(\S+)|) {
@@ -2005,8 +2005,8 @@ sub test_suite_conf_files() {
         }
     }
 
-    for my $f (glob("$tests_dir/*.pl")) {
-        if ($f =~ m|$tests_dir/(\S+)|) {
+    for my $f (glob("tests/*.pl")) {
+        if ($f =~ m|tests/(\S+)|) {
             unless (defined $makefile_test_scripts{$1}) {
                 &write_test_file("[-] test suite script file $1 not in $make_file.\n",
                     $curr_test_file);
