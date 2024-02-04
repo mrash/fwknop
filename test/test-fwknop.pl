@@ -305,6 +305,7 @@ our $pinentry_fail = 0;
 our $perl_path = '';
 our $prove_path = '';
 our $ifconfig_path = '';
+our $ip_path = '';
 my  $readelf_path = '';
 our $platform = '';
 our $help = 0;
@@ -760,7 +761,9 @@ exit &diff_test_results() if $diff_mode;
 ### run an fwknop command under gdb from a previous test run
 exit &gdb_test_cmd() if $gdb_test_file;
 
-$ifconfig_path = &find_command('ifconfig') unless $ifconfig_path;
+### only need one of 'ip' or 'ifconfig', prefer 'ip'
+$ip_path = &find_command('ip') unless $ip_path;
+$ifconfig_path = &find_command('ifconfig') unless $ifconfig_path or $ip_path;
 &identify_loopback_intf() unless $list_mode or $client_only_mode;
 
 ### make sure everything looks as expected before continuing
@@ -6133,9 +6136,15 @@ sub down_interface() {
 
     &start_fwknopd($test_hr);
 
-    &run_cmd("$ifconfig_path lo down", $cmd_out_tmp, $curr_test_file);
-    sleep 5;
-    &run_cmd("$ifconfig_path lo up", $cmd_out_tmp, $curr_test_file);
+    if ($ip_path) {
+        &run_cmd("$ip_path link set $loopback_intf down", $cmd_out_tmp, $curr_test_file);
+        sleep 5;
+        &run_cmd("$ip_path link set $loopback_intf up", $cmd_out_tmp, $curr_test_file);
+    } else {
+        &run_cmd("$ifconfig_path $loopback_intf down", $cmd_out_tmp, $curr_test_file);
+        sleep 5;
+        &run_cmd("$ifconfig_path $loopback_intf up", $cmd_out_tmp, $curr_test_file);
+    }
 
     if (&is_fwknopd_running()) {
         $rv = 0 unless $test_hr->{'no_exit_intf_down'} eq $YES;
@@ -7107,11 +7116,17 @@ sub specs() {
             $cmd_out_tmp, $curr_test_file);
 
     my $have_gpgme = 0;
+    my $net_cmd = '';
+    if ($ip_path) {
+        $net_cmd = "$ip_path addr";
+    } else {
+        $net_cmd = "$ifconfig_path -a";
+    }
 
     for my $cmd (
         'uname -a',
         'uptime',
-        'ifconfig -a',
+        "$net_cmd",
         'ls -l /etc', 'if [ -e /etc/issue ]; then cat /etc/issue; fi',
         'if [ `which iptables` ]; then iptables -V; fi',
         'if [ -e /proc/cpuinfo ]; then cat /proc/cpuinfo; fi',
@@ -7761,7 +7776,7 @@ sub init() {
     $lcov_path = &find_command('lcov') unless $lcov_path;
     $genhtml_path = &find_command('genhtml') unless $genhtml_path;
 
-    unless ($ifconfig_path) {
+    unless ($ip_path or $ifconfig_path) {
         push @tests_to_exclude, qr/down interface/;
     }
 
@@ -7980,10 +7995,18 @@ sub openssl_hmac_style_check() {
 sub identify_loopback_intf() {
     return if $loopback_intf;
 
-    die "[*] ifconfig command not found, use --loopback <name>"
-        unless $ifconfig_path;
+    die "[*] ip and ifconfig commands not found, use --loopback <name>"
+        unless $ip_path or $ifconfig_path;
 
-    ### Linux:
+    ### Linux 'ip addr'
+    ### 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    ###     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    ###     inet 127.0.0.1/8 scope host lo
+    ###         valid_lft forever preferred_lft forever
+    ###     inet6 ::1/128 scope host
+    ###         valid_lft forever preferred_lft forever
+
+    ### Linux 'ifconfig -a':
 
     ### lo    Link encap:Local Loopback
     ###       inet addr:127.0.0.1  Mask:255.0.0.0
@@ -8006,23 +8029,43 @@ sub identify_loopback_intf() {
     my $intf = '';
     my $found_loopback_intf = 0;
 
-    my $cmd = "$ifconfig_path -a";
-    open C, "$cmd |" or die "[*] (use --loopback <name>) $cmd: $!";
-    while (<C>) {
-        if (/^(\S+?):?\s+.*loopback/i) {
-            $intf = $1;
-            next;
+    if ($ip_path) {
+        my $cmd = "$ip_path addr";
+        open C, "$cmd |" or die "[*] (use --loopback <name>) $cmd: $!";
+        while (<C>) {
+            if (/^\s*\d+\:\s+(\S+?)\:\s+.*loopback/i) {
+                $intf = $1;
+                next;
+            }
+            if (/^\S/ and $intf and not $found_loopback_intf) {
+                ### should not happen
+                last;
+            }
+            if ($intf and /\b127\.0\.0\.1/) {
+                $found_loopback_intf = 1;
+                last;
+            }
         }
-        if (/^\S/ and $intf and not $found_loopback_intf) {
-            ### should not happen
-            last;
+        close C;
+    } else {
+        my $cmd = "$ifconfig_path -a";
+        open C, "$cmd |" or die "[*] (use --loopback <name>) $cmd: $!";
+        while (<C>) {
+            if (/^(\S+?):?\s+.*loopback/i) {
+                $intf = $1;
+                next;
+            }
+            if (/^\S/ and $intf and not $found_loopback_intf) {
+                ### should not happen
+                last;
+            }
+            if ($intf and /\b127\.0\.0\.1\b/) {
+                $found_loopback_intf = 1;
+                last;
+            }
         }
-        if ($intf and /\b127\.0\.0\.1\b/) {
-            $found_loopback_intf = 1;
-            last;
-        }
+        close C;
     }
-    close C;
 
     die "[*] could not determine loopback interface, use --loopback <name>"
         unless $found_loopback_intf;
