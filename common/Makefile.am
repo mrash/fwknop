@@ -12,7 +12,7 @@ libfko_util_a_SOURCES    	= $(libfko_util_source_files)
 
 if USE_MINGW
 EXTRA_libfko_util_a_SOURCES = ../win32/getlogin.c ../win32/getlogin.h
-libfko_util_a_LDFLAGS = -lwsock32 -lws2_32
+libfko_util_a_LIBADD = -lwsock32 -lws2_32
 endif
 
 AM_CPPFLAGS         		= $(GPGME_CFLAGS) -I $(top_srcdir)/common -I $(top_srcdir)/lib

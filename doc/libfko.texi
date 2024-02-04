@@ -589,8 +589,7 @@ In this case, the context is created, the @acronym{SPA} data is
 decrypted, decoded, parsed, and stored in the context ready for retrieval.
 If an HMAC is also desired or required, then the @var{hmac_key} and
 associated length can be passed in.  This will cause libfko to authenticate
-the SPA data before decryption is attempted, and this is strongly
-recommended to do.
+the SPA data before decryption is attempted; this is strongly recommended.
 
 The @code{fko_new_with_data} function returns the error code
 @code{FKO_SUCCESS} if the context was successfully created.  If any of the
