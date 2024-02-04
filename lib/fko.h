@@ -613,9 +613,8 @@ DLL_API int fko_set_raw_spa_digest(fko_ctx_t ctx);
  * Set the encrytion algorithm to use when ecrypting the final SPA
  * data.  Valid values can be found in [FKO_ENCRYPTION_TYPE_T](\ref FKO_ENCRYPTION_TYPE_T)
  * of this manual.  For example:
-~~~
-             rc = fko_set_encryption_type(ctx, FKO_ENCRYPTION_RIJNDAEL);
-~~~
+ *
+ * rc = fko_set_spa_encryption_type(ctx, FKO_ENCRYPTION_RIJNDAEL);
  *
  * \param ctx The FKO context to modify
  * \param the encryption type to use
