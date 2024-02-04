@@ -240,3 +240,11 @@ Jérémie Courrèges-Anglas and Ingo Feinerer
     - Contributed a patch to fix endian detection on OpenBSD systems based on
       information contained here:
             https://www.opengroup.org/austin/docs/austin_514.txt
+
+Francois Marier
+    - Various fixes to the AppArmor profile to support recent versions of
+      Debian and Ubuntu.
+
+Barnabé BALP
+    - Contributed a patch to fix snprintf buffer length in
+      lib/fko_encryption.c.
