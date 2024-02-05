@@ -1,5 +1,5 @@
 
-AFL_CC=afl-gcc
+AFL_CC=afl-clang-fast
 
 set_afl_cc() {
     $AFL_CC /dev/null 2>&1 | grep -q -i "On Apple systems.*wrapper for clang"

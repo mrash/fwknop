@@ -5,7 +5,7 @@ SERVER="../../server/.libs/fwknopd"
 CLIENT="../../client/.libs/fwknop"
 LIB_DIR="../../lib/.libs"
 
-MEM_LIMIT=800
+MEM_LIMIT=none
 TIMEOUT=1000
 
 fw_type() {
