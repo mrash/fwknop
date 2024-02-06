@@ -69,7 +69,7 @@ static void enable_fault_injections(fko_srv_options_t * const opts);
 #endif
 
 #if AFL_FUZZING
-#define AFL_MAX_PKT_SIZE  1024
+#define AFL_MAX_PKT_SIZE  MAX_SPA_ENCODED_MSG_SIZE
 #define AFL_DUMP_CTX_SIZE 4096
 #endif
 
@@ -376,10 +376,11 @@ static void afl_enc_pkt_from_file(fko_srv_options_t *opts)
         {
             enc_spa_pkt[enc_msg_len] = rc;
             enc_msg_len++;
-            if(enc_msg_len == AFL_MAX_PKT_SIZE-1)
+            if(enc_msg_len == AFL_MAX_PKT_SIZE-2)
                 break;
         }
         fclose(fp);
+        enc_msg_len++;
 
         fko_new(&decrypt_ctx);
 
