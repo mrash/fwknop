@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl -w
 #
 # This is the main driver program for the fwknop test suite.  Test definitions
 # are imported from the tests/ directory.

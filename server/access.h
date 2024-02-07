@@ -36,9 +36,9 @@
 /**
  * \def ACCESS_BUF_LEN
  *
- * \brief Allow strings as large as 123.123.123.123/255.255.255.255
+ * \brief Allow strings as large as 1234:5678:9abc:deff:ffff:ffff:ffff:ffff/128
  */
-#define ACCESS_BUF_LEN  33
+#define ACCESS_BUF_LEN  45
 
 /**
  * \def MAX_DEPTH
@@ -114,7 +114,7 @@ int valid_access_stanzas(acc_stanza_t *acc);
  * \return Returns true on a match
  *
  */
-int compare_addr_list(acc_int_list_t *source_list, const uint32_t ip);
+int compare_addr_list(acc_int_list_t *source_list, int family, ...);
 
 /**
  * \brief Check for a proto-port string

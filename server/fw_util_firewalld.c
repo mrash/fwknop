@@ -1402,7 +1402,7 @@ static void snat_rule(const fko_srv_options_t * const opts,
 
         /* Add SNAT or MASQUERADE rules.
         */
-        if(acc->force_snat && acc->force_snat_ip != NULL && is_valid_ipv4_addr(acc->force_snat_ip, strlen(acc->force_snat_ip)))
+        if(acc->force_snat && acc->force_snat_ip != NULL && is_valid_ip_addr(acc->force_snat_ip, strlen(acc->force_snat_ip), AF_INET))
         {
             /* Using static SNAT */
             snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
@@ -1410,7 +1410,7 @@ static void snat_rule(const fko_srv_options_t * const opts,
                 "--to-source %s", acc->force_snat_ip);
         }
         else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
-            && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP])))
+            && is_valid_ip_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP]), AF_INET))
         {
             /* Using static SNAT */
             snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
@@ -1436,7 +1436,7 @@ static void snat_rule(const fko_srv_options_t * const opts,
     {
         /* Add SNAT or MASQUERADE rules.
         */
-        if(acc->force_snat && acc->force_snat_ip != NULL && is_valid_ipv4_addr(acc->force_snat_ip, strlen(acc->force_snat_ip)))
+        if(acc->force_snat && acc->force_snat_ip != NULL && is_valid_ip_addr(acc->force_snat_ip, strlen(acc->force_snat_ip), AF_INET))
         {
             /* Using static SNAT */
             snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
@@ -1451,7 +1451,7 @@ static void snat_rule(const fko_srv_options_t * const opts,
                 "--to-ports %i", fst_port);
         }
         else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
-            && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP])))
+            && is_valid_ip_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP]), AF_INET))
         {
             /* Using static SNAT */
             snat_chain = &(opts->fw_config->chain[FIREWD_SNAT_ACCESS]);
@@ -1494,7 +1494,7 @@ int
 process_spa_request(const fko_srv_options_t * const opts,
         const acc_stanza_t * const acc, spa_data_t * const spadat)
 {
-    char            nat_ip[MAX_IPV4_STR_LEN] = {0};
+    char            nat_ip[MAX_IPV46_STR_LEN] = {0};
     char            nat_dst[MAX_HOSTNAME_LEN] = {0};
     unsigned int    nat_port = 0;
     unsigned int    fst_proto;
@@ -1561,7 +1561,7 @@ process_spa_request(const fko_srv_options_t * const opts,
             if((ndx != NULL) && (str_len <= MAX_HOSTNAME_LEN))
             {
                 strlcpy(nat_dst, spadat->nat_access, str_len+1);
-                if(! is_valid_ipv4_addr(nat_dst, str_len))
+                if(! is_valid_ip_addr(nat_dst, str_len, AF_INET))
                 {
                     if(strncasecmp(opts->config[CONF_ENABLE_NAT_DNS], "Y", 1) == 0)
                     {
@@ -1571,7 +1571,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                             free_acc_port_list(port_list);
                             return res;
                         }
-                        if (ipv4_resolve(nat_dst, nat_ip) == 0)
+                        if (ip_resolve(nat_dst, nat_ip, AF_INET) == 0)
                         {
                             log_msg(LOG_INFO, "Resolved NAT IP in SPA message");
                         }

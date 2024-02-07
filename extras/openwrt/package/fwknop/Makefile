@@ -40,7 +40,8 @@ endef
 CONFIGURE_ARGS += \
        --disable-client \
        --without-gpgme \
-       --with-iptables=/usr/sbin/iptables
+       --with-iptables=/usr/sbin/iptables \
+       --with-ip6tables=/usr/sbin/ip6tables
 
 
 
@@ -108,6 +109,7 @@ define Build/Configure
 		--with-gpgme \
 		--with-gpg=/usr/bin/gpg \
 		--with-iptables=/usr/sbin/iptables \
+		--with-ip6tables=/usr/sbin/ip6tables \
 		--with-sh=/bin/sh \
 	)
 endef
