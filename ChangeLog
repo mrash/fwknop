@@ -1,4 +1,4 @@
-fwknop-2.6.11 (02//2024):
+fwknop-2.6.11 (02/06/2024):
     - [server] (Amin Massad) Fixed two bugs in PF handling code - one for
       indefinitely repeating error messages "Did not find expire comment in
       rules list 0" in rule deletion code, and the second where min_exp was
