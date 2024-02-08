@@ -87,8 +87,8 @@ typedef struct fko_cli_options
     int  no_save_args;
     int  use_hmac;
     char spa_server_str[MAX_SERVER_STR_LEN];  /* may be a hostname */
-    char allow_ip_str[MAX_IPV4_STR_LEN];
-    char spoof_ip_src_str[MAX_IPV4_STR_LEN];
+    char allow_ip_str[MAX_IPV46_STR_LEN];
+    char spoof_ip_src_str[MAX_IPV46_STR_LEN];
     char spoof_user[MAX_USERNAME_LEN];
     int  rand_port;
     char gpg_recipient_key[MAX_GPG_KEY_ID];
