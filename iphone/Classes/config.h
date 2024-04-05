@@ -26,6 +26,9 @@ Copyright (C) Max Kastanas 2010
 /* Path to firewall command executable (it should match the firewall type). */
 #define FIREWALL_EXE "/sbin/iptables"
 
+/* Path to firewall command executable for IPv6 (it should match the firewall type). */
+#define FIREWALL_EXE_IPV6 "/sbin/ip6tables"
+
 /* The firewall type: ipf. */
 /* #undef FIREWALL_IPF */
 

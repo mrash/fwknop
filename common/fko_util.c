@@ -35,9 +35,15 @@
 #ifndef WIN32
   /* for inet_aton() IP validation
   */
-  #include <sys/socket.h>
-  #include <netinet/in.h>
-  #include <arpa/inet.h>
+# if HAVE_SYS_SOCKET_H
+#  include <sys/socket.h>
+#endif
+# if HAVE_NETINET_IN_H
+#  include <netinet/in.h>
+# endif
+# if HAVE_ARPA_INET_H
+#  include <arpa/inet.h>
+# endif
 #endif
 
 /* Check for a FKO error returned by a function an return the error code */
@@ -119,57 +125,27 @@ is_valid_encoded_msg_len(const int len)
     return(1);
 }
 
-/* Validate an IPv4 address
+/* Validate an IP address
 */
 int
-is_valid_ipv4_addr(const char * const ip_str, const int len)
+is_valid_ip_addr(const char * const ip_str, const int len, const int family)
 {
-    const char         *ndx     = ip_str;
-    char         tmp_ip_str[MAX_IPV4_STR_LEN + 1] = {0};
-    int                 dot_ctr = 0, char_ctr = 0;
-    int                 res     = 1;
-#if HAVE_SYS_SOCKET_H
-    struct in_addr      in;
-#endif
+    struct addrinfo * result, hints;
+    int error;
+    char * p;
 
-    if(ip_str == NULL)
-        return 0;
-
-    if((len > MAX_IPV4_STR_LEN) || (len < MIN_IPV4_STR_LEN))
-        return 0;
-
-    while(char_ctr < len)
-    {
-        /* If we've hit a null within the given length, then not valid regardless */
-        if(*ndx == '\0')
-            return 0;
-
-        char_ctr++;
-
-        if(*ndx == '.')
-            dot_ctr++;
-        else if(isdigit((int)(unsigned char)*ndx) == 0)
-        {
-            res = 0;
-            break;
-        }
-        ndx++;
+    if((p = strndup(ip_str, len)) == NULL)
+	return 0;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = family;
+    hints.ai_flags = AI_NUMERICHOST;
+    error = getaddrinfo(p, NULL, &hints, &result);
+    free(p);
+    if (error) {
+	return 0;
     }
-
-    if((res == 1) && (dot_ctr != 3))
-        res = 0;
-
-#if HAVE_SYS_SOCKET_H
-    /* Stronger IP validation now that we have a candidate that looks
-     * close enough
-    */
-    if(res == 1) {
-        strncpy(tmp_ip_str, ip_str, len);
-        if (inet_aton(tmp_ip_str, &in) == 0)
-            res = 0;
-    }
-#endif
-    return(res);
+    freeaddrinfo(result);
+    return 1;
 }
 
 /* Validate a hostname
@@ -222,9 +198,6 @@ is_valid_hostname(const char * const hostname_str, const int len)
     ndx--;
     if (*ndx == '-')
         return 0;
-
-    if (*ndx == '.')
-        total_size--;
 
     if (label_size > 63)
         return 0;
@@ -644,7 +617,7 @@ char
 {
     char* ns = NULL;
     if(s) {
-        ns = calloc(1, len + 1);
+        ns = malloc(len + 1);
         if(ns) {
             ns[len] = 0;
             // strncpy to be pedantic about modification in multithreaded
@@ -766,7 +739,7 @@ add_argv(char **argv_new, int *argc_new, const char *new_arg)
     int buf_size = 0;
 
     buf_size = strlen(new_arg) + 1;
-    argv_new[*argc_new] = calloc(1, buf_size);
+    argv_new[*argc_new] = malloc(buf_size);
 
     if(argv_new[*argc_new] == NULL)
         return 0;
@@ -1080,10 +1053,10 @@ get_in_addr(struct sockaddr *sa)
  * @return 0 if successful, 1 if an error occurred.
  */
 int
-ipv4_resolve(const char *dns_str, char *ip_str)
+ip_resolve(const char *dns_str, char *ip_str, int family)
 {
     int                 error;      /* Function error return code */
-    size_t ip_bufsize = MAX_IPV4_STR_LEN;
+    size_t ip_bufsize = MAX_IPV46_STR_LEN;
     struct addrinfo     hints;
     struct addrinfo    *result;     /* Result of getaddrinfo() */
     struct addrinfo    *rp;         /* Element of the linked list returned by getaddrinfo() */
@@ -1092,7 +1065,7 @@ ipv4_resolve(const char *dns_str, char *ip_str)
     struct sockaddr_in *in;
     char               *win_ip;
 #else
-    struct sockaddr_in *sai_remote; /* Remote host information as a sockaddr_in structure */
+    char               *sai_remote; /* Remote host information */
 #endif
 
 #if WIN32 
@@ -1106,7 +1079,7 @@ ipv4_resolve(const char *dns_str, char *ip_str)
 #endif
 
     memset(&hints, 0 , sizeof(hints));
-    hints.ai_family = AF_INET;
+    hints.ai_family = family;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
@@ -1125,15 +1098,17 @@ ipv4_resolve(const char *dns_str, char *ip_str)
             memset(ip_str, 0, ip_bufsize);
 
 #if WIN32 && WINVER <= 0x0600
-                        /* On older Windows systems (anything before Vista?),
-                         * we use inet_ntoa for now.
-                        */
-                        in = (struct sockaddr_in*)(rp->ai_addr);
-                        win_ip = inet_ntoa(in->sin_addr);
+            if(rp->ai_family != AF_INET)
+                continue;
+	    /* On older Windows systems (anything before Vista?),
+	     * we use inet_ntoa for now.
+	    */
+            in = (struct sockaddr_in*)(rp->ai_addr);
+            win_ip = inet_ntoa(in->sin_addr);
 
-                        if (win_ip != NULL && (strlcpy(ip_str, win_ip, ip_bufsize) > 0))
+            if (win_ip != NULL && (strlcpy(ip_str, win_ip, ip_bufsize) > 0))
 #else
-            sai_remote = (struct sockaddr_in *)get_in_addr((struct sockaddr *)(rp->ai_addr));
+            sai_remote = get_in_addr((struct sockaddr *)(rp->ai_addr));
             if (inet_ntop(rp->ai_family, sai_remote, ip_str, ip_bufsize) != NULL)
 #endif
             {
@@ -1187,15 +1162,15 @@ DECLARE_UTEST(test_hostname_validator, "test the is_valid_hostname function")
     strcpy(test_hostname, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.b");
     CU_ASSERT(is_valid_hostname(test_hostname, strlen(test_hostname)) == 0);
 }
-DECLARE_UTEST(test_ipv4_validator, "test the is_valid_ipv4_addr function")
+DECLARE_UTEST(test_ipv4_validator, "test the is_valid_ip_addr function")
 {
     char test_str[32];
     strcpy(test_str, "1.2.3.4");
-    CU_ASSERT(is_valid_ipv4_addr(test_str, strlen(test_str)));
+    CU_ASSERT(is_valid_ip_addr(test_str, strlen(test_str), AF_INET));
     strcpy(test_str, "127.0.0.2");
-    CU_ASSERT(is_valid_ipv4_addr(test_str, 9));
+    CU_ASSERT(is_valid_ip_addr(test_str, 9, AF_INET));
     strcpy(test_str, "1.2.3.400");
-    CU_ASSERT(is_valid_ipv4_addr(test_str, strlen(test_str)) == 0);
+    CU_ASSERT(is_valid_ip_addr(test_str, strlen(test_str), AF_INET) == 0);
 }
 
 DECLARE_UTEST(test_count_characters, "test the count_characters function")

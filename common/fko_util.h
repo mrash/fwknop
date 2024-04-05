@@ -40,7 +40,7 @@
 */
 int     is_valid_encoded_msg_len(const int len);
 int     is_valid_pt_msg_len(const int len);
-int     is_valid_ipv4_addr(const char * const ip_str, const int len);
+int     is_valid_ip_addr(const char * const ip_str, const int len, const int family);
 int     is_valid_hostname(const char * const hostname_str, const int len);
 int     is_base64(const unsigned char * const buf, const unsigned short int len);
 void    hex_dump(const unsigned char *data, const int size);
@@ -75,7 +75,7 @@ int   count_characters(const char *str, const char match, int len);
 int   strtoargv(const char * const args_str, char **argv_new, int *argc_new);
 void  free_argv(char **argv_new, int *argc_new);
 
-int   ipv4_resolve(const char *dns_str, char *ip_str);
+int   ip_resolve(const char *dns_str, char *ip_str, int family);
 #if !HAVE_STRLCAT
 size_t  strlcat(char *dst, const char *src, size_t siz);
 #endif
