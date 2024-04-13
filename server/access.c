@@ -295,7 +295,7 @@ add_acc_force_nat(fko_srv_options_t *opts, acc_stanza_t *curr_acc,
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
-    if(! is_valid_ipv4_addr(ip_str, strlen(ip_str)))
+    if(! is_valid_ip_addr(ip_str, strlen(ip_str), AF_INET))
     {
         log_msg(LOG_ERR,
             "[*] Fatal: invalid FORCE_NAT IP '%s'", ip_str);
@@ -325,7 +325,7 @@ add_acc_force_snat(fko_srv_options_t *opts, acc_stanza_t *curr_acc,
         clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
     }
 
-    if(! is_valid_ipv4_addr(ip_str, strlen(ip_str)))
+    if(! is_valid_ip_addr(ip_str, strlen(ip_str), AF_INET))
     {
         log_msg(LOG_ERR,
             "[*] Fatal: invalid FORCE_SNAT IP '%s'", ip_str);
@@ -349,13 +349,16 @@ static int
 add_int_ent(acc_int_list_t **ilist, const char *ip)
 {
     char                *ndx;
-    char                ip_str[MAX_IPV4_STR_LEN] = {0};
-    char                ip_mask_str[MAX_IPV4_STR_LEN] = {0};
-    uint32_t            mask;
-    int                 is_err, mask_len = 0, need_shift = 1;
+    char                 ip_str[MAX_IPV46_STR_LEN] = {0};
+    char                 ip_mask_str[MAX_IPV46_STR_LEN] = {0};
+    uint32_t             mask;
+    int                  is_err, mask_len = 0, need_shift = 1;
 
-    struct in_addr      in;
-    struct in_addr      mask_in;
+    struct in_addr       in;
+    struct in_addr       mask_in;
+    struct addrinfo     *ai, hints;
+    struct sockaddr_in  *sin;
+    struct sockaddr_in6 *sin6;
 
     acc_int_list_t      *last_sle, *new_sle, *tmp_sle;
 
@@ -371,8 +374,8 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
     */
     if(strcasecmp(ip, "ANY") == 0)
     {
-        new_sle->maddr = 0x0;
-        new_sle->mask = 0x0;
+        new_sle->family = AF_UNSPEC;
+        memset(&new_sle->acc_int, 0, sizeof(new_sle->acc_int));
     }
     else
     {
@@ -381,7 +384,7 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
         */
         if((ndx = strchr(ip, '/')) != NULL)
         {
-            if(((ndx-ip)) >= MAX_IPV4_STR_LEN)
+            if(((ndx-ip)) >= MAX_IPV46_STR_LEN)
             {
                 log_msg(LOG_ERR, "[*] Error parsing string to IP");
                 free(new_sle);
@@ -391,7 +394,7 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
 
             mask_len = strlen(ip) - (ndx-ip+1);
 
-            if(mask_len > 2)
+            if(mask_len > 3)
             {
                 if(mask_len >= MIN_IPV4_STR_LEN && mask_len < MAX_IPV4_STR_LEN)
                 {
@@ -418,28 +421,24 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
                     return 0;
                 }
             }
-            else
-            {
-                if(mask_len > 0)
+            else if(mask_len > 0) {
+                /* CIDR mask
+                 */
+                mask = strtol_wrapper(ndx+1, 1, 128, NO_EXIT_UPON_ERR, &is_err);
+                if(is_err != FKO_SUCCESS)
                 {
-                    /* CIDR mask
-                    */
-                    mask = strtol_wrapper(ndx+1, 1, 32, NO_EXIT_UPON_ERR, &is_err);
-                    if(is_err != FKO_SUCCESS)
-                    {
-                        log_msg(LOG_ERR, "[*] Invalid IP mask str '%s'.", ndx+1);
-                        free(new_sle);
-                        new_sle = NULL;
-                        return 0;
-                    }
-                }
-                else
-                {
-                    log_msg(LOG_ERR, "[*] Missing mask value.");
+                    log_msg(LOG_ERR, "[*] Invalid IP mask str '%s'.", ndx+1);
                     free(new_sle);
                     new_sle = NULL;
                     return 0;
                 }
+            }
+            else
+            {
+                log_msg(LOG_ERR, "[*] Missing mask value.");
+                free(new_sle);
+                new_sle = NULL;
+                return 0;
             }
 
             strlcpy(ip_str, ip, (ndx-ip)+1);
@@ -447,7 +446,7 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
         else
         {
             mask = 32;
-            if(strnlen(ip, MAX_IPV4_STR_LEN+1) >= MAX_IPV4_STR_LEN)
+            if(strnlen(ip, MAX_IPV46_STR_LEN+1) >= MAX_IPV46_STR_LEN)
             {
                 log_msg(LOG_ERR, "[*] Error parsing string to IP");
                 free(new_sle);
@@ -457,31 +456,70 @@ add_int_ent(acc_int_list_t **ilist, const char *ip)
             strlcpy(ip_str, ip, sizeof(ip_str));
         }
 
-        if(inet_aton(ip_str, &in) == 0)
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_flags = AI_NUMERICHOST | AI_CANONNAME;
+        if(getaddrinfo(ip_str, NULL, &hints, &ai) != 0)
         {
             log_msg(LOG_ERR,
                 "[*] Fatal error parsing IP to int for: %s", ip_str
             );
-
             free(new_sle);
             new_sle = NULL;
-
             return 0;
         }
+        switch(ai->ai_family)
+        {
+            case AF_INET:
+                sin = (struct sockaddr_in *)ai->ai_addr;
+                in = sin->sin_addr;
 
-        /* Store our mask converted from CIDR to a 32-bit value.
-        */
-        if(mask == 32)
-            new_sle->mask = 0xFFFFFFFF;
-        else if(need_shift && (mask > 0 && mask < 32))
-            new_sle->mask = (0xFFFFFFFF << (32 - mask));
-        else
-            new_sle->mask = mask;
+                /* Store our mask converted from CIDR to a 32-bit value.
+                */
+                if(mask > 32)
+                {
+                    log_msg(LOG_ERR, "[*] Invalid IP mask '%u'.", mask);
+                    freeaddrinfo(ai);
+                    free(new_sle);
+                    new_sle = NULL;
+                    return 0;
+                }
+                else if(mask == 32)
+                    new_sle->acc_int.inet.mask = 0xFFFFFFFF;
+                else if(need_shift && (mask > 0 && mask < 32))
+                    new_sle->acc_int.inet.mask = (0xFFFFFFFF << (32 - mask));
+                else
+                    new_sle->acc_int.inet.mask = mask;
 
-        /* Store our masked address for comparisons with future incoming
-         * packets.
-        */
-        new_sle->maddr = ntohl(in.s_addr) & new_sle->mask;
+                /* Store our masked address for comparisons with future incoming
+                 * packets.
+                 */
+                new_sle->acc_int.inet.maddr = ntohl(in.s_addr) & new_sle->acc_int.inet.mask;
+                break;
+	    case AF_INET6:
+                sin6 = (struct sockaddr_in6 *)ai->ai_addr;
+                new_sle->acc_int.inet6.maddr = sin6->sin6_addr;
+                if(mask > 128)
+                {
+                    log_msg(LOG_ERR, "[*] Invalid IPv6 prefix '%u'.", mask);
+                    freeaddrinfo(ai);
+                    free(new_sle);
+                    new_sle = NULL;
+                    return 0;
+                }
+                new_sle->acc_int.inet6.prefix = mask;
+                break;
+            default:
+                log_msg(LOG_ERR,
+                    "[*] Unsupported family parsing IP to int for: %s", ip_str
+                );
+                free(new_sle);
+                new_sle = NULL;
+                freeaddrinfo(ai);
+                return 0;
+        }
+        new_sle->family = ai->ai_family;
+        freeaddrinfo(ai);
     }
 
     /* If this is not the first entry, we walk our pointer to the
@@ -2042,23 +2080,61 @@ int valid_access_stanzas(acc_stanza_t *acc)
     return 1;
 }
 
-int
-compare_addr_list(acc_int_list_t *ip_list, const uint32_t ip)
+static int
+compare_addr_list_ipv4(acc_int_list_t *ip_list, uint32_t ip)
 {
-    int match = 0;
-
-    while(ip_list)
+    for(; ip_list; ip_list = ip_list->next)
     {
-        if((ip & ip_list->mask) == (ip_list->maddr & ip_list->mask))
-        {
-            match = 1;
-            break;
-        }
-
-        ip_list = ip_list->next;
+        if(ip_list->family == AF_UNSPEC)
+            return 1;
+        if(ip_list->family != AF_INET6)
+            continue;
+        if((ip & ip_list->acc_int.inet.mask) == (ip_list->acc_int.inet.maddr & ip_list->acc_int.inet.mask))
+            return 1;
     }
+    return 0;
+}
 
-    return(match);
+static int
+compare_addr_list_ipv6(acc_int_list_t *ip_list, struct in6_addr *ip6)
+{
+    for(; ip_list; ip_list = ip_list->next)
+    {
+        if(ip_list->family == AF_UNSPEC)
+            return 1;
+        if(ip_list->family != AF_INET6)
+            continue;
+        if(memcmp(&ip_list->acc_int.inet6.maddr, ip6, sizeof(*ip6)) == 0)
+            return 1;
+    }
+    return 0;
+}
+
+int
+compare_addr_list(acc_int_list_t *ip_list, int family, ...)
+{
+    int res;
+    va_list ap;
+    uint32_t ip;
+    struct in6_addr * ip6;
+
+    va_start(ap, family);
+    switch(family)
+    {
+        case AF_INET:
+            ip = va_arg(ap, uint32_t);
+            res = compare_addr_list_ipv4(ip_list, ip);
+            break;
+        case AF_INET6:
+            ip6 = va_arg(ap, struct in6_addr *);
+            res = compare_addr_list_ipv6(ip_list, ip6);
+            break;
+        default:
+            res = 0;
+            break;
+    }
+    va_end(ap);
+    return res;
 }
 
 /**

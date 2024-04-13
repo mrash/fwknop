@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 #
 # This is the main driver program for the fwknop test suite.  Test definitions
 # are imported from the tests/ directory.
@@ -12,6 +12,7 @@ use Data::Dumper;
 use Getopt::Long 'GetOptions';
 use Getopt::Long 'GetOptionsFromString';
 use strict;
+use warnings;
 use POSIX;
 
 #==================== config =====================
@@ -82,7 +83,9 @@ our $gpg_server_large_key = '40051F51';
 our $gpg_client_subkey = '9CF38326'; ### last subkey in the keyring as shown above,
                                      ### and GPG_REMOTE_ID must match in access.conf
 our $loopback_ip       = '127.0.0.1';
+our $loopback_ip6      = '::1';
 our $fake_ip           = '127.0.0.2';
+our $fake_ip6          = '::2';
 our $spoof_ip          = '1.2.3.4';
 our $internal_nat_host = '192.168.1.2';
 our $force_nat_host    = '192.168.1.123';
@@ -127,6 +130,7 @@ my @test_files = (
     "$tests_dir/code_structure.pl",
     "$tests_dir/basic_operations.pl",
     "$tests_dir/cunit_tests.pl",
+    "$tests_dir/ipv6.pl",
     "$tests_dir/rijndael.pl",
     "$tests_dir/rijndael_cmd_exec.pl",
     "$tests_dir/rijndael_hmac_cmd_exec.pl",
@@ -157,6 +161,7 @@ our @code_structure_errstr        = ();  ### from tests/code_structure.pl (may i
 our @configure_args               = ();  ### from tests/configure_args.pl
 our @basic_operations             = ();  ### from tests/basic_operations.pl
 our @cunit_tests                  = ();  ### from tests/cunit_tests.pl
+our @ipv6                         = ();  ### from tests/ipv6.pl
 our @rijndael                     = ();  ### from tests/rijndael.pl
 our @rijndael_cmd_exec            = ();  ### from tests/rijndael_cmd_exec.pl
 our @rijndael_hmac_cmd_exec       = ();  ### from tests/rijndael_hmac_cmd_exec.pl
@@ -797,6 +802,10 @@ our $default_client_args_no_get_key = "$lib_view_str " .
     "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
     "--no-save-args $verbose_str";
 
+our $default_client_args_ipv6_no_get_key = "$lib_view_str " .
+    "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip6 -D $loopback_ip6 " .
+    "--no-save-args $verbose_str";
+
 our $default_client_args_no_verbose = "$lib_view_str " .
     "$valgrind_str $fwknopCmd -A tcp/22 -a $fake_ip -D $loopback_ip " .
     '--no-save-args ';
@@ -822,6 +831,9 @@ our $server_rewrite_conf_files = "$lib_view_str $valgrind_str $fwknopdCmd " .
     "-d $default_digest_file -p $default_pid_file $intf_str";
 
 our $default_client_hmac_args = "$default_client_args_no_get_key " .
+    "--rc-file $cf{'rc_hmac_b64_key'}";
+
+our $default_client_hmac_args_ipv6 = "$default_client_args_ipv6_no_get_key " .
     "--rc-file $cf{'rc_hmac_b64_key'}";
 
 our $client_hmac_rc_defaults = "$lib_view_str $valgrind_str " .
@@ -976,6 +988,7 @@ my @tests = (
     @rijndael_fuzzing,
     @rijndael_hmac,
     @rijndael_hmac_fuzzing,
+    @ipv6,
     @fault_injection,
     @address_sanitizer,
     @afl_fuzzing,
@@ -7115,6 +7128,10 @@ sub specs() {
             "$default_server_conf_args --fw-list-all",
             $cmd_out_tmp, $curr_test_file);
 
+     &run_cmd("$lib_view_str $valgrind_str $fwknopdCmd " .
+            "$default_server_conf_args --ipv6 --fw-list-all",
+            $cmd_out_tmp, $curr_test_file);
+
     my $have_gpgme = 0;
     my $net_cmd = '';
     if ($ip_path) {
@@ -8317,13 +8334,18 @@ sub is_fw_rule_active() {
 
     my $conf_args = $default_server_conf_args;
 
+    my $ipv6_arg = '';
+    if (&get_msg($test_hr) =~ /IPv6/) {
+        $ipv6_arg = '--ipv6';
+    }
+
     if ($test_hr->{'server_conf'}) {
         $conf_args = "-c $test_hr->{'server_conf'} -a $cf{'def_access'} " .
             "-d $default_digest_file -p $default_pid_file";
     }
 
     if ($test_hr->{'no_ip_check'}) {
-        &run_cmd("$lib_view_str $fwknopdCmd " .
+        &run_cmd("$lib_view_str $fwknopdCmd $ipv6_arg " .
                 qq{$conf_args --fw-list | grep -v "# DISABLED" },
                 $cmd_out_tmp, $curr_test_file);
         unless (&file_find_regex([qr/_exp_/],
@@ -8331,7 +8353,7 @@ sub is_fw_rule_active() {
             $rv = 0;
         }
     } else {
-        &run_cmd("$lib_view_str $fwknopdCmd " .
+        &run_cmd("$lib_view_str $fwknopdCmd $ipv6_arg " .
                 qq{$conf_args --fw-list | grep -v "# DISABLED" },
                 $cmd_out_tmp, $curr_test_file);
         if ($test_hr->{'insert_duplicate_rule_while_running'}) {
@@ -8354,9 +8376,16 @@ sub is_fw_rule_active() {
             close FWPOL;
             $rv = 0 unless $new_fw_rule;
         } else {
-            unless (&file_find_regex([qr/\s$fake_ip\s.*_exp_/],
-                    $MATCH_ALL, $NO_APPEND_RESULTS, $cmd_out_tmp)) {
-                $rv = 0;
+            if ($ipv6_arg) {
+                unless (&file_find_regex([qr/\s$fake_ip6\s.*_exp_/],
+                        $MATCH_ALL, $NO_APPEND_RESULTS, $cmd_out_tmp)) {
+                    $rv = 0;
+                }
+            } else {
+                unless (&file_find_regex([qr/\s$fake_ip\s.*_exp_/],
+                        $MATCH_ALL, $NO_APPEND_RESULTS, $cmd_out_tmp)) {
+                    $rv = 0;
+                }
             }
         }
     }
