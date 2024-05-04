@@ -103,7 +103,7 @@ Specify the location of the
 file\&. If this option is not given,
 \fIfwknopd\fR
 will use the compile\-time default location (typically
-\fI@localstatedir@/fwknop/digest\&.cache\fR)\&.
+\fI@runstatedir@/fwknop/digest\&.cache\fR)\&.
 .RE
 .PP
 \fB\-D, \-\-dump\-config\fR
@@ -181,7 +181,7 @@ Parse config files (\fI@sysconfdir@/fwknop/fwknopd\&.conf\fR, and
 \fB\-\-exit\-parse\-digest\-cache\fR
 .RS 4
 Parse the digest cache file
-\fI@localstatedir@/fwknop/digest\&.cache\fR
+\fI@runstatedir@/fwknop/digest\&.cache\fR
 and exit\&. This validates the structure of the digest cache file without having to start processing network traffic\&. Note that the standard configuration files are also parsed in this mode\&.
 .RE
 .PP
@@ -239,7 +239,7 @@ Specify the location of the
 file\&. If this option is not given,
 \fIfwknopd\fR
 will use the compile\-time default location (typically
-\fI@localstatedir@/fwknop/fwknopd\&.pid\fR)\&.
+\fI@runstatedir@/fwknop/fwknopd\&.pid\fR)\&.
 .RE
 .PP
 \fB\-P, \-\-pcap\-filter\fR=\fI<filter>\fR
@@ -287,7 +287,7 @@ files\&. This will also force a flush of the current \(lqFWKNOP\(rq iptables cha
 \fB\-\-rotate\-digest\-cache\fR
 .RS 4
 Rotate the digest cache file by renaming it to \(lq<name>\-old\(rq, and starting a new one\&. The digest cache file is typically found in
-\fI@localstatedir@/fwknop/digest\&.cache\fR\&.
+\fI@runstatedir@/fwknop/digest\&.cache\fR\&.
 .RE
 .PP
 \fB\-r, \-\-run\-dir\fR=\fI<path>\fR
@@ -295,7 +295,7 @@ Rotate the digest cache file by renaming it to \(lq<name>\-old\(rq, and starting
 Specify the directory where
 \fBfwknopd\fR
 writes run time state files\&. The default is
-\fI@localstatedir@\fR\&.
+\fI@runstatedir@\fR\&.
 .RE
 .PP
 \fB\-S, \-\-status\fR
@@ -612,7 +612,7 @@ will set the destination field on the firewall rule to the destination address s
 Specify the directory where
 \fBfwknopd\fR
 writes run time state files\&. The default is
-\fI@localstatedir@\fR\&.
+\fI@runstatedir@\fR\&.
 .RE
 .SS "ACCESS\&.CONF VARIABLES"
 .sp
