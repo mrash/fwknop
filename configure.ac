@@ -756,7 +756,7 @@ dnl
             IPFW_EXE=""
             IPTABLES_EXE=""
             FIREWALLD_EXE=""
-          ],[]
+          ],[:]
         ]
       ]
     ]
