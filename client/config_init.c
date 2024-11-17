@@ -871,9 +871,9 @@ create_fwknoprc(const char *rcfile)
         "#FW_TIMEOUT          30\n"
         "#SPA_SERVER_PORT     62201\n"
         "#SPA_SERVER_PROTO    udp\n"
-        "#ALLOW_IP            <ip addr>\n"
+        "#ALLOW_IP            <IP address>\n"
         "#SPOOF_USER          <username>\n"
-        "#SPOOF_SOURCE_IP     <IPaddr>\n"
+        "#SPOOF_SOURCE_IP     <IP address>\n"
         "#TIME_OFFSET         0\n"
         "#USE_GPG             N\n"
         "#GPG_HOMEDIR         /path/to/.gnupg\n"
@@ -986,7 +986,7 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
         else /* Assume IP address and validate */
         {
             strlcpy(options->allow_ip_str, val, sizeof(options->allow_ip_str));
-            if(! is_valid_ipv4_addr(options->allow_ip_str, strlen(options->allow_ip_str)))
+            if(! is_valid_ip_addr(options->allow_ip_str, strlen(options->allow_ip_str), AF_INET))
                 parse_error = -1;
         }
     }
@@ -1850,7 +1850,8 @@ validate_options(fko_cli_options_t *options)
                 exit(EXIT_FAILURE);
             }
             else if(options->verbose
-                    && strncmp(options->allow_ip_str, "0.0.0.0", strlen("0.0.0.0")) == 0)
+                    && (strncmp(options->allow_ip_str, "0.0.0.0", strlen("0.0.0.0")) == 0
+			    || strncmp(options->allow_ip_str, "::", strlen("::")) == 0))
             {
                 log_msg(LOG_VERBOSITY_WARNING,
                     "[-] WARNING: Should use -a or -R to harden SPA against potential MITM attacks");
@@ -1865,7 +1866,7 @@ validate_options(fko_cli_options_t *options)
     {
         options->resolve_ip_http_https = 0;
 
-        if(! is_valid_ipv4_addr(options->allow_ip_str, strlen(options->allow_ip_str)))
+        if(! is_valid_ip_addr(options->allow_ip_str, strlen(options->allow_ip_str), AF_UNSPEC))
         {
             log_msg(LOG_VERBOSITY_ERROR,
                 "Invalid allow IP specified for SPA access");
@@ -1875,7 +1876,7 @@ validate_options(fko_cli_options_t *options)
 
     if (options->spoof_ip_src_str[0] != 0x00)
     {
-        if(! is_valid_ipv4_addr(options->spoof_ip_src_str, strlen(options->spoof_ip_src_str)))
+        if(! is_valid_ip_addr(options->spoof_ip_src_str, strlen(options->spoof_ip_src_str), AF_UNSPEC))
         {
             log_msg(LOG_VERBOSITY_ERROR, "Invalid spoof IP");
             exit(EXIT_FAILURE);

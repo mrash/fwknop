@@ -614,7 +614,7 @@ can be found at http://www.cipherdyne.org/fwknop.
 =item B<new($spa_data, $password, $enc_type, $hmac_key, $hmac_type)>
 
 The C<new> method creates the I<FKO> object.  With no arguments, it creates
-creates and empty I<FKO> object ready to be popluated with data (i.e. create
+creates and empty I<FKO> object ready to be populated with data (i.e. create
 a new SPA data packet to send).
 
 You can also pass existing encoded/encrypted I<SPA> data, a decryption

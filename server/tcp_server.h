@@ -32,7 +32,7 @@
 
 /* Function prototypes
 */
-int run_tcp_server(fko_srv_options_t *opts);
+int run_tcp_server(fko_srv_options_t *opts, const int family);
 
 #endif /* TCP_SERVER_H */
 

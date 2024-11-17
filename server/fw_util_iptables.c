@@ -56,6 +56,15 @@ zero_cmd_buffers(void)
     memset(cmd_out, 0x0, STANDARD_CMD_OUT_BUFSIZE);
 }
 
+static char const *
+any_ip(int ipv6)
+{
+	if(ipv6)
+		return IPT_ANY_IPV6;
+	else
+		return IPT_ANY_IP;
+}
+
 static int pid_status = 0;
 
 static int
@@ -67,7 +76,8 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
         const unsigned int port,
         const char * const natip,
         const unsigned int nat_port,
-        const unsigned int exp_ts)
+        const unsigned int exp_ts,
+        int ipv6)
 {
     int     rule_exists=0;
     char    ipt_line_buf[CMD_BUFSIZE]    = {0};
@@ -92,7 +102,7 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
 #endif
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
-        opts->fw_config->fw_command,
+        ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
         fwc->table,
         fwc->to_chain
     );
@@ -175,18 +185,18 @@ rule_exists_no_chk_support(const fko_srv_options_t * const opts,
     if(rule_exists)
         log_msg(LOG_DEBUG,
                 "rule_exists_no_chk_support() %s %u -> %s expires: %u rule already exists",
-                proto_search, port, srcip, exp_ts);
+                proto_search, port, srcip, exp_ts, ipv6);
     else
         log_msg(LOG_DEBUG,
                 "rule_exists_no_chk_support() %s %u -> %s expires: %u rule does not exist",
-                proto_search, port, srcip, exp_ts);
+                proto_search, port, srcip, exp_ts, ipv6);
 
    return(rule_exists);
 }
 
 static int
 rule_exists_chk_support(const fko_srv_options_t * const opts,
-        const char * const chain, const char * const rule)
+        const char * const chain, const char * const rule, int ipv6)
 {
     int     rule_exists = 0;
     int     res = 0;
@@ -194,7 +204,8 @@ rule_exists_chk_support(const fko_srv_options_t * const opts,
     zero_cmd_buffers();
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_CHK_RULE_ARGS,
-            opts->fw_config->fw_command, chain, rule);
+            ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
+            chain, rule);
 
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE,
             WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
@@ -231,16 +242,17 @@ rule_exists(const fko_srv_options_t * const opts,
         const unsigned int port,
         const char * const nat_ip,
         const unsigned int nat_port,
-        const unsigned int exp_ts)
+        const unsigned int exp_ts,
+        int ipv6)
 {
     int rule_exists = 0;
 
     if(have_ipt_chk_support == 1)
-        rule_exists = rule_exists_chk_support(opts, fwc->to_chain, rule);
+        rule_exists = rule_exists_chk_support(opts, fwc->to_chain, rule, ipv6);
     else
         rule_exists = rule_exists_no_chk_support(opts, fwc, proto, srcip,
                 (opts->fw_config->use_destination ? dstip : NULL), port,
-                nat_ip, nat_port, exp_ts);
+                nat_ip, nat_port, exp_ts, ipv6);
 
     if(rule_exists == 1)
         log_msg(LOG_DEBUG, "rule_exists() Rule : '%s' in %s already exists",
@@ -253,7 +265,7 @@ rule_exists(const fko_srv_options_t * const opts,
 }
 
 static void
-ipt_chk_support(const fko_srv_options_t * const opts)
+ipt_chk_support(const fko_srv_options_t * const opts, int ipv6)
 {
     int               res = 1;
     struct fw_chain  *in_chain = &(opts->fw_config->chain[IPT_INPUT_ACCESS]);
@@ -265,10 +277,11 @@ ipt_chk_support(const fko_srv_options_t * const opts)
      * delete the rule, and return.
     */
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_TMP_CHK_RULE_ARGS,
-        opts->fw_config->fw_command,
+        ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
         in_chain->table,
         in_chain->from_chain,
         1,   /* first rule */
+        ipv6 ? DUMMY_IPV6 : DUMMY_IP,
         in_chain->target
     );
 
@@ -284,9 +297,10 @@ ipt_chk_support(const fko_srv_options_t * const opts)
     /* Now see if '-C' works - any output indicates failure
     */
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_TMP_VERIFY_CHK_ARGS,
-        opts->fw_config->fw_command,
+        ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
         in_chain->table,
         in_chain->from_chain,
+        ipv6 ? DUMMY_IPV6 : DUMMY_IP,
         in_chain->target
     );
 
@@ -313,19 +327,17 @@ ipt_chk_support(const fko_srv_options_t * const opts)
     zero_cmd_buffers();
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
-        opts->fw_config->fw_command,
+        ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
         in_chain->table,
         in_chain->from_chain,
         1
     );
     run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE,
             WANT_STDERR, NO_TIMEOUT, &pid_status, opts);
-
-    return;
 }
 
 static int
-comment_match_exists(const fko_srv_options_t * const opts)
+comment_match_exists(const fko_srv_options_t * const opts, int ipv6)
 {
     int               res = 1;
     char             *ndx = NULL;
@@ -338,10 +350,11 @@ comment_match_exists(const fko_srv_options_t * const opts)
      * the rule and return true.
     */
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_TMP_COMMENT_ARGS,
-        opts->fw_config->fw_command,
+        ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
         in_chain->table,
         in_chain->from_chain,
         1,   /* first rule */
+        ipv6 ? DUMMY_IPV6 : DUMMY_IP,
         in_chain->target
     );
 
@@ -355,7 +368,7 @@ comment_match_exists(const fko_srv_options_t * const opts)
     zero_cmd_buffers();
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
-        opts->fw_config->fw_command,
+        ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
         in_chain->table,
         in_chain->from_chain
     );
@@ -381,7 +394,7 @@ comment_match_exists(const fko_srv_options_t * const opts)
         zero_cmd_buffers();
 
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
-            opts->fw_config->fw_command,
+            ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
             in_chain->table,
             in_chain->from_chain,
             1
@@ -394,14 +407,14 @@ comment_match_exists(const fko_srv_options_t * const opts)
 }
 
 static int
-add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
+add_jump_rule(const fko_srv_options_t * const opts, const int chain_num, int ipv6)
 {
     int res = 0, rv = 0;
 
     zero_cmd_buffers();
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_JUMP_RULE_ARGS,
-        fwc.fw_command,
+        ipv6 ? fwc.fw_command6 : fwc.fw_command,
         fwc.chain[chain_num].table,
         fwc.chain[chain_num].from_chain,
         fwc.chain[chain_num].jump_rule_pos,
@@ -429,14 +442,14 @@ add_jump_rule(const fko_srv_options_t * const opts, const int chain_num)
 }
 
 static int
-chain_exists(const fko_srv_options_t * const opts, const int chain_num)
+chain_exists(const fko_srv_options_t * const opts, const int chain_num, int ipv6)
 {
     int res = 0;
 
     zero_cmd_buffers();
 
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_CHAIN_EXISTS_ARGS,
-        fwc.fw_command,
+        ipv6 ? fwc.fw_command6 : fwc.fw_command,
         fwc.chain[chain_num].table,
         fwc.chain[chain_num].to_chain
     );
@@ -460,7 +473,7 @@ chain_exists(const fko_srv_options_t * const opts, const int chain_num)
 }
 
 static int
-jump_rule_exists_chk_support(const fko_srv_options_t * const opts, const int chain_num)
+jump_rule_exists_chk_support(const fko_srv_options_t * const opts, const int chain_num, int ipv6)
 {
     int    exists = 0;
     char   rule_buf[CMD_BUFSIZE] = {0};
@@ -470,7 +483,7 @@ jump_rule_exists_chk_support(const fko_srv_options_t * const opts, const int cha
         fwc.chain[chain_num].to_chain
     );
 
-    if(rule_exists_chk_support(opts, fwc.chain[chain_num].from_chain, rule_buf) == 1)
+    if(rule_exists_chk_support(opts, fwc.chain[chain_num].from_chain, rule_buf, ipv6) == 1)
     {
         log_msg(LOG_DEBUG, "jump_rule_exists_chk_support() jump rule found");
         exists = 1;
@@ -512,12 +525,12 @@ jump_rule_exists_no_chk_support(const fko_srv_options_t * const opts,
 }
 
 static int
-jump_rule_exists(const fko_srv_options_t * const opts, const int chain_num)
+jump_rule_exists(const fko_srv_options_t * const opts, const int chain_num, int ipv6)
 {
     int    exists = 0;
 
     if(have_ipt_chk_support == 1)
-        exists = jump_rule_exists_chk_support(opts, chain_num);
+        exists = jump_rule_exists_chk_support(opts, chain_num, ipv6);
     else
         exists = jump_rule_exists_no_chk_support(opts, chain_num);
 
@@ -550,6 +563,36 @@ fw_dump_rules(const fko_srv_options_t * const opts)
             */
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_ALL_RULES_ARGS,
                 opts->fw_config->fw_command,
+                ch[i].table
+            );
+
+            res = run_extcmd(cmd_buf, NULL, 0, NO_STDERR,
+                        NO_TIMEOUT, &pid_status, opts);
+
+            log_msg(LOG_DEBUG, "fw_dump_rules() CMD: '%s' (res: %d)",
+                cmd_buf, res);
+
+            /* Expect full success on this */
+            if(! EXTCMD_IS_SUCCESS(res))
+            {
+                log_msg(LOG_ERR, "fw_dump_rules() Error %i from cmd:'%s': %s",
+                        res, cmd_buf, err_buf);
+                got_err++;
+            }
+        }
+
+        /* the same with IPv6 */
+        for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
+        {
+            if(fwc.chain[i].target[0] == '\0')
+                continue;
+
+            zero_cmd_buffers();
+
+            /* Create the list command
+            */
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_ALL_RULES_ARGS,
+                opts->fw_config->fw_command6,
                 ch[i].table
             );
 
@@ -605,6 +648,40 @@ fw_dump_rules(const fko_srv_options_t * const opts)
                 got_err++;
             }
         }
+
+        /* the same with IPv6 */
+        for(i=0; i < NUM_FWKNOP_ACCESS_TYPES; i++)
+        {
+            if(fwc.chain[i].target[0] == '\0')
+                continue;
+
+            zero_cmd_buffers();
+
+            /* Create the list command
+            */
+            snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
+                opts->fw_config->fw_command6,
+                ch[i].table,
+                ch[i].to_chain
+            );
+
+            fprintf(stdout, "\n");
+            fflush(stdout);
+
+            res = run_extcmd(cmd_buf, NULL, 0, NO_STDERR,
+                        NO_TIMEOUT, &pid_status, opts);
+
+            log_msg(LOG_DEBUG, "fw_dump_rules() CMD: '%s' (res: %d)",
+                cmd_buf, res);
+
+            /* Expect full success on this */
+            if(! EXTCMD_IS_SUCCESS(res))
+            {
+                log_msg(LOG_ERR, "fw_dump_rules() Error %i from cmd:'%s': %s",
+                        res, cmd_buf, err_buf);
+                got_err++;
+            }
+        }
     }
 
     return(got_err);
@@ -613,7 +690,7 @@ fw_dump_rules(const fko_srv_options_t * const opts)
 /* Quietly flush and delete all fwknop custom chains.
 */
 static void
-delete_all_chains(const fko_srv_options_t * const opts)
+delete_all_chains(const fko_srv_options_t * const opts, int ipv6)
 {
     int     i, res, cmd_ctr = 0;
 
@@ -626,12 +703,12 @@ delete_all_chains(const fko_srv_options_t * const opts)
          * is there.
         */
         cmd_ctr = 0;
-        while(cmd_ctr < CMD_LOOP_TRIES && (jump_rule_exists(opts, i) == 1))
+        while(cmd_ctr < CMD_LOOP_TRIES && (jump_rule_exists(opts, i, ipv6) == 1))
         {
             zero_cmd_buffers();
 
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_JUMP_RULE_ARGS,
-                fwc.fw_command,
+                ipv6 ? fwc.fw_command6 : fwc.fw_command,
                 fwc.chain[i].table,
                 fwc.chain[i].from_chain,
                 fwc.chain[i].to_chain
@@ -657,7 +734,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
         /* Now flush and remove the chain.
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_FLUSH_CHAIN_ARGS,
-            fwc.fw_command,
+            ipv6 ? fwc.fw_command6 : fwc.fw_command,
             fwc.chain[i].table,
             fwc.chain[i].to_chain
         );
@@ -677,7 +754,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
         zero_cmd_buffers();
 
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_CHAIN_ARGS,
-            fwc.fw_command,
+            ipv6 ? fwc.fw_command6 : fwc.fw_command,
             fwc.chain[i].table,
             fwc.chain[i].to_chain
         );
@@ -703,7 +780,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
         /* Delete the rule to direct traffic to the NFQ chain.
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
-            fwc.fw_command,
+            ipv6 ? fwc.fw_command6 : fwc.fw_command,
             opts->config[CONF_NFQ_TABLE],
             "INPUT",
             1
@@ -724,7 +801,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
         /* Flush the NFQ chain
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_FLUSH_CHAIN_ARGS,
-            fwc.fw_command,
+            ipv6 ? fwc.fw_command6 : fwc.fw_command,
             opts->config[CONF_NFQ_TABLE],
             opts->config[CONF_NFQ_CHAIN]
         );
@@ -744,7 +821,7 @@ delete_all_chains(const fko_srv_options_t * const opts)
         /* Delete the NF_QUEUE chains and rules
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_CHAIN_ARGS,
-            fwc.fw_command,
+            ipv6 ? fwc.fw_command6 : fwc.fw_command,
             opts->config[CONF_NFQ_TABLE],
             opts->config[CONF_NFQ_CHAIN]
         );
@@ -760,11 +837,10 @@ delete_all_chains(const fko_srv_options_t * const opts)
             log_msg(LOG_ERR, "Error %i from cmd:'%s': %s", res, cmd_buf, err_buf);
     }
 #endif
-    return;
 }
 
 static int
-create_chain(const fko_srv_options_t * const opts, const int chain_num)
+create_chain(const fko_srv_options_t * const opts, const int chain_num, int ipv6)
 {
     int res = 0, rv = 0;
 
@@ -773,7 +849,7 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
     /* Create the custom chain.
     */
     snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_NEW_CHAIN_ARGS,
-        fwc.fw_command,
+        ipv6 ? fwc.fw_command6 : fwc.fw_command,
         fwc.chain[chain_num].table,
         fwc.chain[chain_num].to_chain
     );
@@ -796,18 +872,18 @@ create_chain(const fko_srv_options_t * const opts, const int chain_num)
 }
 
 static int
-mk_chain(const fko_srv_options_t * const opts, const int chain_num)
+mk_chain(const fko_srv_options_t * const opts, const int chain_num, int ipv6)
 {
     int err = 0;
 
     /* Make sure the required chain and jump rule exist
     */
-    if(! chain_exists(opts, chain_num))
-        if(! create_chain(opts, chain_num))
+    if(! chain_exists(opts, chain_num, ipv6))
+        if(! create_chain(opts, chain_num, ipv6))
             err++;
 
-    if (! jump_rule_exists(opts, chain_num))
-        if(! add_jump_rule(opts, chain_num))
+    if (! jump_rule_exists(opts, chain_num, ipv6))
+        if(! add_jump_rule(opts, chain_num, ipv6))
             err++;
 
     return err;
@@ -816,7 +892,7 @@ mk_chain(const fko_srv_options_t * const opts, const int chain_num)
 /* Create the fwknop custom chains (at least those that are configured).
 */
 static int
-create_fw_chains(const fko_srv_options_t * const opts)
+create_fw_chains(const fko_srv_options_t * const opts, int ipv6)
 {
     int     i, got_err = 0;
 #if USE_LIBNETFILTER_QUEUE
@@ -828,7 +904,7 @@ create_fw_chains(const fko_srv_options_t * const opts)
         if(fwc.chain[i].target[0] == '\0')
             continue;
 
-        got_err += mk_chain(opts, i);
+        got_err += mk_chain(opts, i, ipv6);
     }
 
 #if USE_LIBNETFILTER_QUEUE
@@ -839,7 +915,7 @@ create_fw_chains(const fko_srv_options_t * const opts)
         /* Create the NF_QUEUE chains and rules
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_NEW_CHAIN_ARGS,
-            fwc.fw_command,
+            ipv6 ? fwc.fw_command6 : fwc.fw_command,
             opts->config[CONF_NFQ_TABLE],
             opts->config[CONF_NFQ_CHAIN]
         );
@@ -862,7 +938,7 @@ create_fw_chains(const fko_srv_options_t * const opts)
         /* Create the rule to direct traffic to the NFQ chain.
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_ADD_JUMP_RULE_ARGS,
-            fwc.fw_command,
+            ipv6 ? fwc.fw_command6 : fwc.fw_command,
             opts->config[CONF_NFQ_TABLE],
             "INPUT",
             1,
@@ -891,7 +967,7 @@ create_fw_chains(const fko_srv_options_t * const opts)
         if(strlen(opts->config[CONF_NFQ_INTERFACE]) > 0)
         {
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_NFQ_ADD_ARGS_WITH_IF,
-                fwc.fw_command,
+                ipv6 ? fwc.fw_command6 : fwc.fw_command,
                 opts->config[CONF_NFQ_TABLE],
                 opts->config[CONF_NFQ_CHAIN],
                 opts->config[CONF_NFQ_INTERFACE],
@@ -902,7 +978,7 @@ create_fw_chains(const fko_srv_options_t * const opts)
         else
         {
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_NFQ_ADD_ARGS,
-                fwc.fw_command,
+                ipv6 ? fwc.fw_command6 : fwc.fw_command,
                 opts->config[CONF_NFQ_TABLE],
                 opts->config[CONF_NFQ_CHAIN],
                 opts->config[CONF_NFQ_PORT],
@@ -968,7 +1044,7 @@ set_fw_chain_conf(const int type, const char * const conf_str)
                 && *ndx != ' '
                 && *ndx != ','
                 && *ndx != '_'
-                && isalnum(*ndx) == 0)
+                && isalnum((int)(unsigned char)*ndx) == 0)
         {
             log_msg(LOG_ERR, "[*] Custom chain config parse error: "
                 "invalid character '%c' for chain type %i, "
@@ -1031,6 +1107,7 @@ fw_config_init(fko_srv_options_t * const opts)
     /* Set our firewall exe command path (iptables in most cases).
     */
     strlcpy(fwc.fw_command, opts->config[CONF_FIREWALL_EXE], sizeof(fwc.fw_command));
+    strlcpy(fwc.fw_command6, opts->config[CONF_FIREWALL_EXE_IPV6], sizeof(fwc.fw_command6));
 
 #if HAVE_LIBFIU
     fiu_return_on("fw_config_init", 0);
@@ -1101,16 +1178,22 @@ fw_initialize(const fko_srv_options_t * const opts)
     if(opts->ipt_disable_check_support)
         have_ipt_chk_support = 0;
     else
-        ipt_chk_support(opts);
+    {
+        ipt_chk_support(opts, 0);
+        ipt_chk_support(opts, 1);
+    }
 
     /* Flush the chains (just in case) so we can start fresh.
     */
     if(strncasecmp(opts->config[CONF_FLUSH_IPT_AT_INIT], "Y", 1) == 0)
-        delete_all_chains(opts);
+    {
+        delete_all_chains(opts, 0);
+        delete_all_chains(opts, 1);
+    }
 
     /* Now create any configured chains.
     */
-    if(create_fw_chains(opts) != 0)
+    if(create_fw_chains(opts, 0) != 0 || create_fw_chains(opts, 1) != 0)
     {
         log_msg(LOG_WARNING,
                 "fw_initialize() Warning: Errors detected during fwknop custom chain creation");
@@ -1121,7 +1204,7 @@ fw_initialize(const fko_srv_options_t * const opts)
     */
     if(strncasecmp(opts->config[CONF_ENABLE_IPT_COMMENT_CHECK], "Y", 1) == 0)
     {
-        if(comment_match_exists(opts) == 1)
+        if(comment_match_exists(opts, 0) == 1 && comment_match_exists(opts, 1) == 1)
         {
             log_msg(LOG_INFO, "iptables 'comment' match is available");
         }
@@ -1142,13 +1225,14 @@ fw_cleanup(const fko_srv_options_t * const opts)
             && opts->fw_flush == 0)
         return(0);
 
-    delete_all_chains(opts);
+    delete_all_chains(opts, 0);
+    delete_all_chains(opts, 1);
     return(0);
 }
 
 static int
 create_rule(const fko_srv_options_t * const opts,
-        const char * const fw_chain, const char * const fw_rule)
+        const char * const fw_chain, const char * const fw_rule, int ipv6)
 {
     int res = 0;
 
@@ -1156,10 +1240,12 @@ create_rule(const fko_srv_options_t * const opts,
 
     if (strncasecmp(opts->config[CONF_ENABLE_RULE_PREPEND], "Y", 1) == 0) {
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s -I %s %s",
-                opts->fw_config->fw_command, fw_chain, fw_rule);
+                ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
+                fw_chain, fw_rule);
     } else {
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s -A %s %s",
-                opts->fw_config->fw_command, fw_chain, fw_rule);
+                ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
+                fw_chain, fw_rule);
     }
     res = run_extcmd(cmd_buf, err_buf, CMD_BUFSIZE, WANT_STDERR,
                 NO_TIMEOUT, &pid_status, opts);
@@ -1195,7 +1281,8 @@ ipt_rule(const fko_srv_options_t * const opts,
         const unsigned int exp_ts,
         const time_t now,
         const char * const msg,
-        const char * const access_msg)
+        const char * const access_msg,
+        int ipv6)
 {
     char rule_buf[CMD_BUFSIZE] = {0};
 
@@ -1220,15 +1307,15 @@ ipt_rule(const fko_srv_options_t * const opts,
 
     /* Check to make sure that the chain and jump rule exist
     */
-    mk_chain(opts, chain->type);
+    mk_chain(opts, chain->type, ipv6);
 
     if(rule_exists(opts, chain, rule_buf, proto, srcip,
-                dstip, port, nat_ip, nat_port, exp_ts) == 0)
+                dstip, port, nat_ip, nat_port, exp_ts, ipv6) == 0)
     {
-        if(create_rule(opts, chain->to_chain, rule_buf))
+        if(create_rule(opts, chain->to_chain, rule_buf, ipv6))
         {
             log_msg(LOG_INFO, "Added %s rule to %s for %s -> %s %s, expires at %u",
-                msg, chain->to_chain, srcip, (dstip == NULL) ? IPT_ANY_IP : dstip,
+                msg, chain->to_chain, srcip, (dstip == NULL) ? any_ip(ipv6) : dstip,
                 access_msg, exp_ts
             );
 
@@ -1241,8 +1328,6 @@ ipt_rule(const fko_srv_options_t * const opts,
                 chain->next_expire = exp_ts;
         }
     }
-
-    return;
 }
 
 static void forward_access_rule(const fko_srv_options_t * const opts,
@@ -1254,7 +1339,8 @@ static void forward_access_rule(const fko_srv_options_t * const opts,
         const unsigned int fst_port,
         spa_data_t * const spadat,
         const unsigned int exp_ts,
-        const time_t now)
+        const time_t now,
+        int ipv6)
 {
     char   rule_buf[CMD_BUFSIZE] = {0};
 
@@ -1277,7 +1363,7 @@ static void forward_access_rule(const fko_srv_options_t * const opts,
         */
         ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
             NULL, ANY_PROTO, ANY_PORT, NULL, NAT_ANY_PORT,
-            fwd_chain, exp_ts, now, "FORWARD ALL", "*/*");
+            fwd_chain, exp_ts, now, "FORWARD ALL", "*/*", ipv6);
     }
     else
     {
@@ -1293,9 +1379,8 @@ static void forward_access_rule(const fko_srv_options_t * const opts,
         */
         ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
             NULL, fst_proto, nat_port, NULL, NAT_ANY_PORT,
-            fwd_chain, exp_ts, now, "FORWARD", spadat->spa_message_remain);
+            fwd_chain, exp_ts, now, "FORWARD", spadat->spa_message_remain, ipv6);
     }
-    return;
 }
 
 static void dnat_rule(const fko_srv_options_t * const opts,
@@ -1307,7 +1392,8 @@ static void dnat_rule(const fko_srv_options_t * const opts,
         const unsigned int fst_port,
         spa_data_t * const spadat,
         const unsigned int exp_ts,
-        const time_t now)
+        const time_t now,
+        int ipv6)
 {
     char   rule_buf[CMD_BUFSIZE] = {0};
 
@@ -1321,7 +1407,7 @@ static void dnat_rule(const fko_srv_options_t * const opts,
         snprintf(rule_buf, CMD_BUFSIZE-1, IPT_DNAT_ALL_RULE_ARGS,
             dnat_chain->table,
             spadat->use_src_ip,
-            (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+            (fwc.use_destination ? spadat->pkt_destination_ip : any_ip(ipv6)),
             exp_ts,
             dnat_chain->target,
             nat_ip
@@ -1331,17 +1417,17 @@ static void dnat_rule(const fko_srv_options_t * const opts,
         */
         ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
             NULL, ANY_PROTO, ANY_PORT, NULL, NAT_ANY_PORT,
-            dnat_chain, exp_ts, now, "DNAT ALL", "*/*");
+            dnat_chain, exp_ts, now, "DNAT ALL", "*/*", ipv6);
     }
     else
     {
         memset(rule_buf, 0, CMD_BUFSIZE);
 
-        snprintf(rule_buf, CMD_BUFSIZE-1, IPT_DNAT_RULE_ARGS,
+        snprintf(rule_buf, CMD_BUFSIZE-1, ipv6 ? IPT_DNAT_RULE_ARGS_IPV6 : IPT_DNAT_RULE_ARGS,
             dnat_chain->table,
             fst_proto,
             spadat->use_src_ip,
-            (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+            (fwc.use_destination ? spadat->pkt_destination_ip : any_ip(ipv6)),
             fst_port,
             exp_ts,
             dnat_chain->target,
@@ -1350,11 +1436,10 @@ static void dnat_rule(const fko_srv_options_t * const opts,
         );
 
         ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
-            (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+            (fwc.use_destination ? spadat->pkt_destination_ip : any_ip(ipv6)),
             fst_proto, fst_port, nat_ip, nat_port, dnat_chain, exp_ts, now,
-            "DNAT", spadat->spa_message_remain);
+            "DNAT", spadat->spa_message_remain, ipv6);
     }
-    return;
 }
 
 static void snat_rule(const fko_srv_options_t * const opts,
@@ -1365,7 +1450,8 @@ static void snat_rule(const fko_srv_options_t * const opts,
         const unsigned int fst_port,
         spa_data_t * const spadat,
         const unsigned int exp_ts,
-        const time_t now)
+        const time_t now,
+        int ipv6)
 {
     char     rule_buf[CMD_BUFSIZE] = {0};
     char     snat_target[SNAT_TARGET_BUFSIZE] = {0};
@@ -1385,7 +1471,7 @@ static void snat_rule(const fko_srv_options_t * const opts,
 
         /* Add SNAT or MASQUERADE rules.
         */
-        if(acc->force_snat && acc->force_snat_ip != NULL && is_valid_ipv4_addr(acc->force_snat_ip, strlen(acc->force_snat_ip)))
+        if(acc->force_snat && acc->force_snat_ip != NULL && is_valid_ip_addr(acc->force_snat_ip, strlen(acc->force_snat_ip), AF_INET))
         {
             /* Using static SNAT */
             snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
@@ -1393,7 +1479,7 @@ static void snat_rule(const fko_srv_options_t * const opts,
                 "--to-source %s", acc->force_snat_ip);
         }
         else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
-            && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP])))
+            && is_valid_ip_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP]), AF_INET))
         {
             /* Using static SNAT */
             snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
@@ -1413,13 +1499,13 @@ static void snat_rule(const fko_srv_options_t * const opts,
 
         ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
             NULL, ANY_PROTO, ANY_PORT, NULL, NAT_ANY_PORT,
-            snat_chain, exp_ts, now, "SNAT ALL", "*/*");
+            snat_chain, exp_ts, now, "SNAT ALL", "*/*", ipv6);
     }
     else
     {
         /* Add SNAT or MASQUERADE rules.
         */
-        if(acc->force_snat && acc->force_snat_ip != NULL && is_valid_ipv4_addr(acc->force_snat_ip, strlen(acc->force_snat_ip)))
+        if(acc->force_snat && acc->force_snat_ip != NULL && is_valid_ip_addr(acc->force_snat_ip, strlen(acc->force_snat_ip), AF_INET))
         {
             /* Using static SNAT */
             snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
@@ -1434,7 +1520,7 @@ static void snat_rule(const fko_srv_options_t * const opts,
                 "--to-ports %i", fst_port);
         }
         else if((opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
-            && is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP])))
+            && is_valid_ip_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP]), AF_INET))
         {
             /* Using static SNAT */
             snat_chain = &(opts->fw_config->chain[IPT_SNAT_ACCESS]);
@@ -1464,9 +1550,8 @@ static void snat_rule(const fko_srv_options_t * const opts,
         ipt_rule(opts, rule_buf, NULL, spadat->use_src_ip,
                 NULL, fst_proto, nat_port, nat_ip, nat_port,
                 snat_chain, exp_ts, now, "SNAT",
-                spadat->spa_message_remain);
+                spadat->spa_message_remain, ipv6);
     }
-    return;
 }
 
 /****************************************************************************/
@@ -1477,7 +1562,7 @@ int
 process_spa_request(const fko_srv_options_t * const opts,
         const acc_stanza_t * const acc, spa_data_t * const spadat)
 {
-    char            nat_ip[MAX_IPV4_STR_LEN] = {0};
+    char            nat_ip[MAX_IPV46_STR_LEN] = {0};
     char            nat_dst[MAX_HOSTNAME_LEN] = {0};
 
     unsigned int    nat_port = 0;
@@ -1497,6 +1582,9 @@ process_spa_request(const fko_srv_options_t * const opts,
     int             str_len;
     time_t          now;
     unsigned int    exp_ts;
+
+    /* XXX set adequately per SPA message */
+    int             ipv6 = (opts->family == AF_INET6) ? 1 : 0;
 
     /* Parse and expand our access message.
     */
@@ -1545,7 +1633,7 @@ process_spa_request(const fko_srv_options_t * const opts,
             if((ndx != NULL) && (str_len <= MAX_HOSTNAME_LEN))
             {
                 strlcpy(nat_dst, spadat->nat_access, str_len+1);
-                if(! is_valid_ipv4_addr(nat_dst, str_len))
+                if(! is_valid_ip_addr(nat_dst, str_len, ipv6 ? AF_INET6 : AF_INET))
                 {
                     if(strncasecmp(opts->config[CONF_ENABLE_NAT_DNS], "Y", 1) == 0)
                     {
@@ -1555,7 +1643,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                             free_acc_port_list(port_list);
                             return res;
                         }
-                        if (ipv4_resolve(nat_dst, nat_ip) == 0)
+                        if (ip_resolve(nat_dst, nat_ip, ipv6 ? AF_INET6 : AF_INET) == 0)
                         {
                             log_msg(LOG_INFO, "Resolved NAT IP in SPA message");
                         }
@@ -1576,7 +1664,7 @@ process_spa_request(const fko_srv_options_t * const opts,
                 }
                 else
                 {
-                    strlcpy(nat_ip, nat_dst, MAX_IPV4_STR_LEN);
+                    strlcpy(nat_ip, nat_dst, MAX_IPV46_STR_LEN);
                 }
 
                 nat_port = strtol_wrapper(ndx+1, 0, MAX_PORT,
@@ -1601,29 +1689,29 @@ process_spa_request(const fko_srv_options_t * const opts,
                 || spadat->message_type == FKO_CLIENT_TIMEOUT_LOCAL_NAT_ACCESS_MSG)
         {
             ipt_rule(opts, NULL, IPT_RULE_ARGS, spadat->use_src_ip,
-                (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+                (fwc.use_destination ? spadat->pkt_destination_ip : any_ip(ipv6)),
                 fst_proto, nat_port, nat_ip, nat_port, in_chain, exp_ts,
-                now, "local NAT", spadat->spa_message_remain);
+                now, "local NAT", spadat->spa_message_remain, ipv6);
         }
         else if(strlen(fwd_chain->to_chain))
         {
             /* FORWARD access rule
             */
             forward_access_rule(opts, acc, fwd_chain, nat_ip,
-                    nat_port, fst_proto, fst_port, spadat, exp_ts, now);
+                    nat_port, fst_proto, fst_port, spadat, exp_ts, now, ipv6);
         }
 
         /* DNAT rule
         */
         if(strlen(dnat_chain->to_chain) && !acc->disable_dnat)
             dnat_rule(opts, acc, dnat_chain, nat_ip,
-                    nat_port, fst_proto, fst_port, spadat, exp_ts, now);
+                    nat_port, fst_proto, fst_port, spadat, exp_ts, now, ipv6);
 
         /* SNAT rule
         */
         if(acc->force_snat || strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
             snat_rule(opts, acc, nat_ip, nat_port,
-                    fst_proto, fst_port, spadat, exp_ts, now);
+                    fst_proto, fst_port, spadat, exp_ts, now, ipv6);
     }
     else /* Non-NAT request - this is the typical case. */
     {
@@ -1632,9 +1720,9 @@ process_spa_request(const fko_srv_options_t * const opts,
         while(ple != NULL)
         {
             ipt_rule(opts, NULL, IPT_RULE_ARGS, spadat->use_src_ip,
-                (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+                (fwc.use_destination ? spadat->pkt_destination_ip : any_ip(ipv6)),
                 ple->proto, ple->port, NULL, NAT_ANY_PORT,
-                in_chain, exp_ts, now, "access", spadat->spa_message_remain);
+                in_chain, exp_ts, now, "access", spadat->spa_message_remain, ipv6);
 
             /* We need to make a corresponding OUTPUT rule if out_chain target
              * is not NULL.
@@ -1642,9 +1730,9 @@ process_spa_request(const fko_srv_options_t * const opts,
             if(strlen(out_chain->to_chain))
             {
                 ipt_rule(opts, NULL, IPT_OUT_RULE_ARGS, spadat->use_src_ip,
-                    (fwc.use_destination ? spadat->pkt_destination_ip : IPT_ANY_IP),
+                    (fwc.use_destination ? spadat->pkt_destination_ip : any_ip(ipv6)),
                     ple->proto, ple->port, NULL, NAT_ANY_PORT,
-                    out_chain, exp_ts, now, "OUTPUT", spadat->spa_message_remain);
+                    out_chain, exp_ts, now, "OUTPUT", spadat->spa_message_remain, ipv6);
             }
             ple = ple->next;
         }
@@ -1660,7 +1748,7 @@ process_spa_request(const fko_srv_options_t * const opts,
 static void
 rm_expired_rules(const fko_srv_options_t * const opts,
         const char * const ipt_output_buf,
-        char *ndx, struct fw_chain *ch, int cpos, time_t now)
+        char *ndx, struct fw_chain *ch, int cpos, time_t now, int ipv6)
 {
     char        exp_str[12]     = {0};
     char        rule_num_str[6] = {0};
@@ -1758,7 +1846,7 @@ rm_expired_rules(const fko_srv_options_t * const opts,
             zero_cmd_buffers();
 
             snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_DEL_RULE_ARGS,
-                opts->fw_config->fw_command,
+                ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
                 ch[cpos].table,
                 ch[cpos].to_chain,
                 rule_num - rn_offset /* account for position of previously
@@ -1808,16 +1896,14 @@ rm_expired_rules(const fko_srv_options_t * const opts,
         ch[cpos].next_expire = 0;
     else if(min_exp)
         ch[cpos].next_expire = min_exp;
-
-    return;
 }
 
 /* Iterate over the configure firewall access chains and purge expired
  * firewall rules.
 */
-void
-check_firewall_rules(const fko_srv_options_t * const opts,
-        const int chk_rm_all)
+static void
+check_firewall_rules_do(const fko_srv_options_t * const opts,
+        const int chk_rm_all, int ipv6)
 {
     char            *ndx;
     char            ipt_output_buf[STANDARD_CMD_OUT_BUFSIZE] = {0};
@@ -1853,7 +1939,7 @@ check_firewall_rules(const fko_srv_options_t * const opts,
          * mechanism.
         */
         snprintf(cmd_buf, CMD_BUFSIZE-1, "%s " IPT_LIST_RULES_ARGS,
-            opts->fw_config->fw_command,
+            ipv6 ? opts->fw_config->fw_command6 : opts->fw_config->fw_command,
             ch[i].table,
             ch[i].to_chain
         );
@@ -1891,10 +1977,16 @@ check_firewall_rules(const fko_srv_options_t * const opts,
             continue;
         }
 
-        rm_expired_rules(opts, ipt_output_buf, ndx, ch, i, now);
+        rm_expired_rules(opts, ipt_output_buf, ndx, ch, i, now, ipv6);
     }
+}
 
-    return;
+void
+check_firewall_rules(const fko_srv_options_t * const opts,
+        const int chk_rm_all)
+{
+        check_firewall_rules_do(opts, chk_rm_all, 0);
+        check_firewall_rules_do(opts, chk_rm_all, 1);
 }
 
 int
@@ -1913,7 +2005,7 @@ validate_ipt_chain_conf(const char * const chain_str)
                 && *ndx != ' '
                 && *ndx != ','
                 && *ndx != '_'
-                && isalnum(*ndx) == 0)
+                && isalnum((int)(unsigned char)*ndx) == 0)
         {
             rv = 0;
             break;

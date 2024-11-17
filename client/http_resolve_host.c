@@ -55,16 +55,46 @@ struct url
     char    path[MAX_URL_PATH_LEN+1];
 };
 
+static int resolve_ip(const char * resp, fko_cli_options_t *options, const char * extraerror1,char *extraerror2) {
+  struct  addrinfo *result=NULL;
+  struct  addrinfo *rp;
+  struct  addrinfo hints;
+  int error;
+
+  memset(&hints, 0, sizeof(struct addrinfo));
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_flags  = AI_NUMERICHOST | AI_CANONNAME;
+  error = getaddrinfo(resp, NULL, &hints, &result);
+  if (error != 0)
+    {
+        log_msg(LOG_VERBOSITY_ERROR,
+		"[-] Could not resolve IP via: '%s%s'", extraerror1, extraerror2);
+        return(-1);
+    }
+    /* get last IP in case of multi IP host */
+    for (rp = result; rp != NULL; rp = rp->ai_next) {
+	/* the canonical value is in the first structure returned */
+	strlcpy(options->allow_ip_str,
+	        rp->ai_canonname, sizeof(options->allow_ip_str));
+	break;
+    }
+    freeaddrinfo(result);
+
+    log_msg(LOG_VERBOSITY_INFO,
+		"\n[+] Resolved external IP (via '%s%s') as: %s",
+	        extraerror1,extraerror2, options->allow_ip_str);
+    return 1;
+}
+
 static int
 try_url(struct url *url, fko_cli_options_t *options)
 {
-    int     sock=-1, sock_success=0, res, error, http_buf_len, i;
+    int     sock=-1, sock_success=0, i, res, error, http_buf_len;
     int     bytes_read = 0, position = 0;
-    int     o1, o2, o3, o4;
     struct  addrinfo *result=NULL, *rp, hints;
     char    http_buf[HTTP_MAX_REQUEST_LEN]       = {0};
     char    http_response[HTTP_MAX_RESPONSE_LEN] = {0};
-    char   *ndx;
+    char   *ndx, c;
 
 #ifdef WIN32
     WSADATA wsa_data;
@@ -91,13 +121,6 @@ try_url(struct url *url, fko_cli_options_t *options)
     );
 
     http_buf_len = strlen(http_buf);
-
-    memset(&hints, 0, sizeof(struct addrinfo));
-
-    hints.ai_family   = AF_UNSPEC; /* Allow IPv4 or IPv6 */
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-
 #if AFL_FUZZING
     /* Make sure to not generate any resolution requests when compiled
      * for AFL fuzzing cycles
@@ -111,6 +134,10 @@ try_url(struct url *url, fko_cli_options_t *options)
     return(1);
 #endif
 
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family   = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
     error = getaddrinfo(url->host, url->port, &hints, &result);
     if (error != 0)
     {
@@ -198,44 +225,19 @@ try_url(struct url *url, fko_cli_options_t *options)
     ndx += 4;
 
     /* Walk along the content to try to find the end of the IP address.
-     * Note: We are expecting the content to be just an IP address
-     *       (possibly followed by whitespace or other not-digit value).
-     */
-    for(i=0; i<MAX_IPV4_STR_LEN; i++) {
-        if(! isdigit((int)(unsigned char)*(ndx+i)) && *(ndx+i) != '.')
-            break;
-    }
-
+      * Note: We are expecting the content to be just an IP address
+      *       (possibly followed by whitespace or other not-digit value).
+      */
+    for(i=0; i<MAX_IPV46_STR_LEN; i++) {
+         c = *(ndx+i);
+         if(! isdigit((int)(unsigned char)c) && ! ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) && c != '.' && c != ':')
+             break;
+     }
     /* Terminate at the first non-digit and non-dot.
-    */
-    *(ndx+i) = '\0';
-
-    /* Now that we have what we think is an IP address string.  We make
-     * sure the format and values are sane.
      */
-    if((sscanf(ndx, "%u.%u.%u.%u", &o1, &o2, &o3, &o4)) == 4
-            && o1 >= 0 && o1 <= 255
-            && o2 >= 0 && o2 <= 255
-            && o3 >= 0 && o3 <= 255
-            && o4 >= 0 && o4 <= 255)
-    {
-        strlcpy(options->allow_ip_str, ndx, sizeof(options->allow_ip_str));
+     *(ndx+i) = '\0';
 
-        log_msg(LOG_VERBOSITY_INFO,
-                    "\n[+] Resolved external IP (via http://%s%s) as: %s",
-                    url->host,
-                    url->path,
-                    options->allow_ip_str);
-
-        return(1);
-    }
-    else
-    {
-        log_msg(LOG_VERBOSITY_ERROR,
-            "[-] From http://%s%s\n    Invalid IP (%s) in HTTP response:\n\n%s",
-            url->host, url->path, ndx, http_response);
-        return(-1);
-    }
+    return resolve_ip(ndx,options,url->host,url->path);
 }
 
 static int
@@ -323,8 +325,8 @@ parse_url(char *res_url, struct url* url)
 int
 resolve_ip_https(fko_cli_options_t *options)
 {
-    int     o1, o2, o3, o4, got_resp=0, i=0;
-    char   *ndx, resp[MAX_IPV4_STR_LEN+1] = {0};
+    int     got_resp=0;
+    char    resp[MAX_IPV46_STR_LEN+1] = {0};
     struct  url url; /* for validation only */
     char    wget_ssl_cmd[MAX_URL_PATH_LEN] = {0};  /* for verbose logging only */
 
@@ -493,32 +495,14 @@ resolve_ip_https(fko_cli_options_t *options)
     pclose(wget);
 #endif
 
-    if(got_resp)
+    if(! got_resp)
     {
-        ndx = resp;
-        for(i=0; i<MAX_IPV4_STR_LEN; i++) {
-            if(! isdigit((int)(unsigned char)*(ndx+i)) && *(ndx+i) != '.')
-                break;
-        }
-        *(ndx+i) = '\0';
-
-        if((sscanf(ndx, "%u.%u.%u.%u", &o1, &o2, &o3, &o4)) == 4
-                && o1 >= 0 && o1 <= 255
-                && o2 >= 0 && o2 <= 255
-                && o3 >= 0 && o3 <= 255
-                && o4 >= 0 && o4 <= 255)
-        {
-            strlcpy(options->allow_ip_str, ndx, sizeof(options->allow_ip_str));
-
-            log_msg(LOG_VERBOSITY_INFO,
-                        "\n[+] Resolved external IP (via '%s') as: %s",
-                        wget_ssl_cmd, options->allow_ip_str);
-            return 1;
-        }
+        log_msg(LOG_VERBOSITY_ERROR,
+            "[-] Could not resolve IP via: '%s'", wget_ssl_cmd);
+        return -1;
     }
-    log_msg(LOG_VERBOSITY_ERROR,
-        "[-] Could not resolve IP via: '%s'", wget_ssl_cmd);
-    return -1;
+
+    return resolve_ip(resp,options,wget_ssl_cmd,"");
 }
 
 int
