@@ -394,7 +394,6 @@ main(int argc, char **argv)
 
     if(options.use_totp)
     {
-        /* TODO: check for valid responses */
         char *temp = malloc(6);
         get_totp(ctx, &options, temp);
         fko_set_totp(ctx, temp);
