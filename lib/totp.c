@@ -37,7 +37,7 @@ fko_set_totp(fko_ctx_t ctx, const char * const totp_code)
         return(FKO_ERROR_MEMORY_ALLOCATION);
 
     ctx->totp = strdup(totp_code);
-    return 1;
+    return(FKO_SUCCESS);
 }
 
 /* Used by the server to get the TOTP value from the context
