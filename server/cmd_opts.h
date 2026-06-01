@@ -114,6 +114,21 @@ static char *config_map[NUMBER_OF_CONFIG_ENTRIES] = {
     "IPT_SNAT_ACCESS",
     "IPT_MASQUERADE_ACCESS",
     "ENABLE_IPT_COMMENT_CHECK",
+#elif FIREWALL_NFTABLES
+//    "ENABLE_IPT_FORWARDING", /* not implemented yet */
+//    "ENABLE_IPT_LOCAL_NAT", /* not implemented yet */
+//    "ENABLE_IPT_SNAT", /* not implemented yet */
+//    "SNAT_TRANSLATE_IP", /* not implemented yet */
+    "ENABLE_IPT_OUTPUT",
+    "FLUSH_IPT_AT_INIT",
+    "FLUSH_IPT_AT_EXIT",
+    "IPT_INPUT_ACCESS",
+    "IPT_OUTPUT_ACCESS",
+//    "IPT_FORWARD_ACCESS", /* not implemented yet */
+//    "IPT_DNAT_ACCESS", /* not implemented yet */
+//    "IPT_SNAT_ACCESS", /* not implemented yet */
+//    "IPT_MASQUERADE_ACCESS", /* not implemented yet */
+    "NFT_IPV4_USE_INET_FAMILY",
 #elif FIREWALL_IPFW
     "FLUSH_IPFW_AT_INIT",
     "FLUSH_IPFW_AT_EXIT",

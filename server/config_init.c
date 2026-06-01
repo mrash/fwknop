@@ -39,6 +39,8 @@
   #include "fw_util_firewalld.h"
 #elif FIREWALL_IPTABLES
   #include "fw_util_iptables.h"
+#elif FIREWALL_NFTABLES
+  #include "fw_util_nftables.h"
 #endif
 
 /* Check to see if an integer variable has a value that is within a
@@ -812,6 +814,151 @@ validate_options(fko_srv_options_t *opts)
         set_config_entry(opts, CONF_ENABLE_IPT_COMMENT_CHECK,
             DEF_ENABLE_IPT_COMMENT_CHECK);
 
+#elif FIREWALL_NFTABLES
+#if 0
+    /* Enable IPT forwarding.
+    */
+    if(opts->config[CONF_ENABLE_IPT_FORWARDING] == NULL)
+        set_config_entry(opts, CONF_ENABLE_IPT_FORWARDING,
+            DEF_ENABLE_IPT_FORWARDING);
+
+    /* Enable IPT local NAT.
+    */
+    if(opts->config[CONF_ENABLE_IPT_LOCAL_NAT] == NULL)
+        set_config_entry(opts, CONF_ENABLE_IPT_LOCAL_NAT,
+            DEF_ENABLE_IPT_LOCAL_NAT);
+
+    /* Enable IPT SNAT.
+    */
+    if(opts->config[CONF_ENABLE_IPT_SNAT] == NULL)
+        set_config_entry(opts, CONF_ENABLE_IPT_SNAT,
+            DEF_ENABLE_IPT_SNAT);
+
+    /* Make sure we have a valid IP if SNAT is enabled
+    */
+    if(strncasecmp(opts->config[CONF_ENABLE_IPT_SNAT], "Y", 1) == 0)
+    {
+        /* Note that fw_config_init() will set use_masquerade if necessary
+        */
+        if(opts->config[CONF_SNAT_TRANSLATE_IP] != NULL)
+        {
+            if(! is_valid_ipv4_addr(opts->config[CONF_SNAT_TRANSLATE_IP], strlen(opts->config[CONF_SNAT_TRANSLATE_IP])))
+            {
+                log_msg(LOG_ERR,
+                    "Invalid IPv4 addr for SNAT_TRANSLATE_IP"
+                );
+                clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+            }
+        }
+    }
+#endif
+
+    /* Enable IPT OUTPUT.
+    */
+    if(opts->config[CONF_ENABLE_IPT_OUTPUT] == NULL)
+        set_config_entry(opts, CONF_ENABLE_IPT_OUTPUT,
+            DEF_ENABLE_IPT_OUTPUT);
+
+    /* Flush IPT at init.
+    */
+    if(opts->config[CONF_FLUSH_IPT_AT_INIT] == NULL)
+        set_config_entry(opts, CONF_FLUSH_IPT_AT_INIT, DEF_FLUSH_IPT_AT_INIT);
+
+    /* Flush IPT at exit.
+    */
+    if(opts->config[CONF_FLUSH_IPT_AT_EXIT] == NULL)
+        set_config_entry(opts, CONF_FLUSH_IPT_AT_EXIT, DEF_FLUSH_IPT_AT_EXIT);
+
+    /* IPT input access.
+    */
+    if(opts->config[CONF_IPT_INPUT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_IPT_INPUT_ACCESS,
+            DEF_IPT_INPUT_ACCESS);
+
+    if(validate_ipt_chain_conf(opts->config[CONF_IPT_INPUT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid IPT_INPUT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* IPT output access.
+    */
+    if(opts->config[CONF_IPT_OUTPUT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_IPT_OUTPUT_ACCESS,
+            DEF_IPT_OUTPUT_ACCESS);
+
+    if(validate_ipt_chain_conf(opts->config[CONF_IPT_OUTPUT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid IPT_OUTPUT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+#if 0
+    /* IPT forward access.
+    */
+    if(opts->config[CONF_IPT_FORWARD_ACCESS] == NULL)
+        set_config_entry(opts, CONF_IPT_FORWARD_ACCESS,
+            DEF_IPT_FORWARD_ACCESS);
+
+    if(validate_ipt_chain_conf(opts->config[CONF_IPT_FORWARD_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid IPT_FORWARD_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* IPT dnat access.
+    */
+    if(opts->config[CONF_IPT_DNAT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_IPT_DNAT_ACCESS,
+            DEF_IPT_DNAT_ACCESS);
+
+    if(validate_ipt_chain_conf(opts->config[CONF_IPT_DNAT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid IPT_DNAT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* IPT snat access.
+    */
+    if(opts->config[CONF_IPT_SNAT_ACCESS] == NULL)
+        set_config_entry(opts, CONF_IPT_SNAT_ACCESS,
+            DEF_IPT_SNAT_ACCESS);
+
+    if(validate_ipt_chain_conf(opts->config[CONF_IPT_SNAT_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid IPT_SNAT_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    /* IPT masquerade access.
+    */
+    if(opts->config[CONF_IPT_MASQUERADE_ACCESS] == NULL)
+        set_config_entry(opts, CONF_IPT_MASQUERADE_ACCESS,
+            DEF_IPT_MASQUERADE_ACCESS);
+
+    if(validate_ipt_chain_conf(opts->config[CONF_IPT_MASQUERADE_ACCESS]) != 1)
+    {
+        log_msg(LOG_ERR,
+            "Invalid IPT_MASQUERADE_ACCESS specification, see fwknopd.conf comments"
+        );
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+#endif
+
+    /* add IPv4 rules to inet family */
+    if(opts->config[CONF_NFT_IPV4_USE_INET_FAMILY] == NULL)
+        set_config_entry(opts, CONF_NFT_IPV4_USE_INET_FAMILY,
+            DEF_NFT_IPV4_USE_INET_FAMILY);
 #elif FIREWALL_IPFW
 
     /* Flush ipfw rules at init.

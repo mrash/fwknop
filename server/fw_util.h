@@ -44,6 +44,8 @@
   #include "fw_util_firewalld.h"
 #elif FIREWALL_IPTABLES
   #include "fw_util_iptables.h"
+#elif FIREWALL_NFTABLES
+  #include "fw_util_nftables.h"
 #elif FIREWALL_IPFW
   #include "fw_util_ipfw.h"
 #elif FIREWALL_PF

@@ -32,6 +32,10 @@
 
 #include "common.h"
 
+#if FIREWALL_NFTABLES
+#include <jansson.h>
+#endif
+
 #if PLATFORM_OPENBSD
   #include <netinet/in.h>
 #endif
@@ -188,6 +192,24 @@
   #define DEF_IPT_MASQUERADE_ACCESS     "MASQUERADE, nat, POSTROUTING, 1, FWKNOP_MASQUERADE, 1"
 
   #define RCHK_MAX_IPT_RULE_NUM         (2 << 15)
+#elif FIREWALL_NFTABLES
+  #define DEF_FLUSH_IPT_AT_INIT         "Y"
+  #define DEF_FLUSH_IPT_AT_EXIT         "Y"
+  #define DEF_ENABLE_IPT_FORWARDING     "N"
+  #define DEF_ENABLE_IPT_LOCAL_NAT      "N"
+  #define DEF_ENABLE_IPT_SNAT           "N"
+  #define DEF_ENABLE_IPT_OUTPUT         "N"
+  #define DEF_ENABLE_IPT_COMMENT_CHECK  "Y"
+  #define DEF_IPT_INPUT_ACCESS          "accept, filter, input, 1, fwknop_input, 1"
+  #define DEF_IPT_OUTPUT_ACCESS         "accept, filter, output, 1, fwknop_output, 1"
+  #define DEF_IPT_FORWARD_ACCESS        "accept, filter, forward, 1, fwknop_forward, 1"
+  #define DEF_IPT_DNAT_ACCESS           "DNAT, nat, prerouting, 1, fwknop_prerouting, 1"
+  #define DEF_IPT_SNAT_ACCESS           "SNAT, nat, postrouting, 1, fwknop_postrouting, 1"
+  #define DEF_IPT_MASQUERADE_ACCESS     "MASQUERADE, nat, postrouting, 1, fwknop_masquerade, 1"
+
+  #define DEF_NFT_IPV4_USE_INET_FAMILY  "Y"
+
+  #define RCHK_MAX_IPT_RULE_NUM         (2 << 15)
 
 /* Ipfw-specific defines
 */
@@ -317,6 +339,21 @@ enum {
     CONF_IPT_SNAT_ACCESS,
     CONF_IPT_MASQUERADE_ACCESS,
     CONF_ENABLE_IPT_COMMENT_CHECK,
+#elif FIREWALL_NFTABLES
+//    CONF_ENABLE_IPT_FORWARDING, /* not implemented yet */
+//    CONF_ENABLE_IPT_LOCAL_NAT, /* not implemented yet */
+//    CONF_ENABLE_IPT_SNAT, /* not implemented yet */
+//    CONF_SNAT_TRANSLATE_IP, /* not implemented yet */
+    CONF_ENABLE_IPT_OUTPUT,
+    CONF_FLUSH_IPT_AT_INIT,
+    CONF_FLUSH_IPT_AT_EXIT,
+    CONF_IPT_INPUT_ACCESS,
+    CONF_IPT_OUTPUT_ACCESS,
+//    CONF_IPT_FORWARD_ACCESS, /* not implemented yet */
+//    CONF_IPT_DNAT_ACCESS, /* not implemented yet */
+//    CONF_IPT_SNAT_ACCESS, /* not implemented yet */
+//    CONF_IPT_MASQUERADE_ACCESS, /* not implemented yet */
+    CONF_NFT_IPV4_USE_INET_FAMILY,
 #elif FIREWALL_IPFW
     CONF_FLUSH_IPFW_AT_INIT,
     CONF_FLUSH_IPFW_AT_EXIT,
@@ -559,6 +596,57 @@ typedef struct cmd_cycle_list
       /* Flag for setting destination field in rule
       */
       unsigned char   use_destination;
+  };
+
+#elif FIREWALL_NFTABLES
+  /* --DSS XXX: These are arbitrary. We should determine appropriate values.
+  */
+  #define MAX_TABLE_NAME_LEN      64
+  #define MAX_CHAIN_NAME_LEN      64
+  #define MAX_TARGET_NAME_LEN     64
+
+  /* Fwknop custom chain types
+  */
+  enum {
+      IPT_INPUT_ACCESS,
+      IPT_OUTPUT_ACCESS,
+      IPT_FORWARD_ACCESS,
+      IPT_DNAT_ACCESS,
+      IPT_SNAT_ACCESS,
+      IPT_MASQUERADE_ACCESS,
+      NUM_FWKNOP_ACCESS_TYPES  /* Leave this entry last */
+  };
+
+  /* Structure to define an fwknop firewall chain configuration.
+  */
+  struct fw_chain {
+      int     type;
+
+      char    target[MAX_TARGET_NAME_LEN]; /* eg. accept */
+      char    table[MAX_TABLE_NAME_LEN]; /* eg. filter */
+      char    from_chain[MAX_CHAIN_NAME_LEN]; /* eg. input, output, ... */
+      int     jump_rule_pos;
+      char    to_chain[MAX_CHAIN_NAME_LEN]; /* eg. fwknop_input, fwknop_output, ... */
+      int     rule_pos;
+
+      int     active_rules;
+      time_t  next_expire;
+
+      json_int_t handle_jumprule;
+  };
+
+  /* Based on the fw_chain fields (not counting type)
+  */
+  #define FW_NUM_CHAIN_FIELDS 6
+
+  struct fw_config {
+      struct fw_chain chain[NUM_FWKNOP_ACCESS_TYPES];
+      char            fw_command[MAX_PATH_LEN];
+
+      /* Flag for setting destination field in rule
+      */
+      unsigned char   use_destination;
+      const char     *ipv4_family;
   };
 
 #elif FIREWALL_IPFW
