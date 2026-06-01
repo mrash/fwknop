@@ -43,8 +43,12 @@ install_manifest.txt
 autom4te.cache/
 *.m4
 client/.deps/
+client/.libs/
 client/Makefile.in
+common/.deps/
 common/libfko_util.a
+client/fwknop
+client/fwknop.8
 common/Makefile.in
 config.h
 config.h.in
@@ -69,6 +73,7 @@ server/fwknopd
 server/fwknopd.8
 server/Makefile.in
 stamp-h1
+win32/.deps/
 
 # For anyone running on a Mac
 .DS_Store
