@@ -86,6 +86,7 @@ typedef struct fko_cli_options
     char args_save_file[MAX_PATH_LEN];
     int  no_save_args;
     int  use_hmac;
+    int  use_totp;
     char spa_server_str[MAX_SERVER_STR_LEN];  /* may be a hostname */
     char allow_ip_str[MAX_IPV4_STR_LEN];
     char spoof_ip_src_str[MAX_IPV4_STR_LEN];
@@ -112,6 +113,13 @@ typedef struct fko_cli_options
     int  have_hmac_key;
     int  have_hmac_base64_key;
     int  hmac_type;
+    /* TOTP key is never read from the .fwknoprc file, but this is needed for key generation
+    */
+    char totp_key[MAX_KEY_LEN+1];
+    char totp_key_base32[MAX_KEY_LEN+1];
+    int  totp_key_len;
+    int  have_totp_key;
+    int  have_base64_totp_key;
 
     /* NAT access
     */

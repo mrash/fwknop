@@ -292,6 +292,10 @@ get_spa_data_fields(fko_ctx_t ctx, spa_data_t *spdat)
     if(res != FKO_SUCCESS)
         return(res);
 
+    res = fko_get_totp(ctx, &(spdat->totp));
+    if(res != FKO_SUCCESS)
+        return(res);
+
     res = fko_get_spa_server_auth(ctx, &(spdat->server_auth));
     if(res != FKO_SUCCESS)
         return(res);
@@ -583,13 +587,66 @@ check_mode_ctx(spa_data_t *spadat, fko_ctx_t *ctx, int attempted_decrypt,
     return 1;
 }
 
+static int
+handle_totp_enc(acc_stanza_t *acc, spa_pkt_info_t *spa_pkt,
+    spa_data_t *spadat, fko_ctx_t *ctx, int *attempted_decrypt,
+    int *cmd_exec_success, const int enc_type, const int stanza_num,
+    int *res)
+{
+    /* TODO: look into || acc->enable_cmd_exec */
+    if (acc->use_totp && enc_type == FKO_ENCRYPTION_RIJNDAEL)
+    {
+        *res = fko_new_with_data(ctx, (char *)spa_pkt->packet_data,
+            acc->key, acc->key_len, acc->encryption_mode, acc->hmac_key,
+            acc->hmac_key_len, acc->hmac_type);
+        *attempted_decrypt = 1;
+        if(*res == FKO_SUCCESS)
+            *cmd_exec_success = 1;
+    }
+    return 1;
+}
+
+static void
+verify_totp(acc_stanza_t *acc, spa_pkt_info_t *spa_pkt,
+        spa_data_t *spadat, fko_ctx_t *ctx, int *attempted_decrypt,
+        int *cmd_exec_success, const int enc_type, const int stanza_num,
+        int *res)
+{   
+    /* store final TOTP and current timestamp for TOTP */
+    uint32_t totp_code = 0;
+    uint64_t timestamp = (uint64_t)time(NULL);
+    char time_step = 0;
+    if(!fko_totp_from_secret(&totp_code, acc->totp_key, &timestamp, &time_step))
+    {
+        log_msg(LOG_ERR,
+            "Unexpected error on TOTP generation.");
+    }
+
+    /* convert TOTP from integer to char buffer 
+    */
+    unsigned char totp[6] = {0};
+    for (size_t i = 1; i <= 6; i++)
+    {
+        totp[6 - i] = (char)('0' + (totp_code % 10));
+        totp_code /= 10;
+    }
+
+    /* compare the client and server calculated TOTPs
+    */
+    if(strncmp(spadat->totp, (const char *)totp, 6) != 0)
+        *res = FKO_ERROR_UNKNOWN; /* TODO: FKO_TOTP_ERROR */
+
+    return;
+}
+
+
 static void
 handle_rijndael_enc(acc_stanza_t *acc, spa_pkt_info_t *spa_pkt,
         spa_data_t *spadat, fko_ctx_t *ctx, int *attempted_decrypt,
         int *cmd_exec_success, const int enc_type, const int stanza_num,
         int *res)
-{
-    if(enc_type == FKO_ENCRYPTION_RIJNDAEL || acc->enable_cmd_exec)
+{   
+    if(*cmd_exec_success == 0 && (enc_type == FKO_ENCRYPTION_RIJNDAEL || acc->enable_cmd_exec))
     {
         *res = fko_new_with_data(ctx, (char *)spa_pkt->packet_data,
             acc->key, acc->key_len, acc->encryption_mode, acc->hmac_key,
@@ -1012,8 +1069,8 @@ incoming_spa(fko_srv_options_t *opts)
 
         if(acc->use_rijndael)
             handle_rijndael_enc(acc, spa_pkt, &spadat, &ctx,
-                        &attempted_decrypt, &cmd_exec_success, enc_type,
-                        stanza_num, &res);
+                &attempted_decrypt, &cmd_exec_success, enc_type,
+                stanza_num, &res);
 
         if(! handle_gpg_enc(acc, spa_pkt, &spadat, &ctx, &attempted_decrypt,
                     cmd_exec_success, enc_type, stanza_num, &res))
@@ -1044,7 +1101,7 @@ incoming_spa(fko_srv_options_t *opts)
         */
         log_msg(LOG_DEBUG, "[%s] (stanza #%d) SPA Decode (res=%i):",
             spadat.pkt_source_ip, stanza_num, res);
-
+        
         res = dump_ctx_to_buffer(ctx, dump_buf, sizeof(dump_buf));
         if (res == FKO_SUCCESS)
             log_msg(LOG_DEBUG, "%s", dump_buf);
@@ -1070,6 +1127,23 @@ incoming_spa(fko_srv_options_t *opts)
         {
             log_msg(LOG_ERR,
                 "[%s] (stanza #%d) Unexpected error pulling SPA data from the context: %s",
+                spadat.pkt_source_ip, stanza_num, fko_errstr(res));
+
+            acc = acc->next;
+            continue;
+        }
+
+        /* Verify the TOTP from the SPA packet if the access stanza requires it
+        */
+        if(acc->use_totp)
+            verify_totp(acc, spa_pkt, &spadat, &ctx,
+                &attempted_decrypt, &cmd_exec_success, enc_type,
+                stanza_num, &res);
+
+        if(res != FKO_SUCCESS)
+        {
+            log_msg(LOG_ERR,
+                "[%s] (stanza #%d) Incorrect TOTP: %s",
                 spadat.pkt_source_ip, stanza_num, fko_errstr(res));
 
             acc = acc->next;

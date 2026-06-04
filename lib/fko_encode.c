@@ -180,6 +180,13 @@ fko_encode_spa_data(fko_ctx_t ctx)
         }
     }
 
+    if(ctx->totp != NULL)
+    {
+        offset = strlen(tbuf);
+        snprintf(((char*)tbuf+offset), FKO_ENCODE_TMP_BUF_SIZE - offset,
+                ":%s", ctx->totp);
+    }
+
     /* If we have a server_auth field set.  Add it here.
      *
     */

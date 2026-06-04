@@ -31,7 +31,9 @@
 #include "fko.h"
 #include "cipher_funcs.h"
 #include "base64.h"
+#include "base32.h"
 #include "digest.h"
+#include "totp.h"
 
 /* Initialize an fko context.
 */
@@ -301,6 +303,9 @@ fko_destroy(fko_ctx_t ctx)
 
     if(ctx->server_auth != NULL)
         free(ctx->server_auth);
+    
+    if(ctx->totp != NULL)
+        free(ctx->totp);
 
     if(ctx->digest != NULL)
         if(zero_free(ctx->digest, ctx->digest_len) != FKO_SUCCESS)
@@ -365,18 +370,20 @@ fko_destroy(fko_ctx_t ctx)
     return(zero_free_rv);
 }
 
-/* Generate Rijndael and HMAC keys from /dev/random and base64
+/* Generate Rijndael, HMAC and TOTP keys from /dev/random and base64
  * encode them
 */
 int
 fko_key_gen(char * const key_base64, const int key_len,
         char * const hmac_key_base64, const int hmac_key_len,
-        const int hmac_type)
+        const int hmac_type, char * const totp_key_base32, const int totp_key_len)
 {
     unsigned char key[RIJNDAEL_MAX_KEYSIZE];
     unsigned char hmac_key[SHA512_BLOCK_LEN];
+    unsigned char totp_key[TOTP_SECRET_LEN];
     int klen      = key_len;
     int hmac_klen = hmac_key_len;
+    int totp_klen = totp_key_len;
     int b64_len   = 0;
 
     if(key_len == FKO_DEFAULT_KEY_LEN)
@@ -397,14 +404,23 @@ fko_key_gen(char * const key_base64, const int key_len,
             hmac_klen = SHA512_BLOCK_LEN;
     }
 
+    if(totp_key_len == FKO_DEFAULT_KEY_LEN)
+    {
+        totp_klen = TOTP_SECRET_LEN;
+    }
+
     if((klen < 1) || (klen > RIJNDAEL_MAX_KEYSIZE))
         return(FKO_ERROR_INVALID_DATA_FUNCS_GEN_KEYLEN_VALIDFAIL);
 
     if((hmac_klen < 1) || (hmac_klen > SHA512_BLOCK_LEN))
         return(FKO_ERROR_INVALID_DATA_FUNCS_GEN_HMACLEN_VALIDFAIL);
 
+    if((totp_key < 1) || (totp_klen > TOTP_SECRET_LEN))
+        return(FKO_ERROR_INVALID_DATA_FUNCS_GEN_KEYLEN_VALIDFAIL);
+
     get_random_data(key, klen);
     get_random_data(hmac_key, hmac_klen);
+    get_random_data(totp_key, totp_klen);
 
     b64_len = b64_encode(key, key_base64, klen);
     if(b64_len < klen)
@@ -414,7 +430,25 @@ fko_key_gen(char * const key_base64, const int key_len,
     if(b64_len < hmac_klen)
         return(FKO_ERROR_INVALID_DATA_FUNCS_GEN_HMAC_ENCODEFAIL);
 
+    b64_len = b32_encode(totp_key, totp_key_base32, totp_klen);
+    if(b64_len < totp_klen)
+        return(FKO_ERROR_INVALID_DATA_FUNCS_GEN_KEY_ENCODEFAIL);
+
     return(FKO_SUCCESS);
+}
+
+/* Provide an FKO wrapper around base64 encode/decode functions
+*/
+int
+fko_base32_encode(unsigned char * const in, char * const out, int in_len)
+{
+    return b32_encode(in, out, in_len);
+}
+
+int
+fko_base32_decode(const char * const in, unsigned char *out)
+{
+    return b32_decode(in, out);
 }
 
 /* Provide an FKO wrapper around base64 encode/decode functions

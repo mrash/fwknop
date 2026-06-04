@@ -689,6 +689,33 @@ DLL_API const char* fko_errstr(const int err_code);
 DLL_API int fko_encryption_type(const char * const enc_data);
 
 /**
+ * \brief TODO: TOTP
+ *
+ * \param TODO: TOTP
+ *
+ * \return TODO: TOTP
+ */
+DLL_API int fko_totp_from_secret(unsigned int *totp_code, const char * const secret, unsigned long *timestamp, char *time_step);
+
+/**
+ * \brief TODO: TOTP
+ *
+ * \param TODO: TOTP
+ *
+ * \return TODO: TOTP
+ */
+DLL_API int fko_set_totp(fko_ctx_t ctx, const char * const totp_code);
+
+/**
+ * \brief TODO: TOTP
+ *
+ * \param TODO: TOTP
+ *
+ * \return TODO: TOTP
+ */
+DLL_API int fko_get_totp(fko_ctx_t ctx, char **totp_code);
+
+/**
  * \brief generates random keys
  *
  * \param key_base64 pass a pointer into the function to be filled with the generated key
@@ -701,7 +728,38 @@ DLL_API int fko_encryption_type(const char * const enc_data);
  */
 DLL_API int fko_key_gen(char * const key_base64, const int key_len,
         char * const hmac_key_base64, const int hmac_key_len,
-        const int hmac_type);
+        const int hmac_type, char * const totp_key_base32, const int totp_key_len);
+
+/**
+ * \brief Encodes text or binary data into base32
+ *
+ * Function takes text or binary data and returns a base32 encoded string.
+ * This implements base32 encoding as per rfc 4648.
+ * (This is not the url safe encoding scheme)
+ *
+ * \param in Pointer to input data.  May be text or binary data
+ * \param out Pointer to the base32 encoded data
+ * \param in_length Size in bytes of the input
+ *
+ * \return Returns length of base32 encoded output
+ * \todo add CUnit test of base32 encoding: https://tools.ietf.org/html/rfc4648
+ */
+DLL_API int fko_base32_encode(unsigned char * const in, char * const out, int in_len);
+
+/**
+ * \brief Decodes base32 into text or binary data
+ *
+ * Function takes a base32 encoded string and returns the resulting text or binary data
+ * This implements base32 decoding as per rfc 4648.
+ * (This is not the url safe encoding scheme)
+ *
+ * \param in Pointer to input data.  Must be base32 encoded
+ * \param out Pointer to the resulting data
+ *
+ * \return Returns length in bytes of decoded output
+ * \todo add CUnit test of base32 decoding: https://tools.ietf.org/html/rfc4648
+ */
+DLL_API int fko_base32_decode(const char * const in, unsigned char *out);
 
 /**
  * \brief Encodes text or binary data into base64
@@ -1403,6 +1461,7 @@ int register_ts_digest_test(void);
 int register_ts_aes_test(void);
 int register_utils_test(void);
 int register_base64_test(void);
+int register_base32_test(void);
 #endif
 
 #endif /* FKO_H */

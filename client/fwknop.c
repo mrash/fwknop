@@ -40,6 +40,8 @@
 */
 static int get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     char *key, int *key_len, char *hmac_key, int *hmac_key_len);
+static int get_totp(fko_ctx_t ctx, fko_cli_options_t *options,
+    char *totp);
 static void errmsg(const char *msg, const int err);
 static int prev_exec(fko_cli_options_t *options, int argc, char **argv);
 static int get_save_file(char *args_save_file);
@@ -388,6 +390,19 @@ main(int argc, char **argv)
         log_msg(LOG_VERBOSITY_ERROR,
                 "fwknopd is recommended.");
         key_len = 16;
+    }
+
+    if(options.use_totp)
+    {
+        char *temp = malloc(6);
+        get_totp(ctx, &options, temp);
+        fko_set_totp(ctx, temp);
+        temp = NULL;
+        free(temp);
+    } 
+    else
+    {
+        log_msg(LOG_VERBOSITY_NORMAL, "Not using TOTP");
     }
 
     /* Finalize the context data (encrypt and encode the SPA data)
@@ -1237,6 +1252,30 @@ get_keys(fko_ctx_t ctx, fko_cli_options_t *options,
     }
 
     return 1;
+}
+
+/* Prompt for and receive a TOTP
+*/
+static int
+get_totp(fko_ctx_t ctx, fko_cli_options_t *options,
+    char *totp)
+{
+    char   *key_tmp = NULL;
+    if (options->use_totp)
+    {
+        key_tmp = getpasswd("Enter TOTP: ", options->input_fd);
+        if(key_tmp == NULL)
+        {
+            log_msg(LOG_VERBOSITY_ERROR, "[*] get_totp() error.");
+            return 0;
+        }
+        /* TODO: ensure the length of the input */
+        memcpy(totp, key_tmp, 6);
+    }
+    else
+    {
+        log_msg(LOG_VERBOSITY_ERROR, "[-] Could not read TOTP from user.");
+    }
 }
 
 /* Display an FKO error message.

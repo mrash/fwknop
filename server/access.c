@@ -156,6 +156,46 @@ add_acc_group(char **group_var, gid_t *gid_var,
     return;
 }
 
+/* Decode base32 encoded string into access entry
+*/
+static void
+add_acc_b32_string(char **var, int *len, const char *val, FILE *file_ptr,
+        fko_srv_options_t *opts)
+{
+    if(var == NULL)
+    {
+        log_msg(LOG_ERR, "[*] add_acc_b32_string() called with NULL variable");
+        if(file_ptr != NULL)
+            fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+
+    if(*var != NULL)
+        free(*var);
+
+    if((*var = strdup(val)) == NULL)
+    {
+        log_msg(LOG_ERR,
+            "[*] Fatal memory allocation error adding access list entry: %s", *var
+        );
+        if(file_ptr != NULL)
+            fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+    memset(*var, 0x0, strlen(val));
+    *len = fko_base32_decode(val, (unsigned char *) *var);
+
+    if (*len < 0)
+    {
+        log_msg(LOG_ERR,
+            "[*] base32 decoding returned error for: %s", *var
+        );
+        if(file_ptr != NULL)
+            fclose(file_ptr);
+        clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);
+    }
+    return;
+}
 /* Decode base64 encoded string into access entry
 */
 static void
@@ -915,6 +955,18 @@ free_acc_stanza_data(acc_stanza_t *acc)
         free(acc->hmac_key_base64);
     }
 
+    if(acc->totp_key != NULL)
+    {
+        zero_buf_wrapper(acc->totp_key, strlen(acc->totp_key));
+        free(acc->totp_key);
+    }
+
+    if(acc->totp_key_base32 != NULL)
+    {
+        zero_buf_wrapper(acc->totp_key_base32, strlen(acc->totp_key_base32));
+        free(acc->totp_key_base32);
+    }
+
     if(acc->cmd_sudo_exec_user != NULL)
         free(acc->cmd_sudo_exec_user);
 
@@ -1273,8 +1325,9 @@ acc_data_is_valid(fko_srv_options_t *opts,
 
     if(((acc->key == NULL || acc->key_len == 0)
       && ((acc->gpg_decrypt_pw == NULL || !strlen(acc->gpg_decrypt_pw))
-          && acc->gpg_allow_no_pw == 0))
-      || (acc->use_rijndael == 0 && acc->use_gpg == 0 && acc->gpg_allow_no_pw == 0))
+          && acc->gpg_allow_no_pw == 0)
+      && (acc->totp_key == NULL || acc->totp_key_len == 0))
+      || (acc->use_rijndael == 0 && acc->use_gpg == 0 && acc->gpg_allow_no_pw == 0 && acc->use_totp == 0))
     {
         log_msg(LOG_ERR,
             "[*] No keys found for access stanza source: '%s'", acc->source
@@ -1731,6 +1784,30 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
             }
             add_acc_string(&(curr_acc->hmac_key), val, file_ptr, opts);
             curr_acc->hmac_key_len = strlen(curr_acc->hmac_key);
+        }
+        /* TOTP key base32 */
+        else if(CONF_VAR_IS(var, "TOTP_KEY_BASE32"))
+        {
+            /* TODO: is_base32 */
+            if (! is_base32((unsigned char *) val, strlen(val)))
+            {
+                log_msg(LOG_ERR,
+                    "[*] TOTP_KEY_BASE32 argument '%s' doesn't look like base32-encoded data.",
+                    val);
+                fclose(file_ptr);
+                return EXIT_FAILURE;
+            }
+            add_acc_string(&(curr_acc->totp_key_base32), val, file_ptr, opts);
+            add_acc_b32_string(&(curr_acc->totp_key), &(curr_acc->totp_key_len),
+                    curr_acc->totp_key_base32, file_ptr, opts);
+            add_acc_bool(&(curr_acc->use_totp), "Y");
+        }
+        /* TOTP key */
+        else if(CONF_VAR_IS(var, "TOTP_KEY"))
+        {
+            add_acc_string(&(curr_acc->totp_key), val, file_ptr, opts);
+            curr_acc->totp_key_len = strlen(curr_acc->totp_key);
+            add_acc_bool(&(curr_acc->use_totp), "Y");
         }
         else if(CONF_VAR_IS(var, "FW_ACCESS_TIMEOUT"))
         {

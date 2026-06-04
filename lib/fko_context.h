@@ -74,6 +74,7 @@ struct fko_context {
     char           *nat_access;
     char           *server_auth;
     unsigned int    client_timeout;
+    char           *totp;
     /*@}*/
     /** \name FKO SPA user-settable message encoding types */
     /*@{*/

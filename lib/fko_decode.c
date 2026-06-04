@@ -33,7 +33,7 @@
 #include "base64.h"
 #include "digest.h"
 
-#define FIELD_PARSERS 9
+#define FIELD_PARSERS 10
 
 /* Char used to separate SPA fields in an SPA packet */
 #define SPA_FIELD_SEPARATOR    ":"
@@ -346,6 +346,25 @@ parse_server_auth(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
 }
 
 static int
+parse_totp(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
+{
+    /* static size for TOTP */
+    *t_size = 6;
+
+    if(ctx->totp != NULL)
+        free(ctx->totp);
+
+    ctx->totp = malloc(*t_size+1);
+    if(ctx->totp == NULL)
+        return(FKO_ERROR_MEMORY_ALLOCATION);
+
+    strlcpy(ctx->totp, *ndx, *t_size+1);
+
+    *ndx += *t_size+1;
+    return FKO_SUCCESS;
+}
+
+static int
 parse_client_timeout(char *tbuf, char **ndx, int *t_size, fko_ctx_t ctx)
 {
     int         is_err;
@@ -542,6 +561,7 @@ fko_decode_spa_data(fko_ctx_t ctx)
             parse_msg_type,       /* SPA msg type */
             parse_msg,            /* SPA msg string */
             parse_nat_msg,        /* SPA NAT msg string */
+            parse_totp,           /* optional TOTP field */
             parse_server_auth,    /* optional server authentication method */
             parse_client_timeout  /* client defined timeout */
           };

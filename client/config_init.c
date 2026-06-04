@@ -132,6 +132,7 @@ enum
     FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS,
     FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY,
     FWKNOP_CLI_ARG_WGET_CMD,
+    FWKNOP_CLI_ARG_USE_TOTP,
     FWKNOP_CLI_ARG_NO_SAVE_ARGS,
     FWKNOP_CLI_LAST_ARG
 } fwknop_cli_arg_t;
@@ -181,7 +182,8 @@ static fko_var_t fko_var_array[FWKNOP_CLI_LAST_ARG] =
     { "RESOLVE_IP_HTTPS",      FWKNOP_CLI_ARG_RESOLVE_IP_HTTPS      },
     { "RESOLVE_HTTP_ONLY",     FWKNOP_CLI_ARG_RESOLVE_HTTP_ONLY     },
     { "WGET_CMD",              FWKNOP_CLI_ARG_WGET_CMD              },
-    { "NO_SAVE_ARGS",          FWKNOP_CLI_ARG_NO_SAVE_ARGS          }
+    { "NO_SAVE_ARGS",          FWKNOP_CLI_ARG_NO_SAVE_ARGS          },
+    { "USE_TOTP",              FWKNOP_CLI_ARG_USE_TOTP              }
 };
 
 /* Array to define which conf. variables are critical and should not be
@@ -219,7 +221,7 @@ generate_keys(fko_cli_options_t *options)
         /* Generate the key through libfko */
         res = fko_key_gen(options->key_base64, options->key_len,
                 options->hmac_key_base64, options->hmac_key_len,
-                options->hmac_type);
+                options->hmac_type, options->totp_key_base32, options->totp_key_len);
 
         /* Exit upon key generation failure*/
         if(res != FKO_SUCCESS)
@@ -1294,6 +1296,12 @@ parse_rc_param(fko_cli_options_t *options, const char *var_name, char * val)
             options->resolve_http_only = 1;
         else;
     }
+    else if (var->pos == FWKNOP_CLI_ARG_USE_TOTP)
+    {
+        if (is_yes_str(val))
+            options->use_totp = 1;
+        else;
+    }
     /* avoid saving .fwknop.run by default */
     else if (var->pos == FWKNOP_CLI_ARG_NO_SAVE_ARGS)
     {
@@ -1418,6 +1426,7 @@ add_single_var_to_rc(FILE* fhandle, short var_pos, fko_cli_options_t *options)
         case FWKNOP_CLI_ARG_KEY_HMAC:
             strlcpy(val, options->hmac_key, sizeof(val));
             break;
+        /* TODO: does TOTP need FWKNOP_CLI_ARG_TOTP stuff as well? */
         case FWKNOP_CLI_ARG_HMAC_DIGEST_TYPE :
             hmac_digest_inttostr(options->hmac_type, val, sizeof(val));
             break;
@@ -2470,6 +2479,9 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
                 options->input_fd = strtol_wrapper(optarg, 0,
                         -1, EXIT_UPON_ERR, &is_err);
                 break;
+            case USE_TOTP:
+                options->use_totp = 1;
+                break;
             default:
                 usage();
                 exit(EXIT_FAILURE);
@@ -2493,6 +2505,7 @@ config_init(fko_cli_options_t *options, int argc, char **argv)
         {
             add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_RIJNDAEL_BASE64, &var_bitmask);
             add_var_to_bitmask(FWKNOP_CLI_ARG_KEY_HMAC_BASE64, &var_bitmask);
+            /* TODO: TOTP?*/
         }
         else;
 
@@ -2657,6 +2670,7 @@ usage(void)
       "     --time-offset-plus      Add time to outgoing SPA packet timestamp.\n"
       "     --time-offset-minus     Subtract time from outgoing SPA packet\n"
       "                             timestamp.\n"
+      "     --totp                  Use TOTP.\n"
     );
 
     return;

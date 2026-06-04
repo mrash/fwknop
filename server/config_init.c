@@ -222,6 +222,7 @@ generate_keys(fko_srv_options_t *options)
 {
     char key_base64[MAX_B64_KEY_LEN+1];
     char hmac_key_base64[MAX_B64_KEY_LEN+1];
+    char totp_key_base32[32+1]; /* TODO: make const */
 
     FILE  *key_gen_file_ptr = NULL;
     int res;
@@ -240,11 +241,12 @@ generate_keys(fko_srv_options_t *options)
     /* Zero out the key buffers */
     memset(key_base64, 0x00, sizeof(key_base64));
     memset(hmac_key_base64, 0x00, sizeof(hmac_key_base64));
+    memset(totp_key_base32, 0x00, sizeof(totp_key_base32));
 
     /* Generate the key through libfko */
     res = fko_key_gen(key_base64, options->key_len,
             hmac_key_base64, options->hmac_key_len,
-            options->hmac_type);
+            options->hmac_type, totp_key_base32, options->totp_key_len);
 
     if(res != FKO_SUCCESS)
     {
@@ -261,16 +263,16 @@ generate_keys(fko_srv_options_t *options)
                 options->key_gen_file, strerror(errno));
             clean_exit(options, NO_FW_CLEANUP, EXIT_FAILURE);
         }
-        fprintf(key_gen_file_ptr, "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n",
-            key_base64, hmac_key_base64);
+        fprintf(key_gen_file_ptr, "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\nTOTP_KEY_BASE32: %s\n",
+            key_base64, hmac_key_base64, totp_key_base32);
         fclose(key_gen_file_ptr);
         fprintf(stdout, "[+] Wrote Rijndael and HMAC keys to: %s",
             options->key_gen_file);
     }
     else
     {
-        fprintf(stdout, "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\n",
-                key_base64, hmac_key_base64);
+        fprintf(stdout, "KEY_BASE64: %s\nHMAC_KEY_BASE64: %s\nTOTP_KEY_BASE32: %s\n",
+                key_base64, hmac_key_base64, totp_key_base32);
     }
     clean_exit(options, NO_FW_CLEANUP, EXIT_SUCCESS);
 }
