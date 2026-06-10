@@ -139,7 +139,21 @@
             qr/Timer expired/,
         ],
     },
-
+    {
+        'category' => 'Rijndael+HMAC',
+        'subcategory' => 'client+server',
+        'detail'   => 'cmd open/close cycle multiple ports',
+        'function' => \&spa_cmd_open_close_exec_cycle,
+        'cmdline'  => "$default_client_hmac_args --fw-timeout 2 -A tcp/123,udp/4567,tcp/65535",
+        'fwknopd_cmdline' => "$fwknopdCmd -c $cf{'def'} -a $cf{'hmac_cmd_open_close_cycle_access9'} " .
+            "-d $default_digest_file -p $default_pid_file $intf_str",
+        'fw_rule_created' => $REQUIRE_NO_NEW_RULE,
+        'key_file' => $cf{'rc_hmac_b64_key'},
+        'server_positive_num_matches' => [
+            { 're' => qr/Running CMD_CYCLE_OPEN command:.* (6|17) 127.0.0.2 (123|4567|65535) 2/, 'num' => 3 },
+            { 're' => qr/Timer expired, running CMD_CYCLE_CLOSE command:.* (6|17) 127.0.0.2 (123|4567|65535) 2/, 'num' => 3 },
+        ],
+    },
     {
         'category' => 'Rijndael+HMAC',
         'subcategory' => 'client+server',

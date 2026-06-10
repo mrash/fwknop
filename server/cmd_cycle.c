@@ -60,29 +60,19 @@ is_var(const char * const var, const char * const cmd_str)
 }
 
 static int
-build_cmd(spa_data_t *spadat, const char * const cmd_cycle_str, int timer)
+build_cmd(spa_data_t *spadat, const char * const cmd_cycle_str, int timer,
+        acc_port_list_t *port_list)
 {
     char             port_str[MAX_PORT_STR_LEN+1]   = {0};
     char             proto_str[MAX_PROTO_STR_LEN+1] = {0};
     char             timestamp_str[20] = {0};
     char             client_timeout_str[10] = {0};
-    acc_port_list_t *port_list = NULL;
     int              i=0, buf_idx=0;
 
 #if HAVE_LIBFIU
     fiu_return_on("cmd_cycle_build_err", 0);
 #endif
 
-    if(expand_acc_port_list(&port_list, spadat->spa_message_remain) != 1)
-    {
-        free_acc_port_list(port_list);
-        return 0;
-    }
-
-    /* We only look at the first port/proto combination for command
-     * open/close cycles even if the SPA message had multiple ports
-     * and protocols set.
-    */
     snprintf(port_str, MAX_PORT_STR_LEN+1, "%d", port_list->port);
     snprintf(proto_str, MAX_PROTO_STR_LEN+1, "%d", port_list->proto);
 
@@ -169,23 +159,21 @@ build_cmd(spa_data_t *spadat, const char * const cmd_cycle_str, int timer)
             cmd_buf[buf_idx++] = cmd_cycle_str[i];
         if(buf_idx == CMD_CYCLE_BUFSIZE)
         {
-            free_acc_port_list(port_list);
             return 0;
         }
     }
 
-    free_acc_port_list(port_list);
     return 1;
 }
 
 static int
 cmd_open(fko_srv_options_t *opts, acc_stanza_t *acc,
-        spa_data_t *spadat, const int stanza_num)
+        spa_data_t *spadat, const int stanza_num, acc_port_list_t *port_list)
 {
     /* CMD_CYCLE_OPEN: Build the open command by taking care of variable
      * substitutions if necessary.
     */
-    if(build_cmd(spadat, acc->cmd_cycle_open, acc->cmd_cycle_timer))
+    if(build_cmd(spadat, acc->cmd_cycle_open, acc->cmd_cycle_timer, port_list))
     {
         log_msg(LOG_INFO, "[%s] (stanza #%d) Running CMD_CYCLE_OPEN command: %s",
                 spadat->pkt_source_ip, stanza_num, cmd_buf);
@@ -208,7 +196,7 @@ cmd_open(fko_srv_options_t *opts, acc_stanza_t *acc,
 
 static int
 add_cmd_close(fko_srv_options_t *opts, acc_stanza_t *acc,
-        spa_data_t *spadat, const int stanza_num)
+        spa_data_t *spadat, const int stanza_num, acc_port_list_t *port_list)
 {
     cmd_cycle_list_t   *last_clist=NULL, *new_clist=NULL, *tmp_clist=NULL;
     time_t              now;
@@ -217,7 +205,7 @@ add_cmd_close(fko_srv_options_t *opts, acc_stanza_t *acc,
     /* CMD_CYCLE_CLOSE: Build the close command, but don't execute it until
      * the expiration timer has passed.
     */
-    if(build_cmd(spadat, acc->cmd_cycle_close, acc->cmd_cycle_timer))
+    if(build_cmd(spadat, acc->cmd_cycle_close, acc->cmd_cycle_timer, port_list))
     {
         /* Now the corresponding close command is now in cmd_buf
          * for later execution when the timer expires.
@@ -299,14 +287,27 @@ int
 cmd_cycle_open(fko_srv_options_t *opts, acc_stanza_t *acc,
         spa_data_t *spadat, const int stanza_num, int *res)
 {
-    if(! cmd_open(opts, acc, spadat, stanza_num))
-        return 0;
+    acc_port_list_t *port_list = NULL;
+    acc_port_list_t *ple = NULL;
+    int rv = 0;
 
-    if(acc->cmd_cycle_do_close)
-        if(! add_cmd_close(opts, acc, spadat, stanza_num))
-            return 0;
+    if(expand_acc_port_list(&port_list, spadat->spa_message_remain) != 1)
+        goto error;
 
-     return 1;
+    for(ple = port_list; ple != NULL; ple = ple->next)
+    {
+        if(! cmd_open(opts, acc, spadat, stanza_num, ple))
+            goto error;
+
+        if(acc->cmd_cycle_do_close && ! add_cmd_close(opts, acc, spadat, stanza_num, ple))
+            goto error;
+    }
+
+    rv = 1;
+
+error:
+    free_acc_port_list(port_list);
+    return rv;
 }
 
 static void
