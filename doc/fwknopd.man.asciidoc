@@ -77,7 +77,7 @@ COMMAND-LINE OPTIONS
 *-d, --digest-file*='<digest-file>'::
     Specify the location of the 'digest.cache' file. If this option is
     not given, 'fwknopd' will use the compile-time default location (typically
-    '@localstatedir@/fwknop/digest.cache').
+    '@runstatedir@/fwknop/digest.cache').
 
 *-D, --dump-config*::
     Dump the configuration values that *fwknopd* derives from the
@@ -126,7 +126,7 @@ COMMAND-LINE OPTIONS
     start processing network traffic.
 
 *--exit-parse-digest-cache*::
-    Parse the digest cache file '@localstatedir@/fwknop/digest.cache'
+    Parse the digest cache file '@runstatedir@/fwknop/digest.cache'
     and exit. This validates the structure of the digest cache file without
     having to start processing network traffic. Note that the standard
     configuration files are also parsed in this mode.
@@ -168,7 +168,7 @@ COMMAND-LINE OPTIONS
 *-p, --pid-file*='<pid-file>'::
     Specify the location of the 'fwknopd.pid' file. If this option is
     not given, 'fwknopd' will use the compile-time default location (typically
-    '@localstatedir@/fwknop/fwknopd.pid').
+    '@runstatedir@/fwknop/fwknopd.pid').
 
 *-P, --pcap-filter*='<filter>'::
     Specify a Berkeley packet filter statement on the *fwknopd* command
@@ -202,11 +202,11 @@ COMMAND-LINE OPTIONS
 *--rotate-digest-cache*::
     Rotate the digest cache file by renaming it to ``<name>-old'', and
     starting a new one. The digest cache file is typically found in
-    '@localstatedir@/fwknop/digest.cache'.
+    '@runstatedir@/fwknop/digest.cache'.
 
 *-r, --run-dir*='<path>'::
     Specify the directory where *fwknopd* writes run time state files. The
-    default is '@localstatedir@'.
+    default is '@runstatedir@'.
 
 *-S, --status*::
     Display the status of any *fwknopd* processes that may or not be
@@ -474,7 +474,7 @@ the '@sysconfdir@/fwknop/fwknopd.conf' file for additional details.
 
 *FWKNOP_RUN_DIR* '<path>'::
     Specify the directory where *fwknopd* writes run time state files. The
-    default is '@localstatedir@'.
+    default is '@runstatedir@'.
 
 ACCESS.CONF VARIABLES
 ~~~~~~~~~~~~~~~~~~~~~
