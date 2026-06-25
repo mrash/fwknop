@@ -77,7 +77,7 @@ static int process_nfq_packet(struct nfq_q_handle *qh,
          * a spa packet and can be dropped. Otherwise, let it through.
         */
         verdict = (ph->hook == NF_IP_LOCAL_IN) ? NF_DROP : NF_ACCEPT;
-        nfq_set_verdict(qh, ph->packet_id, verdict, 0, NULL);
+        nfq_set_verdict(qh, ntohl(ph->packet_id), verdict, 0, NULL);
     }
     return 0;
 }
