@@ -451,6 +451,10 @@ typedef struct acc_stanza
     char                *force_snat_ip;
     unsigned char        force_masquerade;
 
+    /* PF firewall settings
+    */
+    unsigned char        pf_no_quick;
+
     struct acc_stanza   *next;
 } acc_stanza_t;
 

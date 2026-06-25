@@ -1957,6 +1957,9 @@ parse_access_file(fko_srv_options_t *opts, char *access_filename, int *depth)
         {
             add_acc_bool(&(curr_acc->forward_all), val);
         }
+        else if(CONF_VAR_IS(var, "PF_NO_QUICK")) {
+            add_acc_bool(&(curr_acc->pf_no_quick), val);
+        }
         else
         {
             log_msg(LOG_ERR,
